@@ -1,29 +1,37 @@
-// Define a type for a bill
 export type Bill = {
     id: string;
-    total: number; // This should be a user entered total
-    subTotal: number; // This should be calculated from the sum of the bill items totals
+    userEnteredTotal: number;
+    subTotal: number; // Automatically calculated from the sum of all `BillItem.totalPrice`
+    finalTotal: number; // Derived: subTotal + serviceCharge - discounts
     items: BillItem[];
+    Payees: Payee[];
+    serviceCharge?: number; // Optional service charge (defaults to 0 if not provided)
+    discounts?: DiscountItem[];
 };
 
 export type BillItem = {
     id: string;
     name: string;
-    price: number; // if quantity and total price is entered, then price is totalPrice / quantity
+    price: number; // Price per unit of the item (Can be derived from totalPrice / quantity)
     quantity: number;
-    totalPrice: number; // if quantity and price is entered, then totalPrice is price * quantity
-    assignedTo: string[]; // Array of participant IDs
+    totalPrice: number; // Total price items (Can be derived from totalPrice * quantity)
+    assignedTo: string[];
+    discounts?: DiscountItem[];
+    isDiscounted?: boolean;
+    discountedPrice?: number;
+    category?: string; // Optional: for grouping or analytics
 };
 
 export type Payee = {
     id: string;
     name: string;
-    partySize: number; // Accounts for service charge split when paying for multiple people.
+    partySize: number; // Number of people represented by this payee (for service charge splitting)
+    amountToPay: number;
 };
 
 export type DiscountItem = {
     id: string;
-    usePercentage: boolean;
-    percentage: number; // either percentage or amount is used, not both
-    amount: number;
+    usePercentage: boolean; // True if the discount is percentage-based
+    percentage?: number; // Discount percentage (used if `usePercentage` is true)
+    amount?: number; // Fixed discount amount (used if `usePercentage` is false)
 };

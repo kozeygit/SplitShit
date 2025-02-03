@@ -17,74 +17,27 @@ import { Bill, BillItem, Payer, DiscountItem } from "../models/bill";
 import { ThemedView } from "@/components/ThemedView";
 import BillCard from "@/components/bill/billCard";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
+import PayerCard from "@/components/bill/payerCard";
 
-const BillPage = () => {
-    const dummyBills: Bill[] = [
+const PayerPage = () => {
+    const dummyPayers: Payer[] = [
         {
             id: "0",
-            name: "Dinner at Luigi's",
-            date: new Date("2025-01-28"),
-            userEnteredTotal: 120.5,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: true,
-            items: [],
-            Payees: [],
+            name: "Kozell",
+            amountToPay: 0,
+            partySize: 3,
         },
         {
             id: "1",
-            name: "Brunch",
-            date: new Date("2025-03-21"),
-            userEnteredTotal: 80.0,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
+            name: "Louanne",
+            amountToPay: 0,
+            partySize: 2,
         },
         {
             id: "2",
-            name: "Dinner at Luigi's",
-            date: new Date("2025-01-28"),
-            userEnteredTotal: 120.5,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
-        },
-        {
-            id: "3",
-            name: "Brunch",
-            date: new Date("2025-03-21"),
-            userEnteredTotal: 80.0,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
-        },
-        {
-            id: "4",
-            name: "Dinner at Luigi's",
-            date: new Date("2025-01-28"),
-            userEnteredTotal: 120.5,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
-        },
-        {
-            id: "5",
-            name: "Brunch",
-            date: new Date("2025-03-21"),
-            userEnteredTotal: 80.0,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
+            name: "Nathaniel",
+            amountToPay: 0,
+            partySize: 4,
         },
     ];
 
@@ -99,32 +52,21 @@ const BillPage = () => {
             style={{
                 flex: 1,
                 paddingHorizontal: 10,
-                backgroundColor: Colors.pastel.red,
+                paddingTop: 50,
+                backgroundColor: Colors.pastel.indigo,
             }}
         >
-            {/* Title */}
-            <View>
-                <Image
-                    source={require("@/assets/images/logo.png")}
-                    resizeMode="contain"
-                    style={styles.logo}
-                />
-            </View>
-            {/* Bill Cards */}
+            {/* Payer Cards */}
             <FlatList
-                style={{ padding: 10 }}
-                data={dummyBills}
+                numColumns={2}
+                style={{ padding: 10}}
+                contentContainerStyle={{borderWidth: 2 , alignItems: "stretch", gap: 10}}
+                data={dummyPayers}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <BillCard
-                        billData={item}
-                        isExpanded={expandedBillId === item.id}
-                        onToggleDropdown={toggleDropdown}
-                    />
-                )}
+                renderItem={({ item }) => <PayerCard payerData={item} />}
             />
 
-            {/* Add Bill Button */}
+            {/* Add Payer Button */}
             <ThemedView style={styles.addBillButtonOuter}>
                 <TouchableNativeFeedback
                     onPress={() => {
@@ -136,7 +78,7 @@ const BillPage = () => {
                             type="defaultSemiBold"
                             style={styles.addBillText}
                         >
-                            New Bill
+                            New Payer
                         </ThemedText>
                         <IconSymbol
                             size={24}
@@ -152,9 +94,9 @@ const BillPage = () => {
 };
 
 const styles = StyleSheet.create({
-  logo: {
-    marginTop: 60,
-    marginBottom: 30,
+    logo: {
+        marginTop: 60,
+        marginBottom: 30,
         width: "100%",
         resizeMode: "contain",
         height: 120,
@@ -185,7 +127,7 @@ const styles = StyleSheet.create({
     },
 
     addBillIcon: {
-        backgroundColor: Colors.pastel.blue,
+        backgroundColor: Colors.pastel.yellow,
         borderRadius: 50,
         borderWidth: 2,
         padding: 8,
@@ -196,4 +138,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default BillPage;
+export default PayerPage;

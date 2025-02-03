@@ -1,12 +1,15 @@
 export type Bill = {
     id: string;
+    name: string;
+    date: Date;
     userEnteredTotal: number;
     subTotal: number; // Automatically calculated from the sum of all `BillItem.totalPrice`
     finalTotal: number; // Derived: subTotal + serviceCharge - discounts
     items: BillItem[];
-    Payees: Payee[];
+    Payees: Payer[];
     serviceCharge?: number; // Optional service charge (defaults to 0 if not provided)
     discounts?: DiscountItem[];
+    complete: boolean;
 };
 
 export type BillItem = {
@@ -22,7 +25,7 @@ export type BillItem = {
     category?: string; // Optional: for grouping or analytics
 };
 
-export type Payee = {
+export type Payer = {
     id: string;
     name: string;
     partySize: number; // Number of people represented by this payee (for service charge splitting)

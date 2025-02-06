@@ -13,32 +13,17 @@ import {
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 
-import { Bill } from "../models/bill";
+import { Bill } from "../../models/bill";
 import { ThemedView } from "@/components/ThemedView";
 import BillCard from "@/components/bill/billCard";
-import { useTestDb } from "../utils/dbToModel";
+import { useGetData } from "@/hooks/useGetData";
 
 const BillPage = () => {
-    const { getBills, insertDummyData } = useTestDb();
+    const { getBills } = useGetData();
     const [refreshing, setRefreshing] = useState(false); // State for refreshing
 
     const handleButtonPress = async () => {
-        console.log("OPS");
-        try {
-            await getBills();
-        } catch (error) {
-            console.log(error);
-        }
-        try {
-            await insertDummyData();
-        } catch (error) {
-            console.log(error);
-        }
-        try {
-            await getBills();
-        } catch (error) {
-            console.log(error);
-        }
+        await getBills();
     };
 
     const [bills, setBills] = useState<Bill[]>([]); // State for bills
@@ -170,7 +155,6 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     addBillText: {
-        fontSize: 20,
         marginLeft: 10,
     },
 });

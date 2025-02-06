@@ -1,10 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
 import React from "react";
-import { View, StyleSheet, TouchableNativeFeedback } from "react-native";
+import { View, StyleSheet, TouchableNativeFeedback, FlatList } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { ThemedView } from "@/components/ThemedView";
-import { Bill } from "@/app/models/bill"; // Import your Bill type
+import { Bill } from "@/models/bill"; // Import your Bill type
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -55,7 +55,14 @@ const BillCard: React.FC<BillCardProps> = ({ billData, isExpanded, onToggleDropd
                         color="lightgrey"
                         style={styles.dropdownIcon}
                     />
+                <FlatList
+                    data={billData.items}
+                    renderItem={({ item }) => (
+                        <ThemedText> {item.name} </ThemedText>
+                )}
+                />
                 </ThemedView>
+
             </TouchableNativeFeedback>
 
             <Animated.View
@@ -92,7 +99,7 @@ const BillCard: React.FC<BillCardProps> = ({ billData, isExpanded, onToggleDropd
 const completeStyles = StyleSheet.create({
     billCardOuter: {
         borderWidth: 2,
-        marginVertical: 10,
+        margin: 10,
         borderRadius: 20,
         overflow: "hidden",
         elevation: 5,
@@ -140,7 +147,7 @@ const completeStyles = StyleSheet.create({
 const incompleteStyles = StyleSheet.create({
     billCardOuter: {
         borderWidth: 2,
-        marginVertical: 10,
+        margin: 10,
         borderRadius: 20,
         overflow: "hidden",
         elevation: 5,

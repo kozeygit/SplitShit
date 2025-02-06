@@ -10,11 +10,9 @@ import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 
 import { useSQLiteContext } from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
-import * as schema from '@/db/schema';
 
 export default function TabLayout() {
   const db = useSQLiteContext();
-  const drizzleDb = drizzle(db);
   useDrizzleStudio(db)
   
   const colorScheme = useColorScheme();
@@ -44,6 +42,13 @@ export default function TabLayout() {
         name="payers"
         options={{
           title: 'Payers',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="newBill"
+        options={{
+          title: 'Create New Bill',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="person" color={color} />,
         }}
       />

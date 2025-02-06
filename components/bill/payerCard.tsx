@@ -6,7 +6,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { ThemedView } from "@/components/ThemedView";
-import { Bill, Payer } from "@/app/models/bill";
+import { Bill, Payer } from "@/models/bill";
 
 const colorKeys = Object.values(Colors.pastel);
 
@@ -17,10 +17,10 @@ const PayerCard = ({ payerData }: { payerData: Payer }) => {
         <ThemedView style={styles.payerCard}>
             <IconSymbol
                 size={35}
-                name="person"
+                name="person.2"
                 color={iconColor}
             />
-            <ThemedText type="defaultSemiBold" style={styles.billName}>
+            <ThemedText type="defaultSemiBold" style={styles.payerName}>
                 {payerData.name}    
             </ThemedText>
         </ThemedView>
@@ -30,16 +30,21 @@ const PayerCard = ({ payerData }: { payerData: Payer }) => {
 const styles = StyleSheet.create({
     payerCard: {
         flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+
+        maxHeight: 100,
+        aspectRatio: 1,
+        overflow: "hidden",
+
         borderWidth: 2,
         borderRadius: 20,
-        overflow: "hidden",
+        margin: 10,
+
         elevation: 5,
-        alignItems: "center",
-        padding: 20,
-        margin: 10
     },
-    billName: {
-        fontSize: 16,
+    payerName: {
+        fontSize: 14,
     },
 });
 

@@ -1,69 +1,82 @@
 import { ThemedText } from "@/components/ThemedText";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     StyleSheet,
     FlatList,
     TouchableNativeFeedback,
     SafeAreaView,
-    ScrollView,
     Image,
+    RefreshControl,
 } from "react-native";
 
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 
-import { Bill, BillItem, Payer, DiscountItem } from "../models/bill";
+import { Bill, BillItem, Payer, DiscountItem } from "../../models/bill";
 import { ThemedView } from "@/components/ThemedView";
-import BillCard from "@/components/bill/billCard";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
 import PayerCard from "@/components/bill/payerCard";
+import { useGetData } from "@/hooks/useGetData";
+
 
 const PayerPage = () => {
-    const dummyPayers: Payer[] = [
-        {
-            id: "0",
-            name: "Kozell",
-            amountToPay: 0,
-            partySize: 3,
-        },
-        {
-            id: "1",
-            name: "Louanne",
-            amountToPay: 0,
-            partySize: 2,
-        },
-        {
-            id: "2",
-            name: "Nathaniel",
-            amountToPay: 0,
-            partySize: 4,
-        },
-    ];
+    const { getPayers } = useGetData();
 
-    const [expandedBillId, setExpandedBillId] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState(false); // State for refreshing
 
-    const toggleDropdown = (id: string) => {
-        setExpandedBillId(expandedBillId === id ? null : id);
-    };
+    const [payers, setPayers] = useState<Payer[]>([]); // State for payers
+
+    const fetchPayers = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            const fetchedPayers = await getPayers();
+            setPayers(fetchedPayers); // Correct: Functional update
+        } catch (error) {
+            console.error("Error fetching payers:", error);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [getPayers]);
+
+    useEffect(() => {
+        fetchPayers();
+    }, [fetchPayers]);
+
+
+    const onRefresh = useCallback(() => {
+        fetchPayers();
+    }, [fetchPayers]);
+
 
     return (
         <SafeAreaView
             style={{
                 flex: 1,
                 paddingHorizontal: 10,
-                paddingTop: 50,
                 backgroundColor: Colors.pastel.indigo,
             }}
         >
+            {/* Title */}
+            <View>
+                <Image
+                    source={require("@/assets/images/logo.png")}
+                    resizeMode="contain"
+                    style={styles.logo}
+                />
+            </View>
             {/* Payer Cards */}
             <FlatList
+                style={{ padding: 10 }}
                 numColumns={2}
-                style={{ padding: 10}}
-                contentContainerStyle={{borderWidth: 2 , alignItems: "stretch", gap: 10}}
-                data={dummyPayers}
-                keyExtractor={(item) => item.id}
+                data={payers}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => <PayerCard payerData={item} />}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
             />
 
             {/* Add Payer Button */}
@@ -133,7 +146,6 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     addBillText: {
-        fontSize: 20,
         marginLeft: 10,
     },
 });

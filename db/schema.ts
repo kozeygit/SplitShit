@@ -25,13 +25,13 @@ export const billItems = sqliteTable("bill_items", {
     isDiscounted: integer("is_discounted").default(0),
     discountedPrice: real("discounted_price"),
     category: text("category"),
-    billId: text("bill_id").references(() => bills.id),
+    billId: integer("bill_id").references(() => bills.id),
 });
 
 export const assignedItems = sqliteTable("assigned_items", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    billItemId: text("bill_item_id").references(() => billItems.id),
-    payerId: text("payer_id").references(() => payers.id),
+    billItemId: integer("bill_item_id").references(() => billItems.id),
+    payerId: integer("payer_id").references(() => payers.id),
 });
 
 export const discounts = sqliteTable("discounts", {
@@ -43,19 +43,19 @@ export const discounts = sqliteTable("discounts", {
 
 export const billDiscounts = sqliteTable("bill_discounts", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    billId: text("bill_id").references(() => bills.id),
-    discountId: text("discount_id").references(() => discounts.id),
+    billId: integer("bill_id").references(() => bills.id),
+    discountId: integer("discount_id").references(() => discounts.id),
 });
 
 export const billItemDiscounts = sqliteTable("bill_item_discounts", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    billItemId: text("bill_item_id").references(() => billItems.id),
-    discountId: text("discount_id").references(() => discounts.id),
+    billItemId: integer("bill_item_id").references(() => billItems.id),
+    discountId: integer("discount_id").references(() => discounts.id),
 });
 
 export const billPayers = sqliteTable("bill_payers", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    billId: text("bill_id").references(() => bills.id),
-    payerId: text("payer_id").references(() => payers.id),
+    billId: integer("bill_id").references(() => bills.id),
+    payerId: integer("payer_id").references(() => payers.id),
     partySize: integer("party_size").notNull(),
 });

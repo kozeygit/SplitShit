@@ -13,21 +13,24 @@ import "react-native-reanimated";
 import { Suspense } from "react";
 import { ActivityIndicator } from "react-native";
 import { SQLiteProvider, openDatabaseSync } from "expo-sqlite";
-import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import migrations from "@/drizzle/migrations";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { getDrizzleDb } from "../utils/database";
 
 export const DATABASE_NAME = "bills";
+const db = getDrizzleDb(); // Initialize drizzle *outside* the component
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-    const expoDb = openDatabaseSync(DATABASE_NAME);
-    const db = drizzle(expoDb);
     const { success, error } = useMigrations(db, migrations);
+
+    if (!success) {
+        console.log(error)
+    }
 
     const colorScheme = useColorScheme();
 
@@ -62,7 +65,7 @@ export default function RootLayout() {
                         />
                         <Stack.Screen name="+not-found" />
                     </Stack>
-                    <StatusBar style="auto" />
+                    <StatusBar style="inverted" />
                 </ThemeProvider>
             </SQLiteProvider>
         </Suspense>

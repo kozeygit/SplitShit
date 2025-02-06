@@ -17,7 +17,8 @@ const MAPPING = {
   'note': 'receipt-long',
   'chevron.compact.down': "keyboard-arrow-down",
   'chevron.compact.up': "keyboard-arrow-up",
-  'person': 'person-add-alt-1'
+  'person': 'person-add-alt-1',
+  'person.2': 'person'
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

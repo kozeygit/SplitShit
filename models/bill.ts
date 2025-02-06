@@ -1,14 +1,12 @@
-// bills.ts (or your models file)
-
 export type Bill = {
     id: number;
     name: string;
     date: Date;
     userEnteredTotal: number;
-    serviceCharge?: number;
+    serviceCharge: number;
     complete: boolean;
     items: BillItem[];
-    Payees: Payer[];
+    payers: Payer[];
     discounts?: DiscountItem[]; // Discounts applied to the entire bill
 };
 
@@ -18,9 +16,9 @@ export type BillItem = {
     price: number;
     quantity: number;
     totalPrice: number;
-    assignedTo: string[]; // Array of payer IDs or names
-    isDiscounted?: boolean;
-    discountedPrice?: number;
+    assignedTo: Payer[]; // Array of payer IDs or names
+    isDiscounted: boolean;
+    discountedPrice: number;
     category?: string;
     discounts?: DiscountItem[]; // Discounts applied to this specific item
 };
@@ -30,8 +28,8 @@ export type Payer = {
     name: string;
     number?: number;
     email?: string;
-    partySize: number;
-    amountToPay: number; // Calculated dynamically
+    partySize?: number;
+    amountToPay?: number; // Calculated dynamically
 };
 
 export type DiscountItem = {
@@ -40,3 +38,8 @@ export type DiscountItem = {
     percentage?: number;
     amount?: number;
 };
+
+export type NewBill = Omit<Bill, "id" | "payers" | "discounts" | "items">
+export type NewBillItem = Omit<BillItem, "id">
+export type NewPayer = Omit<Payer, "id">
+export type NewDiscountItem = Omit<DiscountItem, "id">

@@ -8,6 +8,34 @@
       "when": 1738622773931,
       "tag": "0000_short_lilandra",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1738663515555,
+      "tag": "0001_violet_amazoness",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1738797236726,
+      "tag": "0002_thin_doctor_faustus",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1738801903374,
+      "tag": "0003_mean_power_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1738851799509,
+      "tag": "0004_lazy_famine",
+      "breakpoints": true
     }
   ]
 }

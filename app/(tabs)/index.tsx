@@ -1,98 +1,75 @@
 import { ThemedText } from "@/components/ThemedText";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     StyleSheet,
     FlatList,
     TouchableNativeFeedback,
     SafeAreaView,
-    ScrollView,
     Image,
+    RefreshControl,
 } from "react-native";
 
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 
-import { Bill, BillItem, Payer, DiscountItem } from "../models/bill";
+import { Bill } from "../models/bill";
 import { ThemedView } from "@/components/ThemedView";
 import BillCard from "@/components/bill/billCard";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { useTestDb } from "../utils/dbToModel";
 
 const BillPage = () => {
-    const dummyBills: Bill[] = [
-        {
-            id: "0",
-            name: "Dinner at Luigi's",
-            date: new Date("2025-01-28"),
-            userEnteredTotal: 120.5,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: true,
-            items: [],
-            Payees: [],
-        },
-        {
-            id: "1",
-            name: "Brunch",
-            date: new Date("2025-03-21"),
-            userEnteredTotal: 80.0,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
-        },
-        {
-            id: "2",
-            name: "Dinner at Luigi's",
-            date: new Date("2025-01-28"),
-            userEnteredTotal: 120.5,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
-        },
-        {
-            id: "3",
-            name: "Brunch",
-            date: new Date("2025-03-21"),
-            userEnteredTotal: 80.0,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
-        },
-        {
-            id: "4",
-            name: "Dinner at Luigi's",
-            date: new Date("2025-01-28"),
-            userEnteredTotal: 120.5,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
-        },
-        {
-            id: "5",
-            name: "Brunch",
-            date: new Date("2025-03-21"),
-            userEnteredTotal: 80.0,
-            subTotal: 0,
-            finalTotal: 0,
-            complete: false,
-            items: [],
-            Payees: [],
-        },
-    ];
+    const { getBills, insertDummyData } = useTestDb();
+    const [refreshing, setRefreshing] = useState(false); // State for refreshing
 
-    const [expandedBillId, setExpandedBillId] = useState<string | null>(null);
+    const handleButtonPress = async () => {
+        console.log("OPS");
+        try {
+            await getBills();
+        } catch (error) {
+            console.log(error);
+        }
+        try {
+            await insertDummyData();
+        } catch (error) {
+            console.log(error);
+        }
+        try {
+            await getBills();
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
-    const toggleDropdown = (id: string) => {
+    const [bills, setBills] = useState<Bill[]>([]); // State for bills
+
+    const fetchBills = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            const fetchedBills = await getBills();
+            setBills(fetchedBills); // Correct: Functional update
+        } catch (error) {
+            console.error("Error fetching bills:", error);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [getBills]);
+
+    useEffect(() => {
+        fetchBills();
+    }, [fetchBills]);
+
+    const [expandedBillId, setExpandedBillId] = useState<number | null>(null);
+
+    const toggleDropdown = (id: number) => {
         setExpandedBillId(expandedBillId === id ? null : id);
     };
+
+    const onRefresh = useCallback(() => {
+        fetchBills();
+    }, [fetchBills]);
+
+    console.log("BillPage rendered");
 
     return (
         <SafeAreaView
@@ -113,8 +90,14 @@ const BillPage = () => {
             {/* Bill Cards */}
             <FlatList
                 style={{ padding: 10 }}
-                data={dummyBills}
-                keyExtractor={(item) => item.id}
+                data={bills}
+                keyExtractor={(item) => item.id.toString()}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
                 renderItem={({ item }) => (
                     <BillCard
                         billData={item}
@@ -126,11 +109,7 @@ const BillPage = () => {
 
             {/* Add Bill Button */}
             <ThemedView style={styles.addBillButtonOuter}>
-                <TouchableNativeFeedback
-                    onPress={() => {
-                        console.log("Add Bill button pressed");
-                    }}
-                >
+                <TouchableNativeFeedback onPress={handleButtonPress}>
                     <ThemedView style={styles.addBillButtonInner}>
                         <ThemedText
                             type="defaultSemiBold"
@@ -152,9 +131,9 @@ const BillPage = () => {
 };
 
 const styles = StyleSheet.create({
-  logo: {
-    marginTop: 60,
-    marginBottom: 30,
+    logo: {
+        marginTop: 60,
+        marginBottom: 30,
         width: "100%",
         resizeMode: "contain",
         height: 120,

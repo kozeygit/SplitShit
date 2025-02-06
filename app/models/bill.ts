@@ -1,40 +1,42 @@
+// bills.ts (or your models file)
+
 export type Bill = {
-    id: string;
+    id: number;
     name: string;
     date: Date;
     userEnteredTotal: number;
-    subTotal: number; // Automatically calculated from the sum of all `BillItem.totalPrice`
-    finalTotal: number; // Derived: subTotal + serviceCharge - discounts
+    serviceCharge?: number;
+    complete: boolean;
     items: BillItem[];
     Payees: Payer[];
-    serviceCharge?: number; // Optional service charge (defaults to 0 if not provided)
-    discounts?: DiscountItem[];
-    complete: boolean;
+    discounts?: DiscountItem[]; // Discounts applied to the entire bill
 };
 
 export type BillItem = {
-    id: string;
+    id: number;
     name: string;
-    price: number; // Price per unit of the item (Can be derived from totalPrice / quantity)
+    price: number;
     quantity: number;
-    totalPrice: number; // Total price items (Can be derived from totalPrice * quantity)
-    assignedTo: string[];
-    discounts?: DiscountItem[];
+    totalPrice: number;
+    assignedTo: string[]; // Array of payer IDs or names
     isDiscounted?: boolean;
     discountedPrice?: number;
-    category?: string; // Optional: for grouping or analytics
+    category?: string;
+    discounts?: DiscountItem[]; // Discounts applied to this specific item
 };
 
 export type Payer = {
-    id: string;
+    id: number;
     name: string;
-    partySize: number; // Number of people represented by this payee (for service charge splitting)
-    amountToPay: number;
+    number?: number;
+    email?: string;
+    partySize: number;
+    amountToPay: number; // Calculated dynamically
 };
 
 export type DiscountItem = {
-    id: string;
-    usePercentage: boolean; // True if the discount is percentage-based
-    percentage?: number; // Discount percentage (used if `usePercentage` is true)
-    amount?: number; // Fixed discount amount (used if `usePercentage` is false)
+    id: number;
+    usePercentage: boolean;
+    percentage?: number;
+    amount?: number;
 };

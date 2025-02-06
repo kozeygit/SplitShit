@@ -6,8 +6,17 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
+
+import { useSQLiteContext } from 'expo-sqlite';
+import { drizzle } from 'drizzle-orm/expo-sqlite';
+import * as schema from '@/db/schema';
 
 export default function TabLayout() {
+  const db = useSQLiteContext();
+  const drizzleDb = drizzle(db);
+  useDrizzleStudio(db)
+  
   const colorScheme = useColorScheme();
 
   return (

@@ -1,53 +1,43 @@
 import { ThemedText } from "@/components/ThemedText";
-import React, { useState } from "react";
+import React from "react";
 import { View, StyleSheet, TouchableNativeFeedback } from "react-native";
-
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { ThemedView } from "@/components/ThemedView";
-import { Bill } from "@/app/models/bill";
+import { Bill } from "@/app/models/bill"; // Import your Bill type
 import Animated, {
-    BounceIn,
-    FadeIn,
-    FadeOut,
-    FlipInXDown,
-    SlideInUp,
-    SlideOutDown,
     useSharedValue,
-    withSpring,
+    useAnimatedStyle,
     withTiming,
 } from "react-native-reanimated";
 
 const colorKeys = Object.values(Colors.pastel);
 
-const BillCard = ({
-    billData,
-    isExpanded,
-    onToggleDropdown,
-}: {
+interface BillCardProps {
     billData: Bill;
     isExpanded: boolean;
-    onToggleDropdown: (id: string) => void;
-}) => {
+    onToggleDropdown: (id: number) => void;
+}
+
+const BillCard: React.FC<BillCardProps> = ({ billData, isExpanded, onToggleDropdown }) => {
     const iconColor = colorKeys[Number(billData.id) % colorKeys.length];
     const styles = billData.complete ? completeStyles : incompleteStyles;
+
+    const animatedStyles = useAnimatedStyle(() => {
+        return {
+            height: withTiming(isExpanded ? 45 : 0, { duration: 100 }),
+            opacity: withTiming(isExpanded ? 1 : 0, { duration: 100 }),
+            transform: [{ translateY: withTiming(isExpanded ? 0 : -45, { duration: 101 }) }],
+        };
+    });
 
     return (
         <ThemedView style={styles.billCardOuter}>
             <TouchableNativeFeedback onPress={() => onToggleDropdown(billData.id)}>
                 <ThemedView style={styles.billCardInner}>
-                    <IconSymbol
-                        size={35}
-                        name="note"
-                        color={iconColor}
-                        style={styles.billIcon}
-                    />
+                    <IconSymbol size={35} name="note" color={iconColor} style={styles.billIcon} />
                     <View style={styles.billDetails}>
-                        <ThemedText
-                            type="defaultSemiBold"
-                            style={styles.billName}
-                        >
+                        <ThemedText type="defaultSemiBold" style={styles.billName}>
                             {billData.name}
                         </ThemedText>
                         <ThemedText type="default" style={styles.billSubtext}>
@@ -61,47 +51,43 @@ const BillCard = ({
                     </View>
                     <IconSymbol
                         size={30}
-                        name={
-                            isExpanded
-                                ? "chevron.compact.up"
-                                : "chevron.compact.down"
-                        }
+                        name={isExpanded ? "chevron.compact.up" : "chevron.compact.down"}
                         color="lightgrey"
                         style={styles.dropdownIcon}
                     />
-                </ThemedView> 
+                </ThemedView>
             </TouchableNativeFeedback>
 
-            {/* Dropdown Menu */}
-            {isExpanded && (
-                <Animated.View
-                    entering={FlipInXDown}
-                    exiting={SlideOutDown}
-                    style={{
-                        zIndex: -1,
+            <Animated.View
+                style={[
+                    {
+                        overflow: "hidden",
                         flexDirection: "row",
-                        borderTopWidth: 2,
-                    }}
-                >
-                    <TouchableNativeFeedback
-                        onPress={() => console.log(`Edit ${billData.name}`)}
-                    >
-                        <View style={styles.dropdownOptionEdit}>
-                            <ThemedText type="default">Edit</ThemedText>
-                        </View>
-                    </TouchableNativeFeedback>
-                    <TouchableNativeFeedback
-                        onPress={() => console.log(`Complete ${billData.name}`)}
-                    >
-                        <View style={styles.dropdownOptionComplete}>
-                            <ThemedText type="default">Complete</ThemedText>
-                        </View>
-                    </TouchableNativeFeedback>
-                </Animated.View>
-            )}
+                        borderTopWidth: isExpanded ? 2 : 0,
+                        zIndex: -1
+                    },
+                    animatedStyles,
+                ]}
+            >
+                {isExpanded && (
+                    <>
+                        <TouchableNativeFeedback onPress={() => console.log(`Edit ${billData.name}`)}>
+                            <View style={styles.dropdownOptionEdit}>
+                                <ThemedText type="default">Edit</ThemedText>
+                            </View>
+                        </TouchableNativeFeedback>
+                        <TouchableNativeFeedback onPress={() => console.log(`Complete ${billData.name}`)}>
+                            <View style={styles.dropdownOptionComplete}>
+                                <ThemedText type="default">Complete</ThemedText>
+                            </View>
+                        </TouchableNativeFeedback>
+                    </>
+                )}
+            </Animated.View>
         </ThemedView>
     );
 };
+
 
 const completeStyles = StyleSheet.create({
     billCardOuter: {
@@ -135,12 +121,7 @@ const completeStyles = StyleSheet.create({
     },
     billTotal: {
         fontSize: 18,
-        color: "green"
-    },
-    dropdownMenu: {
-        zIndex: -1,
-        flexDirection: "row",
-        borderTopWidth: 2,
+        color: "green",
     },
     dropdownOptionEdit: {
         flex: 1,
@@ -149,7 +130,7 @@ const completeStyles = StyleSheet.create({
         backgroundColor: Colors.pastel.blue,
     },
     dropdownOptionComplete: {
-        display: "none",
+        display: "none", // Or style as needed for "complete" state
     },
     dropdownIcon: {
         paddingLeft: 10,
@@ -188,11 +169,7 @@ const incompleteStyles = StyleSheet.create({
     billTotal: {
         fontSize: 18,
     },
-    dropdownMenu: {
-        zIndex: -1,
-        flexDirection: "row",
-        borderTopWidth: 2,
-    },
+    
     dropdownOptionEdit: {
         flex: 1,
         alignItems: "center",

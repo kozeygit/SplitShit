@@ -14,9 +14,9 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 
 import { Bill, BillItem, Payer, DiscountItem } from "../../models/bill";
-import { ThemedView } from "@/components/ThemedView";
 import PayerCard from "@/components/bill/payerCard";
 import { useGetData } from "@/hooks/useGetData";
+import Logo from "@/components/bill/logo";
 
 
 const PayerPage = () => {
@@ -56,18 +56,12 @@ const PayerPage = () => {
                 backgroundColor: Colors.pastel.indigo,
             }}
         >
-            {/* Title */}
-            <View>
-                <Image
-                    source={require("@/assets/images/logo.png")}
-                    resizeMode="contain"
-                    style={styles.logo}
-                />
-            </View>
+            <Logo />
+
             {/* Payer Cards */}
             <FlatList
                 style={{ padding: 10 }}
-                numColumns={2}
+                numColumns={3}
                 data={payers}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => <PayerCard payerData={item} />}
@@ -80,13 +74,13 @@ const PayerPage = () => {
             />
 
             {/* Add Payer Button */}
-            <ThemedView style={styles.addBillButtonOuter}>
+            <View style={styles.addBillButtonOuter}>
                 <TouchableNativeFeedback
                     onPress={() => {
                         console.log("Add Bill button pressed");
                     }}
                 >
-                    <ThemedView style={styles.addBillButtonInner}>
+                    <View style={styles.addBillButtonInner}>
                         <ThemedText
                             type="defaultSemiBold"
                             style={styles.addBillText}
@@ -99,21 +93,14 @@ const PayerPage = () => {
                             color={Colors.dark.background}
                             style={styles.addBillIcon}
                         />
-                    </ThemedView>
+                    </View>
                 </TouchableNativeFeedback>
-            </ThemedView>
+            </View>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    logo: {
-        marginTop: 60,
-        marginBottom: 30,
-        width: "100%",
-        resizeMode: "contain",
-        height: 120,
-    },
 
     titleText: {
         marginTop: 100,

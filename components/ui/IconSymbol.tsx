@@ -9,15 +9,11 @@ import { OpaqueColorValue, StyleProp, ViewStyle } from 'react-native';
 const MAPPING = {
   // See MaterialIcons here: https://icons.expo.fyi
   // See SF Symbols in the SF Symbols app on Mac.
-  'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
   'plus.app.fill': 'add',
   'note': 'receipt-long',
   'chevron.compact.down': "keyboard-arrow-down",
   'chevron.compact.up': "keyboard-arrow-up",
-  'person': 'person-add-alt-1',
+  'person.badge.plus': 'person-add-alt-1',
   'person.2': 'person'
 } as Partial<
   Record<

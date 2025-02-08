@@ -1,6 +1,7 @@
 import {
     DarkTheme,
     DefaultTheme,
+    NavigationContainer,
     ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
@@ -18,6 +19,7 @@ import migrations from "@/drizzle/migrations";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { getDrizzleDb } from "../utils/database";
+import { BottomTabBar } from "@react-navigation/bottom-tabs";
 
 export const DATABASE_NAME = "bills";
 const db = getDrizzleDb(); // Initialize drizzle *outside* the component
@@ -29,7 +31,7 @@ export default function RootLayout() {
     const { success, error } = useMigrations(db, migrations);
 
     if (!success) {
-        console.log(error)
+        console.log(error);
     }
 
     const colorScheme = useColorScheme();
@@ -60,8 +62,17 @@ export default function RootLayout() {
                 >
                     <Stack>
                         <Stack.Screen
+                            name="(modals)/newBill"
+                            options={{
+                                headerShown: false,
+                                presentation: "modal",
+                            }}
+                        />
+                        <Stack.Screen
                             name="(tabs)"
-                            options={{ headerShown: false }}
+                            options={{
+                                headerShown: false,
+                            }}
                         />
                         <Stack.Screen name="+not-found" />
                     </Stack>

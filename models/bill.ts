@@ -39,7 +39,7 @@ export type DiscountItem = {
     amount?: number;
 };
 
-export type NewBill = Omit<Bill, "id" | "payers" | "discounts" | "items">
+export type NewBill = Omit<Bill, "id" | "payers" | "discounts" | "items" | "complete">
 export type NewBillItem = Omit<BillItem, "id">
 export type NewPayer = Omit<Payer, "id">
 export type NewDiscountItem = Omit<DiscountItem, "id">

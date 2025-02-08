@@ -13,32 +13,28 @@ import {
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 
-import { Bill } from "../../models/bill";
-import { ThemedView } from "@/components/ThemedView";
+import { Bill } from "@/models/bill";
 import BillCard from "@/components/bill/billCard";
 import { useGetData } from "@/hooks/useGetData";
+import Logo from "@/components/bill/logo";
 
 const BillPage = () => {
-    const { getBills } = useGetData();
+    const { getBasicBills } = useGetData();
     const [refreshing, setRefreshing] = useState(false); // State for refreshing
-
-    const handleButtonPress = async () => {
-        await getBills();
-    };
 
     const [bills, setBills] = useState<Bill[]>([]); // State for bills
 
     const fetchBills = useCallback(async () => {
         setRefreshing(true);
         try {
-            const fetchedBills = await getBills();
+            const fetchedBills = await getBasicBills();
             setBills(fetchedBills); // Correct: Functional update
         } catch (error) {
             console.error("Error fetching bills:", error);
         } finally {
             setRefreshing(false);
         }
-    }, [getBills]);
+    }, [getBasicBills]);
 
     useEffect(() => {
         fetchBills();
@@ -57,24 +53,11 @@ const BillPage = () => {
     console.log("BillPage rendered");
 
     return (
-        <SafeAreaView
-            style={{
-                flex: 1,
-                paddingHorizontal: 10,
-                backgroundColor: Colors.pastel.red,
-            }}
-        >
-            {/* Title */}
-            <View>
-                <Image
-                    source={require("@/assets/images/logo.png")}
-                    resizeMode="contain"
-                    style={styles.logo}
-                />
-            </View>
+        <SafeAreaView style={styles.container}>
+            <Logo />
+
             {/* Bill Cards */}
             <FlatList
-                style={{ padding: 10 }}
                 data={bills}
                 keyExtractor={(item) => item.id.toString()}
                 refreshControl={
@@ -91,71 +74,15 @@ const BillPage = () => {
                     />
                 )}
             />
-
-            {/* Add Bill Button */}
-            <ThemedView style={styles.addBillButtonOuter}>
-                <TouchableNativeFeedback onPress={handleButtonPress}>
-                    <ThemedView style={styles.addBillButtonInner}>
-                        <ThemedText
-                            type="defaultSemiBold"
-                            style={styles.addBillText}
-                        >
-                            New Bill
-                        </ThemedText>
-                        <IconSymbol
-                            size={24}
-                            name="plus.app.fill"
-                            color={Colors.dark.background}
-                            style={styles.addBillIcon}
-                        />
-                    </ThemedView>
-                </TouchableNativeFeedback>
-            </ThemedView>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    logo: {
-        marginTop: 60,
-        marginBottom: 30,
-        width: "100%",
-        resizeMode: "contain",
-        height: 120,
-    },
-
-    titleText: {
-        marginTop: 100,
-        marginBottom: 70,
-        textAlign: "center",
-    },
-
-    addBillButtonOuter: {
-        position: "absolute",
-        bottom: 20,
-        right: 20,
-        borderWidth: 2,
-        borderRadius: 50,
-        elevation: 5,
-        overflow: "hidden",
-    },
-    addBillButtonInner: {
-        flexDirection: "row",
-        gap: 10,
-        borderRadius: 50,
-        padding: 10,
-        justifyContent: "space-evenly",
-        alignItems: "center",
-    },
-
-    addBillIcon: {
-        backgroundColor: Colors.pastel.blue,
-        borderRadius: 50,
-        borderWidth: 2,
-        padding: 8,
-    },
-    addBillText: {
-        marginLeft: 10,
+    container: {
+        flex: 1,
+        paddingHorizontal: 20,
+        backgroundColor: Colors.pastel.red,
     },
 });
 

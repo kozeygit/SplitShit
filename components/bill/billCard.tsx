@@ -3,7 +3,6 @@ import React from "react";
 import { View, StyleSheet, TouchableNativeFeedback, FlatList } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
-import { ThemedView } from "@/components/ThemedView";
 import { Bill } from "@/models/bill"; // Import your Bill type
 import Animated, {
     useSharedValue,
@@ -32,9 +31,9 @@ const BillCard: React.FC<BillCardProps> = ({ billData, isExpanded, onToggleDropd
     });
 
     return (
-        <ThemedView style={styles.billCardOuter}>
+        <View style={styles.billCardOuter}>
             <TouchableNativeFeedback onPress={() => onToggleDropdown(billData.id)}>
-                <ThemedView style={styles.billCardInner}>
+                <View style={styles.billCardInner}>
                     <IconSymbol size={35} name="note" color={iconColor} style={styles.billIcon} />
                     <View style={styles.billDetails}>
                         <ThemedText type="defaultSemiBold" style={styles.billName}>
@@ -61,7 +60,7 @@ const BillCard: React.FC<BillCardProps> = ({ billData, isExpanded, onToggleDropd
                         <ThemedText> {item.name} </ThemedText>
                 )}
                 />
-                </ThemedView>
+                </View>
 
             </TouchableNativeFeedback>
 
@@ -91,13 +90,14 @@ const BillCard: React.FC<BillCardProps> = ({ billData, isExpanded, onToggleDropd
                     </>
                 )}
             </Animated.View>
-        </ThemedView>
+        </View>
     );
 };
 
 
 const completeStyles = StyleSheet.create({
     billCardOuter: {
+        backgroundColor: "white",
         borderWidth: 2,
         margin: 10,
         borderRadius: 20,
@@ -146,6 +146,7 @@ const completeStyles = StyleSheet.create({
 
 const incompleteStyles = StyleSheet.create({
     billCardOuter: {
+        backgroundColor: "white",
         borderWidth: 2,
         margin: 10,
         borderRadius: 20,

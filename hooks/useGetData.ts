@@ -1,14 +1,18 @@
 // In your useGetData hook:
-import { fetchBills, fetchBillItems, fetchPayers } from "@/utils/fetchData"; // Import the functions
+import { fetchBills, fetchBillItems, fetchPayers, fetchBasicBills } from "@/utils/fetchData"; // Import the functions
 import { useCallback } from "react";
 
 export const useGetData = () => {
+
+    const getBasicBills = useCallback(async () => {
+        return await fetchBasicBills();
+    }, []);
 
     const getBills = useCallback(async () => {
         return await fetchBills();
     }, []);
 
-    const getBillItems = useCallback(async (billId: number) => {
+    const getBillItems = useCallback(async (billId?: number) => {
         return await fetchBillItems(billId);
     }, []);
 
@@ -16,5 +20,5 @@ export const useGetData = () => {
         return await fetchPayers(billId);
     }, []);
 
-    return { getBills, getBillItems, getPayers };
+    return { getBills, getBillItems, getPayers, getBasicBills};
 };

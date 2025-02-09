@@ -62,16 +62,25 @@ export default function RootLayout() {
                 >
                     <Stack>
                         <Stack.Screen
+                            name="(tabs)"
+                            options={{
+                                headerShown: false,
+                            }}
+                        />
+                        <Stack.Screen
                             name="(modals)/newBill"
                             options={{
                                 headerShown: false,
                                 presentation: "modal",
+                                animation: "slide_from_bottom"
                             }}
                         />
                         <Stack.Screen
-                            name="(tabs)"
+                            name="(modals)/newPayer"
                             options={{
                                 headerShown: false,
+                                presentation: "modal",
+                                animation: "slide_from_bottom"
                             }}
                         />
                         <Stack.Screen name="+not-found" />

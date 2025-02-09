@@ -1,4 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
@@ -10,16 +11,18 @@ import {
     RefreshControl,
 } from "react-native";
 
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 
 import { Bill, BillItem, Payer, DiscountItem } from "../../models/bill";
 import PayerCard from "@/components/bill/payerCard";
 import { useGetData } from "@/hooks/useGetData";
 import Logo from "@/components/bill/logo";
+import { useRouter } from "expo-router";
 
 
 const PayerPage = () => {
+    const router = useRouter();
+    
     const { getPayers } = useGetData();
 
     const [refreshing, setRefreshing] = useState(false); // State for refreshing
@@ -53,7 +56,7 @@ const PayerPage = () => {
             style={{
                 flex: 1,
                 paddingHorizontal: 10,
-                backgroundColor: Colors.pastel.indigo,
+                backgroundColor: Colors.pastel.blue,
             }}
         >
             <Logo />
@@ -72,30 +75,6 @@ const PayerPage = () => {
                     />
                 }
             />
-
-            {/* Add Payer Button */}
-            <View style={styles.addBillButtonOuter}>
-                <TouchableNativeFeedback
-                    onPress={() => {
-                        console.log("Add Bill button pressed");
-                    }}
-                >
-                    <View style={styles.addBillButtonInner}>
-                        <ThemedText
-                            type="defaultSemiBold"
-                            style={styles.addBillText}
-                        >
-                            New Payer
-                        </ThemedText>
-                        <IconSymbol
-                            size={24}
-                            name="plus.app.fill"
-                            color={Colors.dark.background}
-                            style={styles.addBillIcon}
-                        />
-                    </View>
-                </TouchableNativeFeedback>
-            </View>
         </SafeAreaView>
     );
 };

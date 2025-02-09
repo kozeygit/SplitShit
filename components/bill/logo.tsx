@@ -15,7 +15,7 @@ export default Logo;
 
 const styles = StyleSheet.create({
     logo: {
-        marginTop: 50,
+        marginTop: 40,
         marginBottom: 10,
         width: "100%",
         resizeMode: "contain",

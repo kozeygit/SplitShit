@@ -1,78 +1,108 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs, useNavigation } from "expo-router";
+import React, { useState } from "react";
 
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
+import { Colors } from "@/constants/Colors";
+import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 
-import { useSQLiteContext } from 'expo-sqlite';
+import { useSQLiteContext } from "expo-sqlite";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
+import { NavigationState, useRoute } from "@react-navigation/native";
 
 export default function TabLayout() {
   const db = useSQLiteContext();
-  useDrizzleStudio(db)
-  
-  const colorScheme = useColorScheme();
+  useDrizzleStudio(db);
+
+  const [activeTab, setActiveTab] = useState(0); // Store active tab index
+  const router = useRouter();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveBackgroundColor: "#000",
         headerShown: false,
         tabBarStyle: {
-          height: 70,
-          borderTopWidth: 2,
+          height: 60,
+          borderTopWidth: 3,
           borderColor: "black",
-          },
-        
-      }}>
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          tabBarItemStyle: {
-          },
-          tabBarIconStyle: {
-            width: "100%",
-            height: "100%",
-          },
-          tabBarShowLabel: false,
-          tabBarIcon: ({ color }) => <IconSymbol size={38} name="note" color={color} />,
+          tabBarActiveTintColor: Colors.pastel.red,
+          title: "Bills",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons size={30} name="receipt" color={color} />
+          ),
         }}
-      />
-      <Tabs.Screen
-        name='(modals)/newBill'
-        options={{
-          tabBarItemStyle: {
-            flex: 1/2,
-            bottom: 40,
-            borderWidth: 2,
-            backgroundColor: "white",
-            borderRadius: "100%",
-            aspectRatio: 1,
-            justifyContent: 'center',
-            elevation: 5,
+        listeners={() => ({
+          tabPress: (e) => {
+            setActiveTab(0);
           },
-          tabBarIconStyle: {
-            width: "100%",
-            height: "100%",
-          },
-          tabBarShowLabel: false,
-          tabBarIcon: ({ color }) => <IconSymbol size={38} name="plus.app.fill" color={color} />,
-        }}
+        })}
       />
+      {
+        <Tabs.Screen
+          name="placeholder"
+          listeners={() => ({
+            tabPress: (e) => {
+              e.preventDefault();
+
+              console.log("Active Tab Index:", activeTab);
+
+              if (activeTab === 0) {
+                router.push("/(modals)/newBill");
+              } else if (activeTab === 1) {
+                router.push("/(modals)/newPayer");
+              }
+            },
+          })}
+          options={{
+            tabBarItemStyle: {
+              position: "absolute",
+              marginHorizontal: "auto",
+              right: 0,
+              left: 0,
+
+              maxWidth: 100,
+              aspectRatio: 1,
+
+              borderWidth: 2,
+              backgroundColor: "white",
+              borderRadius: "100%",
+
+              elevation: 5,
+            },
+            tabBarLabelStyle: {
+              paddingTop: 5,
+            },
+            tabBarIcon: ({ color }) => (
+              activeTab === 0
+                ? <MaterialIcons size={30} name="post-add" color={color} />
+                : <MaterialIcons size={30} name="person-add" color={color} />
+            ),
+          }}
+        />
+      }
       <Tabs.Screen
         name="payers"
         options={{
-          tabBarItemStyle: {
-            flex: 1
+          tabBarActiveTintColor: Colors.pastel.blue,
+          tabBarLabelStyle: {
+            paddingTop: 0,
           },
-          tabBarIconStyle: {
-            width: "100%",
-            height: "100%",
-          },
-          title: '',
-          tabBarIcon: ({ color }) => <IconSymbol size={38} name="person.badge.plus" color={color} />,
+          title: "Payers",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons size={30} name="person" color={color} />
+          ),
         }}
+        listeners={() => ({
+          tabPress: (e) => {
+            setActiveTab(1);
+          },
+        })}
       />
     </Tabs>
   );

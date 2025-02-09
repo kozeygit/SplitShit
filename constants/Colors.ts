@@ -11,13 +11,13 @@ const tintColorDark = '#fff';
 export const Colors = {
   pastel: {
     pink: '#FFC6FF',
-    red: '#FFADAD',
-    orange: '#FFD6A5',
+    red: '#FAA0A0',
+    orange: '#FAC898',
     yellow: '#FDFFB6',
-    green: '#CAFFBF',
+    green: '#C1E1C1',
     turquoise: '#98F5E1',
-    cyan: '#9BF6FF',
-    blue: '#90DBF4',
+    cyan: '#ADD8E6',
+    blue: '#A7C7E7',
     indigo: '#A0C4FF',
     violet: '#BDB2FF'
 

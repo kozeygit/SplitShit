@@ -41,5 +41,5 @@ export type DiscountItem = {
 
 export type NewBill = Omit<Bill, "id" | "payers" | "discounts" | "items" | "complete">
 export type NewBillItem = Omit<BillItem, "id">
-export type NewPayer = Omit<Payer, "id">
+export type NewPayer = Omit<Payer, "id" | "partySize" | "amountToPay">
 export type NewDiscountItem = Omit<DiscountItem, "id">

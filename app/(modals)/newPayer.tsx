@@ -14,7 +14,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { NewBill } from "@/models/bill"; // Replace with your actual path
+import { NewPayer } from "@/models/bill"; // Replace with your actual path
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -23,67 +23,34 @@ import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
-const billSchema = z.object({
-  name: z.string().min(1, "Bill name is required"),
-  userEnteredTotal: z
-    .number({
-      invalid_type_error: "Total price must be a number",
-    })
-    .positive("Total price must be positive"),
-  date: z.date({
-    invalid_type_error: "Date is required",
-  }),
-  serviceCharge: z
-    .number({
-      invalid_type_error: "Service charge must be a number",
-    })
-    .nonnegative("Service charge cannot be negative"),
+const payerSchema = z.object({
+  name: z.string().min(1, "Payer name is required"),
+  email: z.string().email().optional(),
+  number: z.number().optional(),
 });
 
-export default function NewBillPage() {
+export default function NewPayerPage() {
   const router = useRouter();
   const {
     control,
     handleSubmit,
     formState: { errors },
-    setValue,
-  } = useForm<NewBill>({
+  } = useForm<NewPayer>({
     defaultValues: {
       name: "",
-      userEnteredTotal: 0,
-      date: new Date(),
-      serviceCharge: 0,
+      email: undefined,
+      number: undefined,
     },
-    resolver: zodResolver(billSchema),
+    resolver: zodResolver(payerSchema),
   });
 
-  const onSubmit = (data: NewBill) => console.log(data);
-
-  const [date, setDate] = useState(new Date());
-  const [show, setShow] = useState(false);
-
-  const onChangeDate = (
-    event: DateTimePickerEvent,
-    selectedDate: Date | undefined
-  ) => {
-    if (selectedDate) {
-      setShow(Platform.OS === "ios");
-      setDate(selectedDate);
-      setValue("date", selectedDate);
-    } else if (Platform.OS === "ios") {
-      setShow(false);
-    }
-  };
-
-  const showDatepicker = () => {
-    setShow(true);
-  };
+  const onSubmit = (data: NewPayer) => console.log(data);
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: Colors.pastel.red,
+        backgroundColor: Colors.pastel.blue,
         paddingHorizontal: 20,
       }}
     >
@@ -96,41 +63,61 @@ export default function NewBillPage() {
         <ScrollView>
           <View style={styles.container}>
             <ThemedText type="title" style={styles.title}>
-              Add New Bill
+              Add New Payer
             </ThemedText>
             {/* Bill Name Input */}
-            <Text style={styles.label}>Bill Name</Text>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  style={[
-                    styles.input,
-                    errors.name ? styles.inputError : undefined,
-                  ]}
-                  placeholder="Bill Name"
-                  onBlur={onBlur}
-                  onChangeText={onChange} // Update form state on text change
-                  value={value} // Bind the value to the form state
-                />
-              )}
-            />
+            <Text style={styles.label}>Name</Text>
+            <View
+              style={[
+                styles.input,
+                errors.name ? styles.inputError : undefined,
+              ]}
+            >
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      height: "100%",
+                    }}
+                  >
+                    <TextInput
+                      style={{ flex: 1 }}
+                      placeholder="John Smith"
+                      keyboardType="default"
+                      onBlur={onBlur}
+                      onChangeText={(text) => onChange(text)}
+                      value={value} // Convert number to string for display
+                    />
+                    <MaterialIcons
+                      name="person"
+                      size={20}
+                      color={errors.name ? "red" : "black"}
+                      style={{
+                        alignSelf: "center",
+                      }}
+                    />
+                  </View>
+                )}
+              />
+            </View>
             {errors.name && (
               <Text style={styles.errorText}>{errors.name.message}</Text>
             )}
 
-            {/* Total Amount Input */}
-            <Text style={styles.label}>Total Price</Text>
+            {/* Email Input */}
+            <Text style={styles.label}>Email</Text>
             <View
               style={[
                 styles.input,
-                errors.userEnteredTotal ? styles.inputError : undefined,
+                errors.email ? styles.inputError : undefined,
               ]}
             >
               <Controller
                 control={control}
-                name="userEnteredTotal"
+                name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View
                     style={{
@@ -138,88 +125,41 @@ export default function NewBillPage() {
                       height: "100%",
                     }}
                   >
-                    <MaterialIcons
-                      name="currency-pound"
-                      size={20}
-                      color={errors.userEnteredTotal ? "red" : "black"}
-                      style={{
-                        alignSelf: "center",
-                      }}
-                    />
                     <TextInput
                       style={{ flex: 1 }}
                       placeholder="Total Amount"
-                      keyboardType="numeric"
+                      keyboardType="email-address"
                       onBlur={onBlur}
-                      onChangeText={(text) => onChange(Number(text))} // Convert text to number
-                      value={value.toString()} // Convert number to string for display
+                      onChangeText={(text) => onChange(text)}
+                      value={value} // Convert number to string for display
+                    />
+                    <MaterialIcons
+                      name="email"
+                      size={20}
+                      color={errors.email ? "red" : "black"}
+                      style={{
+                        alignSelf: "center",
+                      }}
                     />
                   </View>
                 )}
               />
             </View>
-            {errors.userEnteredTotal && (
-              <Text style={styles.errorText}>
-                {errors.userEnteredTotal.message}
-              </Text>
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email.message}</Text>
             )}
 
-            {/* Date Picker */}
-            {show && (
-              <DateTimePicker
-                id="dateTimePicker"
-                value={date}
-                mode={"date"}
-                display="default"
-                onChange={onChangeDate}
-              />
-            )}
-
-            {/* Display Selected Date */}
-            <Text style={styles.label}>Date</Text>
-            <TouchableNativeFeedback onPress={showDatepicker}>
-              <View
-                style={[
-                  styles.input,
-                  errors.date ? styles.inputError : undefined,
-                ]}
-              >
-                <Controller
-                  control={control}
-                  name="date"
-                  render={({ field: { value } }) => (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <TextInput
-                        placeholder="Date (YYYY-MM-DD)"
-                        value={value.toLocaleDateString()} // Format date for display
-                        editable={false}
-                      />
-                      <MaterialIcons name="edit-calendar" size={20} />
-                    </View>
-                  )}
-                />
-              </View>
-            </TouchableNativeFeedback>
-            {errors.date && (
-              <Text style={styles.errorText}>{errors.date.message}</Text>
-            )}
-
-            {/* Service Charge Input */}
-            <Text style={styles.label}>Service Charge</Text>
+            {/* Phone Number Input */}
+            <Text style={styles.label}>Phone Number</Text>
             <View
               style={[
                 styles.input,
-                errors.date ? styles.inputError : undefined,
+                errors.number ? styles.inputError : undefined,
               ]}
             >
               <Controller
                 control={control}
-                name="serviceCharge"
+                name="number"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View
                     style={{
@@ -227,30 +167,28 @@ export default function NewBillPage() {
                       height: "100%",
                     }}
                   >
+                    <TextInput
+                      style={{ flex: 1 }}
+                      placeholder="Number"
+                      keyboardType="phone-pad"
+                      onBlur={onBlur}
+                      onChangeText={(text) => onChange(Number(text))} // Convert text to number
+                      value={(value ?? "Hello").toString()}
+                    />
                     <MaterialIcons
-                      name="currency-pound"
+                      name="phone"
                       size={20}
-                      color={errors.userEnteredTotal ? "red" : "black"}
+                      color={errors.number ? "red" : "black"}
                       style={{
                         alignSelf: "center",
                       }}
-                    />
-                    <TextInput
-                      style={{ flex: 1 }}
-                      placeholder="Service Charge"
-                      keyboardType="numeric"
-                      onBlur={onBlur}
-                      onChangeText={(text) => onChange(Number(text))} // Convert text to number
-                      value={value.toString()} // Convert number to string for display
                     />
                   </View>
                 )}
               />
             </View>
-            {errors.serviceCharge && (
-              <Text style={styles.errorText}>
-                {errors.serviceCharge.message}
-              </Text>
+            {errors.number && (
+              <Text style={styles.errorText}>{errors.number.message}</Text>
             )}
           </View>
 

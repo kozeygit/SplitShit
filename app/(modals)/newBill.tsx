@@ -25,10 +25,10 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
-  userEnteredTotal: z
+  userEnteredTotal: z.coerce
     .number({
       invalid_type_error: "Total price must be a number",
-    })
+    }).multipleOf(0.01, "More than two decimals.... really? :/")
     .positive("Total price must be positive"),
   date: z.date({
     invalid_type_error: "Date is required",
@@ -138,21 +138,21 @@ export default function NewBillPage() {
                       height: "100%",
                     }}
                   >
-                    <MaterialIcons
-                      name="currency-pound"
-                      size={20}
-                      color={errors.userEnteredTotal ? "red" : "black"}
-                      style={{
-                        alignSelf: "center",
-                      }}
-                    />
                     <TextInput
                       style={{ flex: 1 }}
                       placeholder="Total Amount"
                       keyboardType="numeric"
                       onBlur={onBlur}
-                      onChangeText={(text) => onChange(Number(text))} // Convert text to number
+                      onChangeText={(text) => onChange(text)} // Convert text to number
                       value={value.toString()} // Convert number to string for display
+                    />
+                    <MaterialIcons
+                      name="price-change"
+                      size={20}
+                      color={errors.userEnteredTotal ? "red" : "black"}
+                      style={{
+                        alignSelf: "center",
+                      }}
                     />
                   </View>
                 )}

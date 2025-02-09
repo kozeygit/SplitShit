@@ -8,6 +8,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { NavigationState, useRoute } from "@react-navigation/native";
+import { Pressable, View } from "react-native";
 
 export default function TabLayout() {
   const db = useSQLiteContext();
@@ -26,6 +27,7 @@ export default function TabLayout() {
           borderTopWidth: 3,
           borderColor: "black",
         },
+        tabBarInactiveTintColor: "black"
       }}
     >
       <Tabs.Screen
@@ -62,27 +64,39 @@ export default function TabLayout() {
           options={{
             tabBarItemStyle: {
               position: "absolute",
-              marginHorizontal: "auto",
-              right: 0,
-              left: 0,
+              width: "100%",
 
-              maxWidth: 100,
-              aspectRatio: 1,
-
-              borderWidth: 2,
-              backgroundColor: "white",
-              borderRadius: "100%",
-
-              elevation: 5,
+              bottom: 15,
             },
             tabBarLabelStyle: {
               paddingTop: 5,
             },
-            tabBarIcon: ({ color }) => (
-              activeTab === 0
-                ? <MaterialIcons size={30} name="post-add" color={color} />
-                : <MaterialIcons size={30} name="person-add" color={color} />
+            title: "New",
+            tabBarButton: (props) => (
+              <View
+                style={{
+                  alignSelf: "center",
+                  borderWidth: 2,
+                  borderRadius: "100%",
+                  backgroundColor: activeTab == 0 ? Colors.pastel.red : Colors.pastel.blue,
+                  width: "100%",
+                  aspectRatio: 1,
+                  overflow: "hidden",
+                  elevation: 5,
+                  maxHeight: 90,
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <Pressable {...props} style={{alignItems: "center", flex: 1, justifyContent: "center"}} />
+              </View>
             ),
+            tabBarIcon: ({ color }) =>
+              activeTab === 0 ? (
+                <MaterialIcons size={32} name="post-add" color={"black"} />
+              ) : (
+                <MaterialIcons size={32} name="person-add-alt-1" color={"black"} />
+              ),
           }}
         />
       }

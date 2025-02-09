@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   TextInput,
-  Button,
   StyleSheet,
   Text,
   Platform,
@@ -14,10 +13,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { NewPayer } from "@/models/bill"; // Replace with your actual path
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import { NewPayer } from "@/models/bill";
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
@@ -127,11 +123,11 @@ export default function NewPayerPage() {
                   >
                     <TextInput
                       style={{ flex: 1 }}
-                      placeholder="Total Amount"
+                      placeholder="email@domain.com"
                       keyboardType="email-address"
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)}
-                      value={value} // Convert number to string for display
+                      value={value}
                     />
                     <MaterialIcons
                       name="email"
@@ -173,7 +169,7 @@ export default function NewPayerPage() {
                       keyboardType="phone-pad"
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(Number(text))} // Convert text to number
-                      value={(value ?? "Hello").toString()}
+                      value={(value ?? "").toString()}
                     />
                     <MaterialIcons
                       name="phone"

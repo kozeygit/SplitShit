@@ -15,10 +15,13 @@ import { Colors } from "@/constants/Colors";
 import { Bill } from "@/models/bill";
 import BillCard from "@/components/bill/billCard";
 import { useGetData } from "@/hooks/useGetData";
-import Logo from "@/components/bill/logo";
+import Logo from "@/components/ui/logo";
+import { useRouter } from "expo-router";
+import { setBillComplete } from "@/utils/insertData";
 
 const BillPage = () => {
-  const { getBasicBills } = useGetData();
+  const router = useRouter();
+  const { getBills } = useGetData();
   const [refreshing, setRefreshing] = useState(false); // State for refreshing
 
   const [bills, setBills] = useState<Bill[]>([]); // State for bills
@@ -26,14 +29,14 @@ const BillPage = () => {
   const fetchBills = useCallback(async () => {
     setRefreshing(true);
     try {
-      const fetchedBills = await getBasicBills();
+      const fetchedBills = await getBills();
       setBills(fetchedBills); // Correct: Functional update
     } catch (error) {
       console.error("Error fetching bills:", error);
     } finally {
       setRefreshing(false);
     }
-  }, [getBasicBills]);
+  }, [getBills]);
 
   useEffect(() => {
     fetchBills();
@@ -45,11 +48,20 @@ const BillPage = () => {
     setExpandedBillId(expandedBillId === id ? null : id);
   };
 
+  const editBill = (id: number) => {
+      router.push({pathname: "/bill", params: {id: id}})
+  };
+
+  const completeBill = (id: number) => {
+      console.log(id, "completed")
+      setBillComplete(id)
+    fetchBills();
+
+  };
+
   const onRefresh = useCallback(() => {
     fetchBills();
   }, [fetchBills]);
-
-  console.log("BillPage rendered");
 
   return (
     <SafeAreaView style={styles.container}>
@@ -67,6 +79,8 @@ const BillPage = () => {
             billData={item}
             isExpanded={expandedBillId === item.id}
             onToggleDropdown={toggleDropdown}
+            onEdit={editBill}
+            onComplete={completeBill}
           />
         )}
       />

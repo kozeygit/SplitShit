@@ -22,6 +22,7 @@ import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { insertBill } from "@/utils/insertData";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
@@ -33,11 +34,12 @@ const billSchema = z.object({
   date: z.date({
     invalid_type_error: "Date is required",
   }),
-  serviceCharge: z
+  serviceCharge: z.coerce
     .number({
       invalid_type_error: "Service charge must be a number",
     })
-    .nonnegative("Service charge cannot be negative"),
+    .nonnegative("Service charge cannot be negative")
+  .optional(),
 });
 
 export default function NewBillPage() {
@@ -57,7 +59,15 @@ export default function NewBillPage() {
     resolver: zodResolver(billSchema),
   });
 
-  const onSubmit = (data: NewBill) => console.log(data);
+  const onSubmit = async (data: NewBill) => {
+    const newBillId = await insertBill(data)
+    if (newBillId < 0) {
+      console.log("insert bill failed for some reason????")
+    }
+    else {
+      router.replace({pathname: "/bill", params: {id: newBillId}})
+    }
+  }
 
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
@@ -227,21 +237,21 @@ export default function NewBillPage() {
                       height: "100%",
                     }}
                   >
-                    <MaterialIcons
-                      name="currency-pound"
-                      size={20}
-                      color={errors.userEnteredTotal ? "red" : "black"}
-                      style={{
-                        alignSelf: "center",
-                      }}
-                    />
                     <TextInput
                       style={{ flex: 1 }}
                       placeholder="Service Charge"
                       keyboardType="numeric"
                       onBlur={onBlur}
-                      onChangeText={(text) => onChange(Number(text))} // Convert text to number
+                      onChangeText={(text) => onChange(text)} // Convert text to number
                       value={value.toString()} // Convert number to string for display
+                    />
+                    <MaterialIcons
+                      name="currency-pound"
+                      size={20}
+                      color={errors.serviceCharge  ? "red" : "black"}
+                      style={{
+                        alignSelf: "center",
+                      }}
                     />
                   </View>
                 )}
@@ -254,6 +264,9 @@ export default function NewBillPage() {
             )}
           </View>
 
+          <View style={{ flex: 1 }}></View>
+        </ScrollView>
+      </KeyboardAvoidingView>
           {/* Submit Button */}
           <View style={styles.buttonContainer}>
             <View style={styles.cancelButtonOuter}>
@@ -275,9 +288,6 @@ export default function NewBillPage() {
               </TouchableNativeFeedback>
             </View>
           </View>
-          <View style={{ flex: 1 }}></View>
-        </ScrollView>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

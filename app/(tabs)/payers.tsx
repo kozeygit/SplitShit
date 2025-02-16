@@ -14,9 +14,9 @@ import {
 import { Colors } from "@/constants/Colors";
 
 import { Bill, BillItem, Payer, DiscountItem } from "../../models/bill";
-import PayerCard from "@/components/bill/payerCard";
+import PayerCard from "@/components/payer/payerCard";
 import { useGetData } from "@/hooks/useGetData";
-import Logo from "@/components/bill/logo";
+import Logo from "@/components/ui/logo";
 import { useRouter } from "expo-router";
 
 

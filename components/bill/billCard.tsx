@@ -21,12 +21,16 @@ interface BillCardProps {
   billData: Bill;
   isExpanded: boolean;
   onToggleDropdown: (id: number) => void;
+  onEdit: (id: number) => void;
+  onComplete: (id: number) => void;
 }
 
 const BillCard: React.FC<BillCardProps> = ({
   billData,
   isExpanded,
   onToggleDropdown,
+  onEdit,
+  onComplete
 }) => {
     const iconColor = colorKeys[billData.id % colorKeys.length];
 
@@ -61,8 +65,8 @@ const BillCard: React.FC<BillCardProps> = ({
             <ThemedText type="defaultSemiBold" style={styles.billName}>
               {billData.name}
             </ThemedText>
-            <ThemedText type="default" style={styles.billSubtext}>
-              {billData.date.toDateString()}
+            <ThemedText type="default" style={styles.billDate}>
+              {billData.date.toLocaleDateString()}
             </ThemedText>
           </View>
           <View style={styles.billMeta}>
@@ -97,14 +101,14 @@ const BillCard: React.FC<BillCardProps> = ({
         {isExpanded && (
           <>
             <TouchableNativeFeedback
-              onPress={() => console.log(`Edit ${billData.name}`)}
+              onPress={() => onEdit(billData.id)}
             >
               <View style={styles.dropdownOptionEdit}>
                 <ThemedText type="default">Edit</ThemedText>
               </View>
             </TouchableNativeFeedback>
             <TouchableNativeFeedback
-              onPress={() => console.log(`Complete ${billData.name}`)}
+              onPress={() => onComplete(billData.id)}
             >
               <View style={styles.dropdownOptionComplete}>
                 <ThemedText type="default">Complete</ThemedText>
@@ -146,8 +150,9 @@ const completeStyles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 5,
   },
-  billSubtext: {
+  billDate: {
     fontSize: 14,
+    color: "grey"
   },
   billMeta: {
     alignItems: "flex-end",
@@ -198,8 +203,9 @@ const incompleteStyles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 5,
   },
-  billSubtext: {
+  billDate: {
     fontSize: 14,
+    color: "grey"
   },
   billMeta: {
     alignItems: "flex-end",

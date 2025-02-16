@@ -6,7 +6,7 @@ export const bills = sqliteTable("bills", {
     name: text("name").notNull(),
     date: text("date").notNull(),
     userEnteredTotal: real("user_entered_total").notNull(),
-    serviceCharge: real("service_charge").default(0),
+    serviceCharge: real("service_charge").notNull().default(0),
     complete: integer("complete").notNull(),
 });
 

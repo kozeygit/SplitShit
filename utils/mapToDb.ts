@@ -2,39 +2,30 @@ import { bills as billsSchema } from "@/db/schema"; // Your Drizzle schema
 import { payers as payersSchema } from "@/db/schema"; // Your Drizzle schema
 import { billPayers as billPayersSchema } from "@/db/schema"; // Your Drizzle schema
 import { billItems as billItemsSchema } from "@/db/schema"; // Your Drizzle schema
-import { Bill, BillItem, Payer } from "@/models/bill";
+import { Bill, BillItem, NewBill, Payer } from "@/models/bill";
 
-export const mapBillToModel = async (dbBill: typeof billsSchema.$inferSelect): Promise<Bill> => {
+type bill_db = typeof billsSchema.$inferInsert
+type payer_db = typeof payersSchema.$inferInsert
 
-    const mappedBill: Bill = {
-        id: dbBill.id,
-        name: dbBill.name,
-        date: new Date(dbBill.date),
-        userEnteredTotal: dbBill.userEnteredTotal,
-        serviceCharge: dbBill.serviceCharge,
-        complete: Boolean(dbBill.complete),
-        items: [],
-        payers: [],
-        discounts: []
+export const mapBillToDB = async (bill: NewBill): Promise<bill_db> => {
+
+    const mappedBill: bill_db = {
+        name: bill.name,
+        date: bill.date.toUTCString(),
+        userEnteredTotal: bill.userEnteredTotal,
+        serviceCharge: bill.serviceCharge,
+        complete: 0,
     };
     return mappedBill;
 };
 
-export const mapPayerToModel = async (dbPayer: typeof payersSchema.$inferSelect, dbBillPayer?: typeof billPayersSchema.$inferSelect): Promise<Payer> => {
+export const mapPayerToDB = async (payer: Payer): Promise<payer_db> => {
 
-    const mappedPayer: Payer = {
-        id: dbPayer.id,
-        name: dbPayer.name,
-        number: dbPayer.number || undefined,
-        email: dbPayer.email || undefined,
-        partySize: 1,
-        amountToPay: 0
+    const mappedPayer: payer_db = {
+        name: payer.name,
+        number: payer.number,
+        email: payer.email
     };
-
-    if (dbBillPayer !== undefined) {
-        mappedPayer.partySize = dbBillPayer.partySize
-    };
-
 
     return mappedPayer;
 };

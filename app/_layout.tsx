@@ -83,6 +83,12 @@ export default function RootLayout() {
                                 animation: "slide_from_bottom"
                             }}
                         />
+                        <Stack.Screen
+                            name="bill"
+                            options={{
+                                headerTitle: "Edit Bill"
+                            }}
+                        />
                         <Stack.Screen name="+not-found" />
                     </Stack>
                     <StatusBar style="inverted" />

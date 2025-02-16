@@ -1,124 +1,120 @@
 import * as schema from "@/db/schema";
 import {
-    mapBillItemToModel,
-    mapBillToModel,
-    mapPayerToModel,
+  mapBillItemToModel,
+  mapBillToModel,
+  mapPayerToModel,
 } from "./mapToModel";
 import { Bill, BillItem, Payer } from "../models/bill";
-import { useCallback } from "react";
 import { getDrizzleDb } from "./database";
 import { eq, lt, gte, ne } from "drizzle-orm";
 
 const db = getDrizzleDb();
 
 export const fetchBillItems = async (billId?: number): Promise<BillItem[]> => {
-    console.log("getItems called: ", new Date().toLocaleTimeString());
-    if (billId === undefined) {
-        try {
-            const result = await db.select().from(schema.billItems);
+  console.log("getItems called: ", new Date().toLocaleTimeString());
+  if (billId === undefined) {
+    try {
+      const result = await db.select().from(schema.billItems);
 
-            const mappedBillItems: BillItem[] = await Promise.all(
-                result.map(
-                    async (billItem) => await mapBillItemToModel(billItem)
-                )
-            );
-            return mappedBillItems;
-        } catch (error) {
-            console.error("Error in getBills:", error);
-            return [];
-        }
-    } else {
-        try {
-            const result = await db
-                .select()
-                .from(schema.billItems)
-                .where(eq(schema.billItems.billId, billId));
-
-            const mappedBillItems: BillItem[] = await Promise.all(
-                result.map(
-                    async (billItem) => await mapBillItemToModel(billItem)
-                )
-            );
-            return mappedBillItems;
-        } catch (error) {
-            console.error("Error in getBills:", error);
-            return [];
-        }
+      const mappedBillItems: BillItem[] = await Promise.all(
+        result.map(async (billItem) => await mapBillItemToModel(billItem))
+      );
+      return mappedBillItems;
+    } catch (error) {
+      console.error("Error in fetchBills:", error);
+      return [];
     }
+  } else {
+    try {
+      const result = await db
+        .select()
+        .from(schema.billItems)
+        .where(eq(schema.billItems.billId, billId));
+
+      const mappedBillItems: BillItem[] = await Promise.all(
+        result.map(async (billItem) => await mapBillItemToModel(billItem))
+      );
+      return mappedBillItems;
+    } catch (error) {
+      console.error("Error in fetchBills:", error);
+      return [];
+    }
+  }
 };
 
 export const fetchPayers = async (billId?: number): Promise<Payer[]> => {
-    console.log("getPayers called: ", new Date().toLocaleTimeString());
-    if (billId === undefined) {
-        try {
-            const result = await db.select().from(schema.payers);
-            const mappedPayers: Payer[] = await Promise.all(
-                result.map(async (payer) => await mapPayerToModel(payer))
-            );
-
-            console.log(mappedPayers);
-            return mappedPayers;
-        } catch (error) {
-            console.error("Error in getPayers:", error);
-            return [];
-        }
-    } else {
-        try {
-            const result = await db
-                .select()
-                .from(schema.payers)
-                .innerJoin(
-                    schema.billPayers,
-                    eq(schema.billPayers.payerId, schema.payers.id)
-                )
-                .where(eq(schema.billPayers.billId, billId));
-
-            const mappedPayers: Payer[] = await Promise.all(
-                result.map(
-                    async (payer) =>
-                        await mapPayerToModel(payer.payers, payer.bill_payers)
-                )
-            );
-
-            console.log(mappedPayers);
-            return mappedPayers;
-        } catch (error) {
-            console.error("Error in getPayers:", error);
-            return [];
-        }
-    }
-};
-
-export const fetchBasicBills = async (): Promise<Bill[]> => {
-    console.log("getBills called: ", new Date().toLocaleTimeString()); // Log inside getBills
+  console.log("getPayers called: ", new Date().toLocaleTimeString());
+  if (billId === undefined) {
     try {
-        const result = await db.select().from(schema.bills);
-        const mappedBills: Bill[] = await Promise.all(
-            result.map(async (bill) => await mapBillToModel(bill))
-        );
+      const result = await db.select().from(schema.payers);
+      const mappedPayers: Payer[] = await Promise.all(
+        result.map(async (payer) => await mapPayerToModel(payer))
+      );
 
-        console.log(mappedBills);
-        return mappedBills;
+      return mappedPayers;
     } catch (error) {
-        console.error("Error in getBasicBills:", error);
-        return [];
+      console.error("Error in getPayers:", error);
+      return [];
     }
+  } else {
+    try {
+      const result = await db
+        .select()
+        .from(schema.payers)
+        .innerJoin(
+          schema.billPayers,
+          eq(schema.billPayers.payerId, schema.payers.id)
+        )
+        .where(eq(schema.billPayers.billId, billId));
+
+      const mappedPayers: Payer[] = await Promise.all(
+        result.map(
+          async (payer) =>
+            await mapPayerToModel(payer.payers, payer.bill_payers)
+        )
+      );
+
+      return mappedPayers;
+    } catch (error) {
+      console.error("Error in fetchPayers:", error);
+      return [];
+    }
+  }
 };
 
 export const fetchBills = async (): Promise<Bill[]> => {
-    console.log("getBills called: ", new Date().toLocaleTimeString()); // Log inside getBills
-    try {
-        const mappedBills: Bill[] = await fetchBasicBills();
+  console.log("fetchBills called: ", new Date().toLocaleTimeString()); // Log inside getBills
+  try {
+    const result = await db.select().from(schema.bills);
+    const mappedBills: Bill[] = await Promise.all(
+      result.map(async (bill) => await mapBillToModel(bill))
+    );
 
-        mappedBills.forEach(async (bill) => {
-            bill.items = await fetchBillItems(bill.id);
-            bill.payers = await fetchPayers(bill.id);
-        });
+    return mappedBills;
+  } catch (error) {
+    console.error("Error in getBasicBills:", error);
+    return [];
+  }
+};
 
-        console.log(mappedBills);
-        return mappedBills;
-    } catch (error) {
-        console.error("Error in getBills:", error);
-        return [];
-    }
+export const fetchBill = async (billId: number): Promise<Bill | undefined> => {
+  console.log("fetchBill called: ", new Date().toLocaleTimeString()); // Log inside getBills
+  try {
+    const result = await db
+      .select()
+      .from(schema.bills)
+      .where(eq(schema.bills.id, billId))
+      .limit(1);
+    
+    const mappedBill: Bill = await mapBillToModel(result[0]);
+
+    mappedBill.items = await fetchBillItems(mappedBill.id);
+    mappedBill.payers = await fetchPayers(mappedBill.id);
+
+    return mappedBill;
+
+  } catch (error) {
+    console.error("Error in fetchBill:", error);
+    return undefined;
+  }
 };

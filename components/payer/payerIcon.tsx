@@ -5,7 +5,7 @@ import { Payer } from "@/models/bill";
 
 const colorKeys = Object.values(Colors.pastel);
 
-const PayerIcon = ({ payer }: { payer: Payer }) => {
+const PayerIcon = ({ payer}: { payer: Payer }) => {
   const iconColor = colorKeys[Number(payer.id) % colorKeys.length];
   return (
     <View style={[styles.payerIconStyle, { backgroundColor: iconColor }]}>

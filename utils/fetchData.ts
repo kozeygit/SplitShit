@@ -6,7 +6,7 @@ import {
 } from "./mapToModel";
 import { Bill, BillItem, Payer } from "../models/bill";
 import { getDrizzleDb } from "./database";
-import { eq, lt, gte, ne } from "drizzle-orm";
+import { eq, lt, gte, ne, desc } from "drizzle-orm";
 
 const db = getDrizzleDb();
 
@@ -85,7 +85,7 @@ export const fetchPayers = async (billId?: number): Promise<Payer[]> => {
 export const fetchBills = async (): Promise<Bill[]> => {
   console.log("fetchBills called: ", new Date().toLocaleTimeString()); // Log inside getBills
   try {
-    const result = await db.select().from(schema.bills);
+    const result = await db.select().from(schema.bills).orderBy(desc(schema.bills.date));
     const mappedBills: Bill[] = await Promise.all(
       result.map(async (bill) => await mapBillToModel(bill))
     );

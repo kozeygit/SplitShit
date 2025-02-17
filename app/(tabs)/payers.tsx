@@ -14,7 +14,7 @@ import {
 import { Colors } from "@/constants/Colors";
 
 import { Bill, BillItem, Payer, DiscountItem } from "../../models/bill";
-import PayerCard from "@/components/payer/payerCard";
+import PayerCard from "@/components/payer/PayerCard";
 import { useGetData } from "@/hooks/useGetData";
 import Logo from "@/components/ui/logo";
 import { useRouter } from "expo-router";
@@ -64,10 +64,10 @@ const PayerPage = () => {
             {/* Payer Cards */}
             <FlatList
                 style={{ padding: 10 }}
-                numColumns={3}
+                numColumns={2}
                 data={payers}
                 keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => <PayerCard payerData={item} />}
+                renderItem={({ item }) => <PayerCard payerData={item}/>}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}

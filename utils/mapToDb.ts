@@ -11,7 +11,7 @@ export const mapBillToDB = async (bill: NewBill): Promise<bill_db> => {
 
     const mappedBill: bill_db = {
         name: bill.name,
-        date: bill.date.toUTCString(),
+        date: bill.date.toISOString(),
         userEnteredTotal: bill.userEnteredTotal,
         serviceCharge: bill.serviceCharge,
         complete: 0,

@@ -84,7 +84,7 @@ export default function RootLayout() {
                             }}
                         />
                         <Stack.Screen
-                            name="bill"
+                            name="editBill"
                             options={{
                                 headerTitle: "Edit Bill"
                             }}

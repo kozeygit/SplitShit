@@ -1,19 +1,15 @@
-import { ThemedText } from "@/components/ThemedText";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  View,
   StyleSheet,
   FlatList,
-  TouchableNativeFeedback,
   SafeAreaView,
-  Image,
   RefreshControl,
 } from "react-native";
 
 import { Colors } from "@/constants/Colors";
 
 import { Bill } from "@/models/bill";
-import BillCard from "@/components/bill/billCard";
+import BillCard from "@/components/bill/BillCard";
 import { useGetData } from "@/hooks/useGetData";
 import Logo from "@/components/ui/logo";
 import { useRouter } from "expo-router";
@@ -49,7 +45,7 @@ const BillPage = () => {
   };
 
   const editBill = (id: number) => {
-      router.push({pathname: "/bill", params: {id: id}})
+      router.push({pathname: "/editBill", params: {id: id}})
   };
 
   const completeBill = (id: number) => {

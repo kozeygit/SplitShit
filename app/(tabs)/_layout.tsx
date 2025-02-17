@@ -65,13 +65,11 @@ export default function TabLayout() {
             tabBarItemStyle: {
               position: "absolute",
               width: "100%",
-
-              bottom: 15,
+              bottom: 10,
             },
             tabBarLabelStyle: {
-              paddingTop: 5,
+              display: "none"
             },
-            title: "New",
             tabBarButton: (props) => (
               <View
                 style={{
@@ -79,13 +77,9 @@ export default function TabLayout() {
                   borderWidth: 2,
                   borderRadius: "100%",
                   backgroundColor: activeTab == 0 ? Colors.pastel.red : Colors.pastel.blue,
-                  width: "100%",
                   aspectRatio: 1,
-                  overflow: "hidden",
                   elevation: 5,
-                  maxHeight: 90,
-                  alignItems: "center",
-                  justifyContent: "center"
+                  maxHeight: 75,
                 }}
               >
                 <Pressable {...props} style={{alignItems: "center", flex: 1, justifyContent: "center"}} />
@@ -93,9 +87,9 @@ export default function TabLayout() {
             ),
             tabBarIcon: ({ color }) =>
               activeTab === 0 ? (
-                <MaterialIcons size={32} name="post-add" color={"black"} />
+                <MaterialIcons size={30} name="post-add" color={"black"} />
               ) : (
-                <MaterialIcons size={32} name="person-add-alt-1" color={"black"} />
+                <MaterialIcons size={30} name="person-add-alt-1" color={"black"} />
               ),
           }}
         />

@@ -6,6 +6,9 @@ import {
   Text,
   TouchableNativeFeedback,
   Switch,
+  Pressable,
+  TouchableOpacity,
+  TouchableHighlight,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -14,9 +17,11 @@ import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { Bill, Payer } from "@/models/bill";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
+import PayerIcon from "@/components/payer/PayerIcon";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const BillDisplay = () => {
-  const router = useRouter()
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getBill } = useGetData();
   const [bill, setBill] = useState<Bill | undefined>(undefined); // State for the bill
@@ -36,13 +41,12 @@ const BillDisplay = () => {
 
   const onSave = () => {
     // updateBill(bill);
-    console.log("Submit")
-
-  }
+    console.log("Submit");
+  };
   const onCancel = () => {
-    console.log("Cancelled")
-    router.back()
-  }
+    console.log("Cancelled");
+    router.back();
+  };
 
   if (!bill) {
     return (
@@ -61,29 +65,31 @@ const BillDisplay = () => {
         paddingHorizontal: 20,
       }}
     >
-      <ScrollView>
-        <View style={styles.container}>
+      <View style={styles.container}>
+        <Pressable onLongPress={() => console.log("Holding :)")}>
           <View style={styles.header}>
             <View style={{}}>
               <BouncyCheckbox
-              isChecked={bill.complete}
+                isChecked={bill.complete}
                 size={25}
                 style={{
                   flexDirection: "row-reverse",
-                  paddingVertical: 10,
+                  paddingBottom: 10,
                 }}
                 fillColor="green"
-                unFillColor={Colors.pastel.red}
-                text="Custom Checkbox"
-                iconStyle={{ borderColor: "black" }}
-                innerIconStyle={{ borderWidth: 0 }}
+                text={bill.name}
+                iconStyle={{ borderColor: Colors.pastel.red, borderWidth: 2 }}
+                innerIconStyle={{
+                  borderWidth: 0,
+                  borderColor: Colors.pastel.red,
+                }}
                 textStyle={{
                   fontSize: 20,
                   fontWeight: "bold",
                   color: "black",
                   textAlign: "left",
                 }}
-                textContainerStyle={{marginLeft: 0}}
+                textContainerStyle={{ marginLeft: 0 }}
                 onPress={(isChecked: boolean) => {
                   console.log(isChecked);
                   bill.complete = isChecked;
@@ -91,86 +97,93 @@ const BillDisplay = () => {
                 }}
               />
             </View>
-            <View style={styles.infoRow}>
+            <View>
               <ThemedText type="default">
                 {bill.date.toLocaleDateString()}
-              </ThemedText>
-              <ThemedText type="default">
+                {"  -  "}
                 {bill.payers.reduce(
                   (acc: number, val) => acc + (val.partySize ?? 1),
                   0
-                )}
+                )}{" "}
+                People
               </ThemedText>
             </View>
           </View>
+        </Pressable>
 
-          <View style={styles.payersContainer}>
+        <View style={styles.payersContainer}>
+          <ScrollView horizontal={true} fadingEdgeLength={2} contentContainerStyle={styles.payersScrollView}>
             {bill.payers.map((payer) => (
-              <Text key={payer.id}>{payer.name}</Text>
+              <PayerIcon key={payer.id} payer={payer} />
             ))}
-          </View>
+          </ScrollView>
+          <TouchableOpacity
+            style={styles.addPayerStyle}
+            onPress={() => console.log("HI")}
+          >
+            <MaterialIcons name="add" size={20} />
+          </TouchableOpacity>
+        </View>
 
-          {/* Example for items: */}
-          <View style={styles.itemsContainer}>
-            {bill.items.map((item) => (
-              <View key={item.id} style={styles.infoRow}>
-                {item.price == item.totalPrice ? (
-                  <ThemedText>
-                    {item.quantity} {item.name}
-                  </ThemedText>
-                ) : (
-                  <ThemedText>
-                    {item.quantity} {item.name} ({item.price.toFixed(2)})
-                  </ThemedText>
-                )}
-                <ThemedText>{item.totalPrice.toFixed(2)}</ThemedText>
-              </View>
-            ))}
-          </View>
+        {/* Example for items: */}
+        <View style={styles.itemsContainer}>
+          {bill.items.map((item) => (
+            <View key={item.id} style={styles.infoRow}>
+              {item.price == item.totalPrice ? (
+                <ThemedText>
+                  {item.quantity} {item.name}
+                </ThemedText>
+              ) : (
+                <ThemedText>
+                  {item.quantity} {item.name} ({item.price.toFixed(2)})
+                </ThemedText>
+              )}
+              <ThemedText>{item.totalPrice.toFixed(2)}</ThemedText>
+            </View>
+          ))}
+        </View>
 
-          <View style={styles.billDataContainer}>
-            <View style={styles.infoRow}>
-              <ThemedText>
-                Service Charge: (
-                {(
-                  (bill.serviceCharge / bill.userEnteredTotal) *
-                  100
-                ).toPrecision(3)}
-                %)
-              </ThemedText>
-              <ThemedText>{"£" + bill.serviceCharge.toFixed(2)}</ThemedText>
-              {/* Handle optional service charge */}
-            </View>
-            <View style={styles.infoRow}>
-              <ThemedText type="subtitle">Total:</ThemedText>
-              <ThemedText type="subtitle">
-                {"£ " + bill.userEnteredTotal.toFixed(2)}
-              </ThemedText>
-            </View>
+        <View style={styles.billDataContainer}>
+          <View style={styles.infoRow}>
+            <ThemedText>
+              Service Charge: (
+              {((bill.serviceCharge / bill.userEnteredTotal) * 100).toPrecision(
+                3
+              )}
+              %)
+            </ThemedText>
+            <ThemedText>{"£" + bill.serviceCharge.toFixed(2)}</ThemedText>
+            {/* Handle optional service charge */}
+          </View>
+          <View style={styles.infoRow}>
+            <ThemedText type="subtitle">Total:</ThemedText>
+            <ThemedText type="subtitle">
+              {"£ " + bill.userEnteredTotal.toFixed(2)}
+            </ThemedText>
           </View>
         </View>
-        {/* Submit Button */}
-        <View style={styles.buttonContainer}>
-          <View style={styles.cancelButtonOuter}>
-            <TouchableNativeFeedback onPress={onCancel}>
-              <View style={styles.cancelButtonInner}>
-                <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                  Cancel
-                </ThemedText>
-              </View>
-            </TouchableNativeFeedback>
-          </View>
-          <View style={styles.submitButtonOuter}>
-            <TouchableNativeFeedback onPress={onSave}>
-              <View style={styles.submitButtonInner}>
-                <ThemedText type="defaultSemiBold" style={styles.submitText}>
-                  Save
-                </ThemedText>
-              </View>
-            </TouchableNativeFeedback>
-          </View>
+      </View>
+      {/* Submit Button */}
+      <View style={styles.buttonContainer}>
+        <View style={styles.cancelButtonOuter}>
+          <TouchableNativeFeedback onPress={onCancel}>
+            <View style={styles.cancelButtonInner}>
+              <ThemedText type="defaultSemiBold" style={styles.cancelText}>
+                Cancel
+              </ThemedText>
+            </View>
+          </TouchableNativeFeedback>
         </View>
-      </ScrollView>
+        <View style={styles.submitButtonOuter}>
+          <TouchableNativeFeedback onPress={onSave}>
+            <View style={styles.submitButtonInner}>
+              <ThemedText type="defaultSemiBold" style={styles.submitText}>
+                Save
+              </ThemedText>
+            </View>
+          </TouchableNativeFeedback>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -203,7 +216,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   itemsContainer: {
-    marginTop: 20,
+    marginVertical: 10,
     gap: 5,
   },
   payersContainer: {
@@ -212,15 +225,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderStyle: "dotted",
-    marginHorizontal: 10,
+    borderColor: "lightgrey",
+  },
+  payersScrollView: {
+    paddingRight: 5,
+    gap: 5
   },
   buttonContainer: {
     marginVertical: 30,
     flexDirection: "row",
     gap: 10,
   },
-
+  addPayerStyle: {
+    marginLeft: 5,
+    borderWidth: 1,
+    borderRadius: "100%",
+    padding: 10,
+    width: 45,
+    aspectRatio: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   submitButtonOuter: {
     flex: 3,
     height: 70,

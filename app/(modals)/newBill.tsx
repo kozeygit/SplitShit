@@ -23,13 +23,15 @@ import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertBill } from "@/utils/insertData";
+import { ServerContainer } from "@react-navigation/native";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
   userEnteredTotal: z.coerce
     .number({
       invalid_type_error: "Total price must be a number",
-    }).multipleOf(0.01, "More than two decimals.... really? :/")
+    })
+    .multipleOf(0.01, "More than two decimals.... really? :/")
     .positive("Total price must be positive"),
   date: z.date({
     invalid_type_error: "Date is required",
@@ -39,7 +41,7 @@ const billSchema = z.object({
       invalid_type_error: "Service charge must be a number",
     })
     .nonnegative("Service charge cannot be negative")
-  .optional(),
+    .optional(),
 });
 
 export default function NewBillPage() {
@@ -60,17 +62,23 @@ export default function NewBillPage() {
   });
 
   const onSubmit = async (data: NewBill) => {
-    const newBillId = await insertBill(data)
+    if (serviceType == "percentage") {
+      data.serviceCharge = data.userEnteredTotal * data.serviceCharge / 100
+    }
+
+    const newBillId = await insertBill(data);
     if (newBillId < 0) {
-      console.log("insert bill failed for some reason????")
+      console.log("insert bill failed for some reason????");
+    } else {
+      router.replace({ pathname: "/bill", params: { id: newBillId } });
     }
-    else {
-      router.replace({pathname: "/bill", params: {id: newBillId}})
-    }
-  }
+  };
 
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
+  const [serviceType, setServiceType] = useState<"percentage" | "amount">(
+    "amount"
+  );
 
   const onChangeDate = (
     event: DateTimePickerEvent,
@@ -82,6 +90,14 @@ export default function NewBillPage() {
       setValue("date", selectedDate);
     } else if (Platform.OS === "ios") {
       setShow(false);
+    }
+  };
+
+  const swapServiceType = () => {
+    if (serviceType == "percentage") {
+      setServiceType("amount");
+    } else {
+      setServiceType("percentage");
     }
   };
 
@@ -103,7 +119,7 @@ export default function NewBillPage() {
           justifyContent: "flex-end",
         }}
       >
-        <ScrollView>
+        <ScrollView style={{ overflow: "visible" }}>
           <View style={styles.container}>
             <ThemedText type="title" style={styles.title}>
               Add New Bill
@@ -245,14 +261,29 @@ export default function NewBillPage() {
                       onChangeText={(text) => onChange(text)} // Convert text to number
                       value={value.toString()} // Convert number to string for display
                     />
-                    <MaterialIcons
-                      name="currency-pound"
-                      size={20}
-                      color={errors.serviceCharge  ? "red" : "black"}
-                      style={{
-                        alignSelf: "center",
-                      }}
-                    />
+                    <TouchableNativeFeedback
+                      onPress={swapServiceType}
+                    >
+                      {serviceType == "percentage" ? (
+                        <MaterialIcons
+                          name="percent"
+                          size={20}
+                          color={errors.serviceCharge ? "red" : "black"}
+                          style={{
+                            alignSelf: "center",
+                          }}
+                        />
+                      ) : (
+                        <MaterialIcons
+                          name="currency-pound"
+                          size={20}
+                          color={errors.serviceCharge ? "red" : "black"}
+                          style={{
+                            alignSelf: "center",
+                          }}
+                        />
+                      )}
+                    </TouchableNativeFeedback>
                   </View>
                 )}
               />
@@ -267,27 +298,27 @@ export default function NewBillPage() {
           <View style={{ flex: 1 }}></View>
         </ScrollView>
       </KeyboardAvoidingView>
-          {/* Submit Button */}
-          <View style={styles.buttonContainer}>
-            <View style={styles.cancelButtonOuter}>
-              <TouchableNativeFeedback onPress={() => router.back()}>
-                <View style={styles.cancelButtonInner}>
-                  <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                    Cancel
-                  </ThemedText>
-                </View>
-              </TouchableNativeFeedback>
+      {/* Submit Button */}
+      <View style={styles.buttonContainer}>
+        <View style={styles.cancelButtonOuter}>
+          <TouchableNativeFeedback onPress={() => router.back()}>
+            <View style={styles.cancelButtonInner}>
+              <ThemedText type="defaultSemiBold" style={styles.cancelText}>
+                Cancel
+              </ThemedText>
             </View>
-            <View style={styles.submitButtonOuter}>
-              <TouchableNativeFeedback onPress={handleSubmit(onSubmit)}>
-                <View style={styles.submitButtonInner}>
-                  <ThemedText type="defaultSemiBold" style={styles.submitText}>
-                    Submit
-                  </ThemedText>
-                </View>
-              </TouchableNativeFeedback>
+          </TouchableNativeFeedback>
+        </View>
+        <View style={styles.submitButtonOuter}>
+          <TouchableNativeFeedback onPress={handleSubmit(onSubmit)}>
+            <View style={styles.submitButtonInner}>
+              <ThemedText type="defaultSemiBold" style={styles.submitText}>
+                Submit
+              </ThemedText>
             </View>
-          </View>
+          </TouchableNativeFeedback>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }

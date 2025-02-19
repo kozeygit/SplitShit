@@ -23,7 +23,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertBill } from "@/utils/insertData";
-import { ServerContainer } from "@react-navigation/native";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
@@ -70,7 +69,7 @@ export default function NewBillPage() {
     if (newBillId < 0) {
       console.log("insert bill failed for some reason????");
     } else {
-      router.replace({ pathname: "/bill", params: { id: newBillId } });
+      router.replace({ pathname: "/editBill", params: { id: newBillId } });
     }
   };
 

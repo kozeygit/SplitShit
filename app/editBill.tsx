@@ -1,36 +1,54 @@
+import PayerIcon from "@/components/payer/PayerIcon";
+import { ThemedText } from "@/components/ThemedText";
+import { Colors } from "@/constants/Colors";
+import { useGetData } from "@/hooks/useGetData";
+import { Bill, BillItem, NewBillItem } from "@/models/bill";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  View,
-  Text,
-  TouchableNativeFeedback,
-  Switch,
-  Pressable,
-  TouchableOpacity,
   TouchableHighlight,
+  TouchableNativeFeedback,
+  View
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useGetData } from "@/hooks/useGetData";
-import { Colors } from "@/constants/Colors";
-import { ThemedText } from "@/components/ThemedText";
-import { Bill, Payer } from "@/models/bill";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
-import PayerIcon from "@/components/payer/PayerIcon";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import EditItemModal from "./(miniModals)/editItemModal";
 
 const BillDisplay = () => {
   const router = useRouter();
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getBill } = useGetData();
-  const [bill, setBill] = useState<Bill | undefined>(undefined); // State for the bill
+
+  const [bill, setBill] = useState<Bill>({
+    id: 0,
+    name: "TempBill",
+    date: new Date("2001-11-09"),
+    items: [],
+    complete: false,
+    payers: [],
+    serviceCharge: 0,
+    userEnteredTotal: 420.69,
+  });
+
+  const [showEditItemModal, setShowEditItemModals] = useState<boolean>(false);
+  const [showEditPayerModal, setShowEditPayerModal] = useState<boolean>(false);
+  const [showEditBillDetailsModal, setShowEditBillDetailsModal] =
+    useState<boolean>(false);
+
+  const [editItem, setEditItem] = useState<BillItem | undefined>(undefined);
 
   useEffect(() => {
     const fetchBill = async () => {
       if (id) {
         const billId = parseInt(id);
         const fetchedBill = await getBill(billId);
+        if (fetchedBill === undefined) {
+          throw Error("uh oh, stinky");
+        }
 
         setBill(fetchedBill);
       }
@@ -41,11 +59,39 @@ const BillDisplay = () => {
 
   const onSave = () => {
     // updateBill(bill);
+    console.log(bill);
     console.log("Submit");
   };
   const onCancel = () => {
     console.log("Cancelled");
     router.back();
+  };
+
+  const newBillItem = () => {
+    setEditItem(undefined);
+    setShowEditItemModals(true);
+  };
+
+  const openItemModal = (item: BillItem) => {
+    setEditItem(item);
+    setShowEditItemModals(true);
+  };
+
+  const handleEditItem = (
+    oldItem: BillItem | undefined,
+    updatedItem: NewBillItem
+  ) => {
+    if (oldItem) {
+      oldItem.name = updatedItem.name;
+      oldItem.quantity = updatedItem.quantity;
+      oldItem.price = updatedItem.price;
+      oldItem.totalPrice = updatedItem.totalPrice;
+      console.log("Edited item: ", oldItem.id);
+
+      return;
+    }
+
+    console.log(updatedItem);
   };
 
   if (!bill) {
@@ -66,7 +112,9 @@ const BillDisplay = () => {
       }}
     >
       <View style={styles.container}>
-        <Pressable onLongPress={() => console.log("Holding :)")}>
+        <TouchableNativeFeedback
+          onPress={() => setShowEditBillDetailsModal(true)}
+        >
           <View style={styles.header}>
             <View style={{}}>
               <BouncyCheckbox
@@ -84,7 +132,7 @@ const BillDisplay = () => {
                   borderColor: Colors.pastel.red,
                 }}
                 textStyle={{
-                  fontSize: 20,
+                  fontSize: 30,
                   fontWeight: "bold",
                   color: "black",
                   textAlign: "left",
@@ -109,47 +157,76 @@ const BillDisplay = () => {
               </ThemedText>
             </View>
           </View>
-        </Pressable>
+        </TouchableNativeFeedback>
 
         <View style={styles.payersContainer}>
-          <ScrollView horizontal={true} fadingEdgeLength={2} contentContainerStyle={styles.payersScrollView}>
-            {bill.payers.map((payer) => (
-              <PayerIcon key={payer.id} payer={payer} />
-            ))}
-          </ScrollView>
-          <TouchableOpacity
-            style={styles.addPayerStyle}
+          {bill.payers.length > 0 ? (
+            <ScrollView
+              horizontal={true}
+              fadingEdgeLength={2}
+              contentContainerStyle={styles.payersScrollView}
+            >
+              {bill.payers.map((payer) => (
+                <PayerIcon key={payer.id} payer={payer} />
+              ))}
+            </ScrollView>
+          ) : (
+            <ThemedText type="grital">No one paying? haha poor.</ThemedText>
+          )}
+          <TouchableHighlight
+            underlayColor={"lightgrey"}
+            style={
+              bill.payers.length > 0
+                ? styles.addPayerStyle
+                : styles.addPayerStyleEmpty
+            }
             onPress={() => console.log("HI")}
           >
             <MaterialIcons name="add" size={20} />
-          </TouchableOpacity>
+          </TouchableHighlight>
         </View>
 
         {/* Example for items: */}
-        <View style={styles.itemsContainer}>
-          {bill.items.map((item) => (
-            <View key={item.id} style={styles.infoRow}>
-              {item.price == item.totalPrice ? (
-                <ThemedText>
-                  {item.quantity} {item.name}
-                </ThemedText>
-              ) : (
-                <ThemedText>
-                  {item.quantity} {item.name} ({item.price.toFixed(2)})
-                </ThemedText>
-              )}
-              <ThemedText>{item.totalPrice.toFixed(2)}</ThemedText>
-            </View>
-          ))}
+        <View>
+          <ScrollView style={styles.itemsContainer}>
+            {bill.items.map((item) => (
+              <TouchableNativeFeedback
+                onPress={() => openItemModal(item)}
+                key={item.id}
+              >
+                <View key={item.id} style={styles.infoRow}>
+                  {item.price == item.totalPrice ? (
+                    <ThemedText>
+                      {item.quantity} {item.name}
+                    </ThemedText>
+                  ) : (
+                    <ThemedText>
+                      {item.quantity} {item.name} ({item.price.toFixed(2)})
+                    </ThemedText>
+                  )}
+                  <ThemedText>{item.totalPrice.toFixed(2)}</ThemedText>
+                </View>
+              </TouchableNativeFeedback>
+            ))}
+          </ScrollView>
+          <View style={styles.newItemOuter}>
+            <TouchableNativeFeedback onPress={newBillItem}>
+              <View style={styles.newItemInner}>
+                <ThemedText type="defaultSemiBold">Add Item</ThemedText>
+              </View>
+            </TouchableNativeFeedback>
+          </View>
         </View>
 
         <View style={styles.billDataContainer}>
           <View style={styles.infoRow}>
             <ThemedText>
               Service Charge: (
-              {((bill.serviceCharge / bill.userEnteredTotal) * 100).toPrecision(
-                3
-              )}
+              {(
+                (bill.serviceCharge /
+                  (bill.userEnteredTotal - bill.serviceCharge)) *
+                100
+              ).toPrecision(3)}
               %)
             </ThemedText>
             <ThemedText>{"£" + bill.serviceCharge.toFixed(2)}</ThemedText>
@@ -184,6 +261,14 @@ const BillDisplay = () => {
           </TouchableNativeFeedback>
         </View>
       </View>
+      <EditItemModal
+        item={editItem}
+        isOpen={showEditItemModal}
+        onSave={handleEditItem}
+        onCancel={() => {
+          setShowEditItemModals(false);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -191,8 +276,21 @@ const BillDisplay = () => {
 export default BillDisplay;
 
 const styles = StyleSheet.create({
+  newItemOuter: {
+    overflow: "hidden",
+    borderColor: "grey",
+    borderWidth: 1,
+    borderRadius: 20,
+    marginVertical: 10,
+    elevation: 2,
+  },
+  newItemInner: {
+    backgroundColor: "white",
+    alignItems: "center",
+    padding: 5,
+  },
   container: {
-    marginTop: 40,
+    marginTop: 80,
     padding: 30,
     backgroundColor: "white",
     borderWidth: 2,
@@ -216,7 +314,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   itemsContainer: {
-    marginVertical: 10,
+    marginTop: 10,
     gap: 5,
   },
   payersContainer: {
@@ -228,23 +326,36 @@ const styles = StyleSheet.create({
     borderColor: "lightgrey",
   },
   payersScrollView: {
-    paddingRight: 5,
-    gap: 5
+    paddingRight: 50,
+    gap: 3,
   },
   buttonContainer: {
     marginVertical: 30,
     flexDirection: "row",
     gap: 10,
   },
-  addPayerStyle: {
-    marginLeft: 5,
-    borderWidth: 1,
+  addPayerStyleEmpty: {
+    borderWidth: 2,
     borderRadius: "100%",
-    padding: 10,
+    width: 35,
+    aspectRatio: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white",
+    elevation: 5,
+  },
+  addPayerStyle: {
+    position: "absolute",
+    borderWidth: 2,
+    borderRadius: "100%",
     width: 45,
     aspectRatio: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "white",
+    elevation: 5,
+    right: 0,
+    top: 0,
   },
   submitButtonOuter: {
     flex: 3,

@@ -85,7 +85,7 @@ export default function TabLayout() {
                 <Pressable {...props} style={{alignItems: "center", flex: 1, justifyContent: "center"}} />
               </View>
             ),
-            tabBarIcon: ({ color }) =>
+            tabBarIcon: () =>
               activeTab === 0 ? (
                 <MaterialIcons size={30} name="post-add" color={"black"} />
               ) : (

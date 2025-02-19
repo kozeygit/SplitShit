@@ -86,7 +86,7 @@ export default function RootLayout() {
                         <Stack.Screen
                             name="editBill"
                             options={{
-                                headerTitle: "Edit Bill"
+                                headerShown: false,
                             }}
                         />
                         <Stack.Screen name="+not-found" />

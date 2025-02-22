@@ -13,7 +13,7 @@ import BillCard from "@/components/bill/BillCard";
 import { useGetData } from "@/hooks/useGetData";
 import Logo from "@/components/ui/logo";
 import { useRouter } from "expo-router";
-import { setBillComplete } from "@/utils/insertData";
+import { setBillComplete } from "@/utils/updateData";
 
 const BillPage = () => {
   const router = useRouter();

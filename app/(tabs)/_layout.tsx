@@ -27,7 +27,7 @@ export default function TabLayout() {
           borderTopWidth: 3,
           borderColor: "black",
         },
-        tabBarInactiveTintColor: "black"
+        tabBarInactiveTintColor: "black",
       }}
     >
       <Tabs.Screen
@@ -45,55 +45,6 @@ export default function TabLayout() {
           },
         })}
       />
-      {
-        <Tabs.Screen
-          name="placeholder"
-          listeners={() => ({
-            tabPress: (e) => {
-              e.preventDefault();
-
-              console.log("Active Tab Index:", activeTab);
-
-              if (activeTab === 0) {
-                router.push("/(modals)/newBill");
-              } else if (activeTab === 1) {
-                router.push("/(modals)/newPayer");
-              }
-            },
-          })}
-          options={{
-            tabBarItemStyle: {
-              position: "absolute",
-              width: "100%",
-              bottom: 10,
-            },
-            tabBarLabelStyle: {
-              display: "none"
-            },
-            tabBarButton: (props) => (
-              <View
-                style={{
-                  alignSelf: "center",
-                  borderWidth: 2,
-                  borderRadius: "100%",
-                  backgroundColor: activeTab == 0 ? Colors.pastel.red : Colors.pastel.blue,
-                  aspectRatio: 1,
-                  elevation: 5,
-                  maxHeight: 75,
-                }}
-              >
-                <Pressable {...props} style={{alignItems: "center", flex: 1, justifyContent: "center"}} />
-              </View>
-            ),
-            tabBarIcon: () =>
-              activeTab === 0 ? (
-                <MaterialIcons size={30} name="post-add" color={"black"} />
-              ) : (
-                <MaterialIcons size={30} name="person-add-alt-1" color={"black"} />
-              ),
-          }}
-        />
-      }
       <Tabs.Screen
         name="payers"
         options={{
@@ -111,6 +62,66 @@ export default function TabLayout() {
             setActiveTab(1);
           },
         })}
+      />
+      <Tabs.Screen
+        name="placeholder"
+        listeners={() => ({
+          tabPress: (e) => {
+            e.preventDefault();
+
+            console.log("Active Tab Index:", activeTab);
+
+            if (activeTab === 0) {
+              router.push("/(modals)/newBill");
+            } else if (activeTab === 1) {
+              router.push("/(modals)/newPayer");
+            }
+          },
+        })}
+        options={{
+          tabBarItemStyle: {
+            position: "absolute",
+            width: "100%",
+            bottom: 10,
+          },
+          tabBarLabelStyle: {
+            display: "none",
+          },
+          tabBarButton: (props) => (
+            <View
+              style={{
+                alignSelf: "center",
+                borderWidth: 2,
+                borderRadius: "100%",
+                backgroundColor:
+                  activeTab == 0 ? Colors.pastel.red : Colors.pastel.blue,
+                aspectRatio: 1,
+                elevation: 5,
+                maxHeight: 75,
+              }}
+            >
+              <Pressable
+                {...props}
+                hitSlop={10}
+                style={{
+                  alignItems: "center",
+                  flex: 1,
+                  justifyContent: "center",
+                }}
+              />
+            </View>
+          ),
+          tabBarIcon: () =>
+            activeTab === 0 ? (
+              <MaterialIcons size={30} name="post-add" color={"black"} />
+            ) : (
+              <MaterialIcons
+                size={30}
+                name="person-add-alt-1"
+                color={"black"}
+              />
+            ),
+        }}
       />
     </Tabs>
   );

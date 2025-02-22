@@ -7,7 +7,6 @@ export type Bill = {
     complete: boolean;
     items: BillItem[];
     payers: Payer[];
-    discounts?: DiscountItem[]; // Discounts applied to the entire bill
 };
 
 export type BillItem = {
@@ -17,29 +16,18 @@ export type BillItem = {
     quantity: number;
     totalPrice: number;
     assignedTo: Payer[]; // Array of payer IDs or names
-    isDiscounted: boolean;
-    discountedPrice: number;
     category?: string;
-    discounts?: DiscountItem[]; // Discounts applied to this specific item
 };
 
 export type Payer = {
     id: number;
     name: string;
-    number?: number;
+    number?: string;
     email?: string;
     partySize?: number;
     amountToPay?: number; // Calculated dynamically
 };
 
-export type DiscountItem = {
-    id: number;
-    usePercentage: boolean;
-    percentage?: number;
-    amount?: number;
-};
-
 export type NewBill = Omit<Bill, "id" | "payers" | "discounts" | "items" | "complete">
 export type NewBillItem = Omit<BillItem, "id" | "assignedTo" | "isDiscounted" | "discountedPrice" | "discounts">
 export type NewPayer = Omit<Payer, "id" | "partySize" | "amountToPay">
-export type NewDiscountItem = Omit<DiscountItem, "id">

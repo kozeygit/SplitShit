@@ -13,7 +13,7 @@ export const bills = sqliteTable("bills", {
 export const payers = sqliteTable("payers", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name").notNull(),
-    number: integer("number"),
+    number: text("number"),
     email: text("email"),
 });
 
@@ -22,8 +22,6 @@ export const billItems = sqliteTable("bill_items", {
     name: text("name").notNull(),
     price: real("price").notNull(),
     quantity: integer("quantity").notNull(),
-    isDiscounted: integer("is_discounted").default(0),
-    discountedPrice: real("discounted_price"),
     category: text("category"),
     billId: integer("bill_id").references(() => bills.id),
 });
@@ -32,25 +30,6 @@ export const assignedItems = sqliteTable("assigned_items", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     billItemId: integer("bill_item_id").references(() => billItems.id),
     payerId: integer("payer_id").references(() => payers.id),
-});
-
-export const discounts = sqliteTable("discounts", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    usePercentage: integer("use_percentage").notNull(),
-    percentage: real("percentage"),
-    amount: real("amount"),
-});
-
-export const billDiscounts = sqliteTable("bill_discounts", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    billId: integer("bill_id").references(() => bills.id),
-    discountId: integer("discount_id").references(() => discounts.id),
-});
-
-export const billItemDiscounts = sqliteTable("bill_item_discounts", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    billItemId: integer("bill_item_id").references(() => billItems.id),
-    discountId: integer("discount_id").references(() => discounts.id),
 });
 
 export const billPayers = sqliteTable("bill_payers", {

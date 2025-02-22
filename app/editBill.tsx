@@ -4,20 +4,20 @@ import { Colors } from "@/constants/Colors";
 import { useGetData } from "@/hooks/useGetData";
 import { Bill, BillItem, NewBillItem } from "@/models/bill";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
   TouchableHighlight,
   TouchableNativeFeedback,
-  View
+  View,
 } from "react-native";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
-import EditItemModal from "./(miniModals)/editItemModal";
 
 const BillDisplay = () => {
+  const [updated, setUpdated] = useState(false);
   const router = useRouter();
 
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,14 +34,7 @@ const BillDisplay = () => {
     userEnteredTotal: 420.69,
   });
 
-  const [showEditItemModal, setShowEditItemModals] = useState<boolean>(false);
-  const [showEditPayerModal, setShowEditPayerModal] = useState<boolean>(false);
-  const [showEditBillDetailsModal, setShowEditBillDetailsModal] =
-    useState<boolean>(false);
-
-  const [editItem, setEditItem] = useState<BillItem | undefined>(undefined);
-
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     const fetchBill = async () => {
       if (id) {
         const billId = parseInt(id);
@@ -49,16 +42,15 @@ const BillDisplay = () => {
         if (fetchedBill === undefined) {
           throw Error("uh oh, stinky");
         }
-
         setBill(fetchedBill);
       }
     };
 
     fetchBill();
-  }, [id, getBill]);
+  }, [id, getBill]));
+
 
   const onSave = () => {
-    // updateBill(bill);
     console.log(bill);
     console.log("Submit");
   };
@@ -67,38 +59,17 @@ const BillDisplay = () => {
     router.back();
   };
 
-  const newBillItem = () => {
-    setEditItem(undefined);
-    setShowEditItemModals(true);
-  };
-
-  const openItemModal = (item: BillItem) => {
-    setEditItem(item);
-    setShowEditItemModals(true);
-  };
-
-  const handleEditItem = (
-    oldItem: BillItem | undefined,
-    updatedItem: NewBillItem
-  ) => {
-    if (oldItem) {
-      oldItem.name = updatedItem.name;
-      oldItem.quantity = updatedItem.quantity;
-      oldItem.price = updatedItem.price;
-      oldItem.totalPrice = updatedItem.totalPrice;
-      console.log("Edited item: ", oldItem.id);
-
-      return;
-    }
-
-    console.log(updatedItem);
+  const openItemModal = (item: BillItem | undefined) => {
+    router.push({
+      pathname: "/(miniModals)/editItemModal",
+      params: { billId: bill.id, itemId: item?.id },
+    });
   };
 
   if (!bill) {
     return (
       <SafeAreaView style={styles.container}>
         <ThemedText>Loading...</ThemedText>
-        {/* Or a loading indicator */}
       </SafeAreaView>
     );
   }
@@ -112,9 +83,7 @@ const BillDisplay = () => {
       }}
     >
       <View style={styles.container}>
-        <TouchableNativeFeedback
-          onPress={() => setShowEditBillDetailsModal(true)}
-        >
+        <TouchableNativeFeedback onPress={() => {}}>
           <View style={styles.header}>
             <View style={{}}>
               <BouncyCheckbox
@@ -163,7 +132,7 @@ const BillDisplay = () => {
           {bill.payers.length > 0 ? (
             <ScrollView
               horizontal={true}
-              fadingEdgeLength={2}
+              fadingEdgeLength={100}
               contentContainerStyle={styles.payersScrollView}
             >
               {bill.payers.map((payer) => (
@@ -187,8 +156,12 @@ const BillDisplay = () => {
         </View>
 
         {/* Example for items: */}
-        <View>
-          <ScrollView style={styles.itemsContainer}>
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            fadingEdgeLength={20}
+            style={styles.itemsContainer}
+            contentContainerStyle={{ paddingHorizontal: 10 }}
+          >
             {bill.items.map((item) => (
               <TouchableNativeFeedback
                 onPress={() => openItemModal(item)}
@@ -204,13 +177,14 @@ const BillDisplay = () => {
                       {item.quantity} {item.name} ({item.price.toFixed(2)})
                     </ThemedText>
                   )}
+                  <View style={styles.itemPriceSeparator}></View>
                   <ThemedText>{item.totalPrice.toFixed(2)}</ThemedText>
                 </View>
               </TouchableNativeFeedback>
             ))}
           </ScrollView>
           <View style={styles.newItemOuter}>
-            <TouchableNativeFeedback onPress={newBillItem}>
+            <TouchableNativeFeedback onPress={() => openItemModal(undefined)}>
               <View style={styles.newItemInner}>
                 <ThemedText type="defaultSemiBold">Add Item</ThemedText>
               </View>
@@ -261,14 +235,6 @@ const BillDisplay = () => {
           </TouchableNativeFeedback>
         </View>
       </View>
-      <EditItemModal
-        item={editItem}
-        isOpen={showEditItemModal}
-        onSave={handleEditItem}
-        onCancel={() => {
-          setShowEditItemModals(false);
-        }}
-      />
     </SafeAreaView>
   );
 };
@@ -290,6 +256,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   container: {
+    flex: 1,
     marginTop: 80,
     padding: 30,
     backgroundColor: "white",
@@ -316,6 +283,14 @@ const styles = StyleSheet.create({
   itemsContainer: {
     marginTop: 10,
     gap: 5,
+  },
+  itemPriceSeparator: {
+    borderBottomWidth: 1,
+    flex: 1,
+    height: "50%",
+    borderStyle: "dotted",
+    marginHorizontal: 5,
+    borderColor: "grey",
   },
   payersContainer: {
     flexDirection: "row",

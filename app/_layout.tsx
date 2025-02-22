@@ -89,6 +89,12 @@ export default function RootLayout() {
                                 headerShown: false,
                             }}
                         />
+                        <Stack.Screen
+                            name="(miniModals)"
+                            options={{
+                                headerShown: false,
+                            }}
+                        />
                         <Stack.Screen name="+not-found" />
                     </Stack>
                     <StatusBar style="inverted" />

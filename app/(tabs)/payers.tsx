@@ -1,119 +1,82 @@
 import { ThemedText } from "@/components/ThemedText";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-    View,
-    StyleSheet,
-    FlatList,
-    TouchableNativeFeedback,
-    SafeAreaView,
-    Image,
-    RefreshControl,
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableNativeFeedback,
+  SafeAreaView,
+  Image,
+  RefreshControl,
 } from "react-native";
 
 import { Colors } from "@/constants/Colors";
 
-import { Bill, BillItem, Payer, DiscountItem } from "../../models/bill";
+import { Bill, BillItem, Payer } from "../../models/bill";
 import PayerCard from "@/components/payer/PayerCard";
 import { useGetData } from "@/hooks/useGetData";
 import Logo from "@/components/ui/logo";
-import { useRouter } from "expo-router";
-
+import { useFocusEffect, useRouter } from "expo-router";
 
 const PayerPage = () => {
-    const router = useRouter();
-    
-    const { getPayers } = useGetData();
+  const router = useRouter();
 
-    const [refreshing, setRefreshing] = useState(false); // State for refreshing
+  const { getPayers } = useGetData();
 
-    const [payers, setPayers] = useState<Payer[]>([]); // State for payers
+  const [refreshing, setRefreshing] = useState(false); // State for refreshing
 
-    const fetchPayers = useCallback(async () => {
-        setRefreshing(true);
-        try {
-            const fetchedPayers = await getPayers();
-            setPayers(fetchedPayers); // Correct: Functional update
-        } catch (error) {
-            console.error("Error fetching payers:", error);
-        } finally {
-            setRefreshing(false);
+  const [payers, setPayers] = useState<Payer[]>([]); // State for payers
+
+  useEffect(() => {
+    if (!refreshing) { return }
+
+    let ignore = false;
+    getPayers().then((result) => {
+      if (!ignore) {
+        setPayers(result);
+        setRefreshing(false);
+      }
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [refreshing]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      onRefresh();
+    }, [])
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Logo />
+
+      {/* Payer Cards */}
+      <FlatList
+        numColumns={2}
+        data={payers}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <PayerCard payerData={item} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-    }, [getPayers]);
-
-    useEffect(() => {
-        fetchPayers();
-    }, [fetchPayers]);
-
-
-    const onRefresh = useCallback(() => {
-        fetchPayers();
-    }, [fetchPayers]);
-
-
-    return (
-        <SafeAreaView
-            style={{
-                flex: 1,
-                paddingHorizontal: 10,
-                backgroundColor: Colors.pastel.blue,
-            }}
-        >
-            <Logo />
-
-            {/* Payer Cards */}
-            <FlatList
-                style={{ padding: 10 }}
-                numColumns={2}
-                data={payers}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => <PayerCard payerData={item}/>}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
-            />
-        </SafeAreaView>
-    );
+      />
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-
-    titleText: {
-        marginTop: 100,
-        marginBottom: 70,
-        textAlign: "center",
-    },
-
-    addBillButtonOuter: {
-        position: "absolute",
-        bottom: 20,
-        right: 20,
-        borderWidth: 2,
-        borderRadius: 50,
-        elevation: 5,
-        overflow: "hidden",
-    },
-    addBillButtonInner: {
-        flexDirection: "row",
-        gap: 10,
-        borderRadius: 50,
-        padding: 10,
-        justifyContent: "space-evenly",
-        alignItems: "center",
-    },
-
-    addBillIcon: {
-        backgroundColor: Colors.pastel.yellow,
-        borderRadius: 50,
-        borderWidth: 2,
-        padding: 8,
-    },
-    addBillText: {
-        marginLeft: 10,
-    },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    backgroundColor: Colors.pastel.blue,
+  },
 });
 
 export default PayerPage;

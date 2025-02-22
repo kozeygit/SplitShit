@@ -9,11 +9,11 @@ import {
   Payer,
 } from "../models/bill";
 import { getDrizzleDb } from "./database";
-import { eq, lt, gte, ne } from "drizzle-orm";
+import { eq, lt, gte, ne, count } from "drizzle-orm";
 
 const db = getDrizzleDb();
 
-export const insertBill = async (newBill: NewBill): Promise<number> => {
+export const removeBill = async (newBill: NewBill): Promise<number> => {
   try {
     const insertedBill: { id: number }[] = await db
       .insert(schema.bills)
@@ -29,7 +29,7 @@ export const insertBill = async (newBill: NewBill): Promise<number> => {
   }
 };
 
-export const insertPayer = async (newPayer: NewPayer): Promise<number> => {
+export const removePayer = async (newPayer: NewPayer): Promise<number> => {
   try {
     const insertedPayer: { id: number }[] = await db
       .insert(schema.payers)
@@ -45,24 +45,27 @@ export const insertPayer = async (newPayer: NewPayer): Promise<number> => {
   }
 };
 
-export const insertBillItem = async (
-  newBillItem: NewBillItem,
-  billId: number
+export const removeBillItem = async (
+  itemId: number,
 ): Promise<number> => {
   try {
-    const mappedItem = mapBillItemToDB(newBillItem);
-    mappedItem.billId = billId;
+    db.transaction
 
-    const insertedItem: { id: number }[] = await db
-      .insert(schema.billItems)
-      .values(mappedItem)
-      .returning({ id: schema.billItems.id });
+    const removeAssignedItems: { id: number }[] = await db.delete(schema.assignedItems).where(eq(schema.assignedItems.billItemId, itemId)).returning({ id: schema.assignedItems.id })
+    const removedItems: { id: number }[] = await db.delete(schema.billItems).where(eq(schema.billItems.id, itemId)).returning({ id: schema.billItems.id })
+    
+    if (removedItems.length > 1) {
+      console.log("uh oh, big problem")
+      console.log(removedItems)
+      console.log(removeAssignedItems)
+      throw new Error("More than 1 item deleted????")
+    }
 
-    console.log(new Date().toLocaleTimeString(), " - insertBillItem called"); // Log inside insertBill
+    console.log(new Date().toLocaleTimeString(), " - removeBillItem called");
 
-    return insertedItem[0].id;
+    return removedItems[0].id;
   } catch (error) {
-    console.error("Error in insertPayer:", error);
+    console.error("Error in removeBillItem:", error);
     return -1;
   }
 };

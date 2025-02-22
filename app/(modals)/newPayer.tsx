@@ -18,11 +18,12 @@ import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { insertPayer } from "@/utils/insertData";
 
 const payerSchema = z.object({
   name: z.string().min(1, "Payer name is required"),
-  email: z.string().email().optional(),
-  number: z.number().optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  number: z.string().optional(),
 });
 
 export default function NewPayerPage() {
@@ -40,7 +41,19 @@ export default function NewPayerPage() {
     resolver: zodResolver(payerSchema),
   });
 
-  const onSubmit = (data: NewPayer) => console.log(data);
+  const onSubmit = async (data: NewPayer) => {
+    if (data.email === "") {
+      data.email = undefined;
+    }
+
+    console.log(data);
+    const newPayerId = await insertPayer(data);
+    if (newPayerId < 0) {
+      console.log("insert payer failed for some reason????");
+    } else {
+      router.back();
+    }
+  };
 
   return (
     <SafeAreaView
@@ -168,8 +181,8 @@ export default function NewPayerPage() {
                       placeholder="Number"
                       keyboardType="phone-pad"
                       onBlur={onBlur}
-                      onChangeText={(text) => onChange(Number(text))} // Convert text to number
-                      value={(value ?? "").toString()}
+                      onChangeText={(text) => onChange(text)} // Convert text to number
+                      value={value}
                     />
                     <MaterialIcons
                       name="phone"

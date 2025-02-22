@@ -1,6 +1,5 @@
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -10,22 +9,27 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import React, { useEffect, useState, useRef } from "react";
-import { BillItem, NewBillItem } from "@/models/bill";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useGetData } from "@/hooks/useGetData";
+import { BillItem, NewBillItem } from "@/models/bill";
+import { removeBillItem } from "@/utils/removeData";
+import { updateBillItem } from "@/utils/updateData";
+import { insertBillItem } from "@/utils/insertData";
 
-interface props {
-  item: BillItem | undefined;
-  isOpen: boolean;
-  onSave: (oldItem: BillItem | undefined, updatedItem: NewBillItem) => void;
-  onCancel: () => void;
-}
+const EditItemModal = () => {
+  const { getBillItem } = useGetData();
+  const router = useRouter();
 
-const EditItemModal = (props: props) => {
-  const { item, isOpen, onSave, onCancel } = props;
+  const { billId, itemId } = useLocalSearchParams<{
+    billId: string;
+    itemId?: string;
+  }>();
 
+  const [item, setItem] = useState<BillItem | undefined>(undefined);
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
@@ -38,18 +42,28 @@ const EditItemModal = (props: props) => {
   const totalPriceInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    if (!item) {
-      setName("New Item");
-      setQuantity("1");
-      setPrice("0");
-      setTotalPrice("0");
+    if (itemId === undefined) {
+      setName("");
+      setQuantity("");
+      setPrice("");
+      setTotalPrice("");
       return;
     }
-    setName(item.name);
-    setQuantity(item.quantity.toString());
-    setPrice(item.price.toString());
-    setTotalPrice(item.totalPrice.toString());
-  }, [item]);
+
+    const fetchBill = async () => {
+      const oldItem = await getBillItem(parseInt(itemId));
+      if (oldItem === undefined) {
+        throw Error("Uh Oh Stinky");
+      }
+      setItem(oldItem);
+      setName(oldItem.name);
+      setQuantity(oldItem.quantity.toString());
+      setPrice(oldItem.price.toFixed(2).toString());
+      setTotalPrice(oldItem.totalPrice.toFixed(2).toString());
+    };
+
+    fetchBill();
+  }, [getBillItem]);
 
   const calculateTotalPrice = () => {
     const numQuantity = parseInt(quantity, 10) || 0;
@@ -102,110 +116,175 @@ const EditItemModal = (props: props) => {
   };
 
   const handleSave = () => {
-    const updatedItem = {
-      name,
-      quantity: parseInt(quantity, 10) || 0,
+    const updatedItem: NewBillItem = {
+      name: name || "New Item",
+      quantity: parseInt(quantity, 10) || 1,
       price: parseFloat(price) || 0,
       totalPrice: parseFloat(totalPrice) || 0,
     };
-    onSave(item, updatedItem);
-    onCancel();
+    if (item) {
+      if (
+        updatedItem.name == item.name &&
+        updatedItem.price == item.price &&
+        updatedItem.quantity == item.quantity &&
+        updatedItem.totalPrice == item.totalPrice
+      ) {
+        console.log("No changes to save")
+        router.back();
+        return;
+      }
+
+      item.name = updatedItem.name;
+      item.quantity = updatedItem.quantity;
+      item.price = updatedItem.price;
+      item.totalPrice = updatedItem.totalPrice;
+
+      console.log("Saving item");
+      updateBillItem(item);
+      router.back();
+      return;
+    }
+
+    insertBillItem(updatedItem, parseInt(billId));
+    console.log("Adding new item");
+    router.back();
+  };
+
+  const handleCancel = () => {
+    console.log("cancelled");
+    router.back();
+  };
+
+  const handleDelete = () => {
+    console.log(item);
+    if (item) {
+      removeBillItem(item.id);
+      console.log("Deleting");
+    }
+    router.back();
   };
 
   return (
-    <Modal
-      onRequestClose={onCancel}
-      visible={isOpen}
-      transparent={true}
-      statusBarTranslucent={true}
-    >
-      <Pressable style={styles.modalBG} onPress={onCancel}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS == "ios" ? "padding" : "height"}
-          style={styles.modalContainer}
-        >
-          <TouchableWithoutFeedback>
-            <View style={styles.container}>
-              <ThemedText type="title" style={styles.title}>
-                {item ? "Edit Item" : "Add Item"}
-              </ThemedText>
+    <Pressable style={styles.modalBG} onPress={handleCancel}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS == "ios" ? "padding" : "height"}
+        style={styles.modalContainer}
+      >
+        <TouchableWithoutFeedback>
+          <View style={styles.container}>
+            <ThemedText type="title" style={styles.title}>
+              {itemId ? "Edit Item" : "Add Item"}
+            </ThemedText>
 
-              <Text style={styles.label}>Name</Text>
-              <View style={[styles.input, {borderColor: Colors.pastel.red}]}>
-                <TextInput
-                  ref={nameInputRef}
-                  style={{ flex: 1 }}
-                  keyboardType="default"
-                  value={name}
-                  onChangeText={setName}
-                  returnKeyType="next"
-                  onSubmitEditing={() => {
-                    quantityInputRef.current?.focus();
-                  }}
-                />
-              </View>
+            <Text style={styles.label}>Name</Text>
+            <View style={[styles.input, { borderColor: Colors.pastel.red }]}>
+              <TextInput
+                ref={nameInputRef}
+                placeholder="Item Name"
+                style={{ flex: 1 }}
+                keyboardType="default"
+                value={name}
+                onChangeText={setName}
+                returnKeyType="next"
+                onSubmitEditing={() => {
+                  quantityInputRef.current?.focus();
+                }}
+              />
+            </View>
 
-              <Text style={styles.label}>Quantity</Text>
-              <View style={[styles.input, {borderColor: Colors.pastel.orange}]}>
-                <TextInput
-                  ref={quantityInputRef}
-                  style={{ flex: 1 }}
-                  keyboardType="numeric"
-                  value={quantity}
-                  onChangeText={handleQuantityChange}
-                  returnKeyType="next"
-                  onSubmitEditing={() => {
-                    priceInputRef.current?.focus();
-                  }}
-                />
-              </View>
+            <Text style={styles.label}>Quantity</Text>
+            <View style={[styles.input, { borderColor: Colors.pastel.orange }]}>
+              <TextInput
+                ref={quantityInputRef}
+                placeholder="0"
+                style={{ flex: 1 }}
+                keyboardType="numeric"
+                value={quantity}
+                onChangeText={handleQuantityChange}
+                returnKeyType="next"
+                onSubmitEditing={() => {
+                  priceInputRef.current?.focus();
+                }}
+              />
+            </View>
 
-              <Text style={styles.label}>Price</Text>
-              <View style={[styles.input, {borderColor: Colors.pastel.green}]}>
-                <TextInput
-                  ref={priceInputRef}
-                  style={{ flex: 1 }}
-                  keyboardType="numeric"
-                  value={price}
-                  onChangeText={handlePriceChange}
-                  returnKeyType="next"
-                  onSubmitEditing={() => {
-                    totalPriceInputRef.current?.focus();
-                  }}
-                />
-                {!isTotalPriceEditing && <MaterialIcons name="edit" size={14} />}
-              </View>
+            <Text style={styles.label}>Price</Text>
+            <View style={[styles.input, { borderColor: Colors.pastel.green }]}>
+              <TextInput
+                ref={priceInputRef}
+                placeholder="0"
+                style={{ flex: 1 }}
+                keyboardType="numeric"
+                value={price}
+                onChangeText={handlePriceChange}
+                returnKeyType="next"
+                onSubmitEditing={() => {
+                  totalPriceInputRef.current?.focus();
+                }}
+              />
+              {!isTotalPriceEditing && <MaterialIcons name="edit" size={14} />}
+            </View>
 
-              <Text style={styles.label}>Total Price</Text>
-              <View style={[styles.input, {borderColor: Colors.pastel.indigo}]}>
-                <TextInput
-                  ref={totalPriceInputRef}
-                  style={{ flex: 1 }}
-                  keyboardType="numeric"
-                  value={totalPrice}
-                  onChangeText={handleTotalPriceChange}
-                  returnKeyType="done"
-                  onSubmitEditing={handleSave}
-                />
-                {isTotalPriceEditing && <MaterialIcons name="edit" size={14} />}
-              </View>
+            <Text style={styles.label}>Total Price</Text>
+            <View style={[styles.input, { borderColor: Colors.pastel.indigo }]}>
+              <TextInput
+                ref={totalPriceInputRef}
+                placeholder="0"
+                style={{ flex: 1 }}
+                keyboardType="numeric"
+                value={totalPrice}
+                onChangeText={handleTotalPriceChange}
+                returnKeyType="done"
+                onSubmitEditing={handleSave}
+              />
+              {isTotalPriceEditing && <MaterialIcons name="edit" size={14} />}
+            </View>
 
-              <View style={styles.buttonContainer}>
-                <View style={styles.submitButtonOuter}>
-                  <TouchableNativeFeedback onPress={handleSave}>
+            <View style={styles.buttonContainer}>
+              {item === undefined ? (
+                <View style={styles.deleteButtonOuter}>
+                  <TouchableNativeFeedback onPress={handleCancel}>
                     <View style={styles.submitButtonInner}>
-                      <ThemedText type="defaultSemiBold" style={styles.submitText}>
-                        Save
+                      <ThemedText
+                        type="defaultSemiBold"
+                        style={styles.deleteText}
+                      >
+                        Cancel
                       </ThemedText>
                     </View>
                   </TouchableNativeFeedback>
                 </View>
+              ) : (
+                <View style={styles.deleteButtonOuter}>
+                  <TouchableNativeFeedback onPress={handleDelete}>
+                    <View style={styles.submitButtonInner}>
+                      <ThemedText
+                        type="defaultSemiBold"
+                        style={styles.deleteText}
+                      >
+                        Delete
+                      </ThemedText>
+                    </View>
+                  </TouchableNativeFeedback>
+                </View>
+              )}
+              <View style={styles.submitButtonOuter}>
+                <TouchableNativeFeedback onPress={handleSave}>
+                  <View style={styles.submitButtonInner}>
+                    <ThemedText
+                      type="defaultSemiBold"
+                      style={styles.submitText}
+                    >
+                      Save
+                    </ThemedText>
+                  </View>
+                </TouchableNativeFeedback>
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
-      </Pressable>
-    </Modal>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </Pressable>
   );
 };
 
@@ -217,18 +296,33 @@ const styles = StyleSheet.create({
     height: 50,
     borderWidth: 2,
     backgroundColor: Colors.pastel.green,
-    borderRadius: 20,
+    borderRadius: 15,
     elevation: 5,
     overflow: "hidden",
-    boxShadow: "no"
+    boxShadow: "no",
   },
   submitButtonInner: {
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
   },
+  deleteButtonOuter: {
+    flex: 1,
+    height: 50,
+    borderWidth: 2,
+    backgroundColor: "red",
+    borderRadius: 15,
+    elevation: 5,
+    overflow: "hidden",
+    boxShadow: "no",
+    color: "white",
+  },
+  deleteText: {
+    fontSize: 18,
+    color: "white",
+  },
   submitText: {
-    fontSize: 20,
+    fontSize: 18,
   },
   buttonContainer: {
     marginTop: 30,
@@ -239,7 +333,8 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "rgba(0,0,0,0.6)",
   },
-  modalContainer: { // Style for the KeyboardAvoidingView
+  modalContainer: {
+    // Style for the KeyboardAvoidingView
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 30,

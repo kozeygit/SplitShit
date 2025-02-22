@@ -4,7 +4,7 @@ import { billPayers as billPayersSchema } from "@/db/schema"; // Your Drizzle sc
 import { billItems as billItemsSchema } from "@/db/schema"; // Your Drizzle schema
 import { Bill, BillItem, Payer } from "@/models/bill";
 
-export const mapBillToModel = async (dbBill: typeof billsSchema.$inferSelect): Promise<Bill> => {
+export const mapBillToModel = (dbBill: typeof billsSchema.$inferSelect): Bill => {
 
     const mappedBill: Bill = {
         id: dbBill.id,
@@ -15,12 +15,11 @@ export const mapBillToModel = async (dbBill: typeof billsSchema.$inferSelect): P
         complete: Boolean(dbBill.complete),
         items: [],
         payers: [],
-        discounts: []
     };
     return mappedBill;
 };
 
-export const mapPayerToModel = async (dbPayer: typeof payersSchema.$inferSelect, dbBillPayer?: typeof billPayersSchema.$inferSelect): Promise<Payer> => {
+export const mapPayerToModel = (dbPayer: typeof payersSchema.$inferSelect, dbBillPayer?: typeof billPayersSchema.$inferSelect): Payer => {
 
     const mappedPayer: Payer = {
         id: dbPayer.id,
@@ -39,7 +38,7 @@ export const mapPayerToModel = async (dbPayer: typeof payersSchema.$inferSelect,
     return mappedPayer;
 };
 
-export const mapBillItemToModel = async (dbBillItem: typeof billItemsSchema.$inferSelect): Promise<BillItem> => {
+export const mapBillItemToModel = (dbBillItem: typeof billItemsSchema.$inferSelect): BillItem => {
 
     const mappedBillItem: BillItem = {
         id: dbBillItem.id,
@@ -48,10 +47,7 @@ export const mapBillItemToModel = async (dbBillItem: typeof billItemsSchema.$inf
         quantity: dbBillItem.quantity,
         totalPrice: dbBillItem.price * dbBillItem.quantity,
         assignedTo: [],
-        isDiscounted: Boolean(dbBillItem.isDiscounted),
-        discountedPrice: dbBillItem.discountedPrice || 0,
         category: dbBillItem.category || undefined,
-        discounts: []
         
     };
     return mappedBillItem;

@@ -2,12 +2,13 @@ import { bills as billsSchema } from "@/db/schema"; // Your Drizzle schema
 import { payers as payersSchema } from "@/db/schema"; // Your Drizzle schema
 import { billPayers as billPayersSchema } from "@/db/schema"; // Your Drizzle schema
 import { billItems as billItemsSchema } from "@/db/schema"; // Your Drizzle schema
-import { Bill, BillItem, NewBill, Payer } from "@/models/bill";
+import { Bill, BillItem, NewBill, NewBillItem, NewPayer, Payer } from "@/models/bill";
 
 type bill_db = typeof billsSchema.$inferInsert
 type payer_db = typeof payersSchema.$inferInsert
+type billItem_db = typeof billItemsSchema.$inferInsert
 
-export const mapBillToDB = async (bill: NewBill): Promise<bill_db> => {
+export const mapBillToDB = (bill: NewBill): bill_db => {
 
     const mappedBill: bill_db = {
         name: bill.name,
@@ -19,7 +20,7 @@ export const mapBillToDB = async (bill: NewBill): Promise<bill_db> => {
     return mappedBill;
 };
 
-export const mapPayerToDB = async (payer: Payer): Promise<payer_db> => {
+export const mapPayerToDB = (payer: NewPayer): payer_db => {
 
     const mappedPayer: payer_db = {
         name: payer.name,
@@ -30,20 +31,30 @@ export const mapPayerToDB = async (payer: Payer): Promise<payer_db> => {
     return mappedPayer;
 };
 
-export const mapBillItemToModel = async (dbBillItem: typeof billItemsSchema.$inferSelect): Promise<BillItem> => {
+export const mapBillItemToDB = (item: NewBillItem): billItem_db => {
 
-    const mappedBillItem: BillItem = {
-        id: dbBillItem.id,
-        name: dbBillItem.name,
-        price: dbBillItem.price,
-        quantity: dbBillItem.quantity,
-        totalPrice: dbBillItem.price * dbBillItem.quantity,
-        assignedTo: [],
-        isDiscounted: Boolean(dbBillItem.isDiscounted),
-        discountedPrice: dbBillItem.discountedPrice || 0,
-        category: dbBillItem.category || undefined,
-        discounts: []
-        
+    const mappedItem: billItem_db = {
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
     };
-    return mappedBillItem;
+
+    return mappedItem;
 };
+// export const mapBillItemToModel = async (dbBillItem: typeof billItemsSchema.$inferSelect): Promise<BillItem> => {
+
+//     const mappedBillItem: BillItem = {
+//         id: dbBillItem.id,
+//         name: dbBillItem.name,
+//         price: dbBillItem.price,
+//         quantity: dbBillItem.quantity,
+//         totalPrice: dbBillItem.price * dbBillItem.quantity,
+//         assignedTo: [],
+//         isDiscounted: Boolean(dbBillItem.isDiscounted),
+//         discountedPrice: dbBillItem.discountedPrice || 0,
+//         category: dbBillItem.category || undefined,
+//         discounts: []
+        
+//     };
+//     return mappedBillItem;
+// };

@@ -7,6 +7,7 @@ import m0002 from './0002_thin_doctor_faustus.sql';
 import m0003 from './0003_mean_power_man.sql';
 import m0004 from './0004_lazy_famine.sql';
 import m0005 from './0005_bumpy_tarot.sql';
+import m0006 from './0006_living_bastion.sql';
 
   export default {
     journal,
@@ -16,7 +17,8 @@ m0001,
 m0002,
 m0003,
 m0004,
-m0005
+m0005,
+m0006
     }
   }
   

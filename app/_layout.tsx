@@ -58,12 +58,13 @@ export default function RootLayout() {
                 useSuspense
             >
                 <ThemeProvider
-                    value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                    value={DefaultTheme}
                 >
                     <Stack>
                         <Stack.Screen
-                            name="(tabs)"
+                            name="(homeTabs)"
                             options={{
+                                
                                 headerShown: false,
                             }}
                         />
@@ -84,15 +85,26 @@ export default function RootLayout() {
                             }}
                         />
                         <Stack.Screen
-                            name="editBill"
+                            name="(billTabs)"
                             options={{
                                 headerShown: false,
+                                animation: "fade_from_bottom"
                             }}
                         />
                         <Stack.Screen
-                            name="(miniModals)"
+                            name="(billModals)"
                             options={{
                                 headerShown: false,
+                                presentation: "modal",
+                                animation: "none"
+                            }}
+                        />
+                        <Stack.Screen
+                            name="(assignModals)"
+                            options={{
+                                headerShown: false,
+                                presentation: "modal",
+                                animation: "none"
                             }}
                         />
                         <Stack.Screen name="+not-found" />

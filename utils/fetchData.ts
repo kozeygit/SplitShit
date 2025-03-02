@@ -10,39 +10,50 @@ import { eq, lt, gte, ne, desc } from "drizzle-orm";
 
 const db = getDrizzleDb();
 
-export const fetchBillItems = async (billId?: number): Promise<BillItem[]> => {
+export const fetchBillItems = async (billId: number): Promise<BillItem[]> => {
   console.log("fetchBillItems called: ", new Date().toLocaleTimeString());
-  if (billId === undefined) {
-    try {
-      const result = await db.select().from(schema.billItems);
+  try {
+    const result = await db
+      .select()
+      .from(schema.billItems)
+      .where(eq(schema.billItems.billId, billId));
 
-      const mappedBillItems: BillItem[] = await Promise.all(
-        result.map(async (billItem) => mapBillItemToModel(billItem))
-      );
-      return mappedBillItems;
-    } catch (error) {
-      console.error("Error in fetchBills:", error);
-      return [];
-    }
-  } else {
-    try {
-      const result = await db
+    const mappedBillItems: BillItem[] = await Promise.all(
+      result.map(async (billItem) => mapBillItemToModel(billItem))
+    );
+
+    for (const item of mappedBillItems) {
+      const assignedResult = await db
         .select()
-        .from(schema.billItems)
-        .where(eq(schema.billItems.billId, billId));
+        .from(schema.assignedItems)
+        .innerJoin(
+          schema.billPayers,
+          eq(schema.billPayers.id, schema.assignedItems.billPayerId)
+        )
+        .where(eq(schema.assignedItems.billItemId, item.id));
 
-      const mappedBillItems: BillItem[] = await Promise.all(
-        result.map(async (billItem) => mapBillItemToModel(billItem))
-      );
-      return mappedBillItems;
-    } catch (error) {
-      console.error("Error in fetchBillItems:", error);
-      return [];
+      for (const assRes of assignedResult) {
+        if (assRes.bill_payers.billId != billId) {
+          throw Error("Got an item thats not for this bill");
+        }
+        if (assRes.bill_payers.payerId === null) {
+          throw Error("Got an item thats not for this bill");
+        }
+        item.assignedToId.push(assRes.bill_payers.payerId);
+        console.log(assRes);
+      }
     }
+
+    return mappedBillItems;
+  } catch (error) {
+    console.error("Error in fetchBillItems:", error);
+    return [];
   }
 };
 
-export const fetchBillItem = async (itemId: number): Promise<BillItem | undefined> => {
+export const fetchBillItem = async (
+  itemId: number
+): Promise<BillItem | undefined> => {
   console.log("fetchBillItem called: ", new Date().toLocaleTimeString());
 
   try {
@@ -51,7 +62,7 @@ export const fetchBillItem = async (itemId: number): Promise<BillItem | undefine
       .from(schema.billItems)
       .where(eq(schema.billItems.id, itemId));
 
-    const mappedBillItem: BillItem = mapBillItemToModel(result[0])
+    const mappedBillItem: BillItem = mapBillItemToModel(result[0]);
 
     return mappedBillItem;
   } catch (error) {
@@ -86,9 +97,8 @@ export const fetchPayers = async (billId?: number): Promise<Payer[]> => {
         .where(eq(schema.billPayers.billId, billId));
 
       const mappedPayers: Payer[] = await Promise.all(
-        result.map(
-          async (payer) =>
-            mapPayerToModel(payer.payers, payer.bill_payers)
+        result.map(async (payer) =>
+          mapPayerToModel(payer.payers, payer.bill_payers)
         )
       );
 
@@ -103,7 +113,10 @@ export const fetchPayers = async (billId?: number): Promise<Payer[]> => {
 export const fetchBills = async (): Promise<Bill[]> => {
   console.log("fetchBills called: ", new Date().toLocaleTimeString()); // Log inside getBills
   try {
-    const result = await db.select().from(schema.bills).orderBy(desc(schema.bills.date));
+    const result = await db
+      .select()
+      .from(schema.bills)
+      .orderBy(desc(schema.bills.date));
     const mappedBills: Bill[] = await Promise.all(
       result.map(async (bill) => mapBillToModel(bill))
     );
@@ -123,14 +136,13 @@ export const fetchBill = async (billId: number): Promise<Bill | undefined> => {
       .from(schema.bills)
       .where(eq(schema.bills.id, billId))
       .limit(1);
-    
+
     const mappedBill: Bill = mapBillToModel(result[0]);
 
     mappedBill.items = await fetchBillItems(mappedBill.id);
     mappedBill.payers = await fetchPayers(mappedBill.id);
 
     return mappedBill;
-
   } catch (error) {
     console.error("Error in fetchBill:", error);
     return undefined;

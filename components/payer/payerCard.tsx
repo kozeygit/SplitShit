@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import React, { useState } from "react";
-import { Text, View, StyleSheet, TouchableNativeFeedback } from "react-native";
+import { Text, View, StyleSheet } from "react-native";
 
 import { Bill, Payer } from "@/models/bill";
 import PayerIcon from "./PayerIcon";

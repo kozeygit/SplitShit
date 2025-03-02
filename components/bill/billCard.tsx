@@ -80,10 +80,6 @@ const BillCard: React.FC<BillCardProps> = ({
             color="lightgrey"
             style={styles.dropdownIcon}
           />
-          <FlatList
-            data={billData.items}
-            renderItem={({ item }) => <ThemedText> {item.name} </ThemedText>}
-          />
         </View>
       </TouchableNativeFeedback>
 

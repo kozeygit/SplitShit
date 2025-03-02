@@ -1,10 +1,14 @@
 import PayerIcon from "@/components/payer/PayerIcon";
 import { ThemedText } from "@/components/ThemedText";
+import ContainerView from "@/components/ui/ContainerView";
 import { Colors } from "@/constants/Colors";
 import { useGetData } from "@/hooks/useGetData";
 import { Bill, BillItem, NewBillItem } from "@/models/bill";
+import { useBillStore } from "@/utils/billStore";
+import { setBillComplete, updateBill } from "@/utils/updateData";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { isEqual } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   SafeAreaView,
@@ -13,20 +17,25 @@ import {
   TouchableHighlight,
   TouchableNativeFeedback,
   View,
+  Text,
+  Pressable,
 } from "react-native";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
 
 const BillDisplay = () => {
-  const [updated, setUpdated] = useState(false);
   const router = useRouter();
-
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const { getBill } = useGetData();
+  const {
+    originalBill,
+    setOriginalBill,
+    editedBill,
+    setEditedBill,
+    resetEditedBill,
+  } = useBillStore();
 
   const [bill, setBill] = useState<Bill>({
     id: 0,
     name: "TempBill",
-    date: new Date("2001-11-09"),
+    date: new Date("2001-09-11"),
     items: [],
     complete: false,
     payers: [],
@@ -34,45 +43,58 @@ const BillDisplay = () => {
     userEnteredTotal: 420.69,
   });
 
-  useFocusEffect(useCallback(() => {
-    const fetchBill = async () => {
-      if (id) {
-        const billId = parseInt(id);
-        const fetchedBill = await getBill(billId);
-        if (fetchedBill === undefined) {
-          throw Error("uh oh, stinky");
-        }
-        setBill(fetchedBill);
+  useFocusEffect(
+    useCallback(() => {
+      if (editedBill) {
+        setBill(editedBill);
       }
-    };
-
-    fetchBill();
-  }, [id, getBill]));
-
+    }, [editedBill])
+  );
 
   const onSave = () => {
-    console.log(bill);
-    console.log("Submit");
+    if (isEqual(originalBill, editedBill)) {
+      console.log("No changes made");
+      router.back();
+      return;
+    }
+    console.log("Changed");
+
+    if (editedBill) {
+      updateBill(editedBill);
+      router.back();
+    }
   };
   const onCancel = () => {
+    resetEditedBill();
     console.log("Cancelled");
     router.back();
   };
 
   const openItemModal = (item: BillItem | undefined) => {
     router.push({
-      pathname: "/(miniModals)/editItemModal",
-      params: { billId: bill.id, itemId: item?.id },
+      pathname: "/(billModals)/editItemModal",
+      params: { itemId: item?.id },
     });
   };
 
-  if (!bill) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ThemedText>Loading...</ThemedText>
-      </SafeAreaView>
-    );
-  }
+  const openBillDetailsModal = () => {
+    router.push({
+      pathname: "/(billModals)/editBillDetailsModal",
+      params: { billId: bill.id },
+    });
+  };
+  
+  const openPayerModal = () => {
+    router.push({
+      pathname: "/(billModals)/editPayerModal",
+      params: { billId: bill.id },
+    });
+  };
+
+  const itemsTotal = bill.items.reduce(
+    (acc: number, item: BillItem) => acc + item.totalPrice,
+    0
+  );
 
   return (
     <SafeAreaView
@@ -82,38 +104,10 @@ const BillDisplay = () => {
         paddingHorizontal: 20,
       }}
     >
-      <View style={styles.container}>
-        <TouchableNativeFeedback onPress={() => {}}>
+      <ContainerView>
+        <TouchableNativeFeedback onPress={openBillDetailsModal}>
           <View style={styles.header}>
-            <View style={{}}>
-              <BouncyCheckbox
-                isChecked={bill.complete}
-                size={25}
-                style={{
-                  flexDirection: "row-reverse",
-                  paddingBottom: 10,
-                }}
-                fillColor="green"
-                text={bill.name}
-                iconStyle={{ borderColor: Colors.pastel.red, borderWidth: 2 }}
-                innerIconStyle={{
-                  borderWidth: 0,
-                  borderColor: Colors.pastel.red,
-                }}
-                textStyle={{
-                  fontSize: 30,
-                  fontWeight: "bold",
-                  color: "black",
-                  textAlign: "left",
-                }}
-                textContainerStyle={{ marginLeft: 0 }}
-                onPress={(isChecked: boolean) => {
-                  console.log(isChecked);
-                  bill.complete = isChecked;
-                  console.log(bill.complete);
-                }}
-              />
-            </View>
+            <ThemedText type="title">{bill.name}</ThemedText>
             <View>
               <ThemedText type="default">
                 {bill.date.toLocaleDateString()}
@@ -128,32 +122,26 @@ const BillDisplay = () => {
           </View>
         </TouchableNativeFeedback>
 
-        <View style={styles.payersContainer}>
-          {bill.payers.length > 0 ? (
-            <ScrollView
-              horizontal={true}
-              fadingEdgeLength={100}
-              contentContainerStyle={styles.payersScrollView}
-            >
-              {bill.payers.map((payer) => (
-                <PayerIcon key={payer.id} payer={payer} />
-              ))}
-            </ScrollView>
-          ) : (
-            <ThemedText type="grital">No one paying? haha poor.</ThemedText>
-          )}
-          <TouchableHighlight
-            underlayColor={"lightgrey"}
-            style={
-              bill.payers.length > 0
-                ? styles.addPayerStyle
-                : styles.addPayerStyleEmpty
-            }
-            onPress={() => console.log("HI")}
-          >
-            <MaterialIcons name="add" size={20} />
-          </TouchableHighlight>
-        </View>
+        <TouchableNativeFeedback onPress={openPayerModal}>
+          <View style={styles.payersContainer}>
+            {bill.payers.length > 0 ? (
+              <ScrollView
+                horizontal={true}
+                fadingEdgeLength={100}
+                contentContainerStyle={styles.payersScrollView}
+              >
+                {bill.payers.slice(0, 7).map((payer, index) => (
+                  <PayerIcon key={index} payer={payer} />
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.addPayerStyleEmpty}>
+                <ThemedText type="default">Add Payers</ThemedText>
+                <MaterialIcons name="person-add-alt-1" size={20} />
+              </View>
+            )}
+          </View>
+        </TouchableNativeFeedback>
 
         {/* Example for items: */}
         <View style={{ flex: 1 }}>
@@ -207,14 +195,41 @@ const BillDisplay = () => {
             {/* Handle optional service charge */}
           </View>
           <View style={styles.infoRow}>
-            <ThemedText type="subtitle">Total:</ThemedText>
-            <ThemedText type="subtitle">
-              {"£ " + bill.userEnteredTotal.toFixed(2)}
+            <ThemedText type="subtitle" style={{ flex: 1 }}>
+              Total:
             </ThemedText>
+            {bill.userEnteredTotal == itemsTotal + bill.serviceCharge ? (
+              <>
+                <ThemedText type="subtitle">
+                  {"£ " + bill.userEnteredTotal.toFixed(2)}
+                </ThemedText>
+              </>
+            ) : (
+              <>
+                <ThemedText
+                  type="default"
+                  style={{ color: "red", fontSize: 18 }}
+                >
+                  (
+                  {itemsTotal + bill.serviceCharge > bill.userEnteredTotal
+                    ? "+"
+                    : ""}
+                  {(
+                    itemsTotal +
+                    bill.serviceCharge -
+                    bill.userEnteredTotal
+                  ).toFixed(2)}
+                  )
+                </ThemedText>
+                <Text> </Text>
+                <ThemedText type="subtitle">
+                  {"£ " + bill.userEnteredTotal.toFixed(2)}
+                </ThemedText>
+              </>
+            )}
           </View>
         </View>
-      </View>
-      {/* Submit Button */}
+      </ContainerView>
       <View style={styles.buttonContainer}>
         <View style={styles.cancelButtonOuter}>
           <TouchableNativeFeedback onPress={onCancel}>
@@ -255,15 +270,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 5,
   },
-  container: {
-    flex: 1,
-    marginTop: 80,
-    padding: 30,
-    backgroundColor: "white",
-    borderWidth: 2,
-    borderRadius: 20,
-    elevation: 5,
-  },
   billDataContainer: {
     borderTopWidth: 1,
     marginTop: 10,
@@ -272,8 +278,9 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingBottom: 20,
+    paddingTop: 10,
+    gap: 10,
     borderBottomWidth: 1,
-    marginBottom: 10,
   },
   infoRow: {
     flexDirection: "row",
@@ -296,12 +303,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-evenly",
-    paddingBottom: 10,
     borderBottomWidth: 1,
     borderColor: "lightgrey",
   },
   payersScrollView: {
     paddingRight: 50,
+    paddingVertical: 10,
     gap: 3,
   },
   buttonContainer: {
@@ -310,20 +317,18 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   addPayerStyleEmpty: {
-    borderWidth: 2,
-    borderRadius: "100%",
-    width: 35,
-    aspectRatio: 1,
+    flexDirection: "row",
+    gap: 10,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "white",
-    elevation: 5,
+    marginVertical: 10,
   },
   addPayerStyle: {
     position: "absolute",
     borderWidth: 2,
     borderRadius: "100%",
-    width: 45,
+    width: 40,
     aspectRatio: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -364,7 +369,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelText: {
-    fontSize: 20,
     color: "white",
+    fontSize: 20,
   },
 });

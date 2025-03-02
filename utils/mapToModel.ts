@@ -46,7 +46,7 @@ export const mapBillItemToModel = (dbBillItem: typeof billItemsSchema.$inferSele
         price: dbBillItem.price,
         quantity: dbBillItem.quantity,
         totalPrice: dbBillItem.price * dbBillItem.quantity,
-        assignedTo: [],
+        assignedToId: [],
         category: dbBillItem.category || undefined,
         
     };

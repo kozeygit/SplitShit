@@ -27,32 +27,30 @@ const PayerPage = () => {
   const [refreshing, setRefreshing] = useState(false); // State for refreshing
 
   const [payers, setPayers] = useState<Payer[]>([]); // State for payers
-
-  useEffect(() => {
-    if (!refreshing) { return }
-
-    let ignore = false;
-    getPayers().then((result) => {
-      if (!ignore) {
-        setPayers(result);
-        setRefreshing(false);
-      }
-    });
-    return () => {
-      ignore = true;
-    };
-  }, [refreshing]);
-
-  const onRefresh = () => {
+  
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-  };
+    try {
+      const fetchedPayers = await getPayers();
+      setPayers(fetchedPayers); // Correct: Functional update
+    } catch (error) {
+      console.error("Error fetching payers:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [getPayers]);
 
   useFocusEffect(
     useCallback(() => {
-      onRefresh();
+      let payers: Payer[];
+      const foo = async () => {
+        payers = await getPayers();
+        setPayers(payers); // Correct: Functional update
+      };
+      foo();
     }, [])
   );
-
+  
   return (
     <SafeAreaView style={styles.container}>
       <Logo />

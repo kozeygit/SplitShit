@@ -12,17 +12,20 @@ import { Bill } from "@/models/bill";
 import BillCard from "@/components/bill/BillCard";
 import { useGetData } from "@/hooks/useGetData";
 import Logo from "@/components/ui/logo";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { setBillComplete } from "@/utils/updateData";
+import { useBillStore } from "@/utils/billStore";
 
 const BillPage = () => {
   const router = useRouter();
-  const { getBills } = useGetData();
+  const { getBills, getBill } = useGetData();
+  const { setOriginalBill, resetEditedBill } = useBillStore();
+
   const [refreshing, setRefreshing] = useState(false); // State for refreshing
 
   const [bills, setBills] = useState<Bill[]>([]); // State for bills
 
-  const fetchBills = useCallback(async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       const fetchedBills = await getBills();
@@ -34,9 +37,16 @@ const BillPage = () => {
     }
   }, [getBills]);
 
-  useEffect(() => {
-    fetchBills();
-  }, [fetchBills]);
+  useFocusEffect(
+    useCallback(() => {
+      let bills: Bill[];
+      const foo = async () => {
+        bills = await getBills();
+        setBills(bills); // Correct: Functional update
+      };
+      foo();
+    }, [])
+  );
 
   const [expandedBillId, setExpandedBillId] = useState<number | null>(null);
 
@@ -44,20 +54,21 @@ const BillPage = () => {
     setExpandedBillId(expandedBillId === id ? null : id);
   };
 
-  const editBill = (id: number) => {
-      router.push({pathname: "/editBill", params: {id: id}})
+  const editBill = async (id: number) => {
+    setBillComplete(id, false);
+    const bill = await getBill(id)
+    setOriginalBill(bill);
+    resetEditedBill()
+
+    router.push({ pathname: "/bill", params: { id: id } });
   };
 
   const completeBill = (id: number) => {
-      console.log(id, "completed")
-      setBillComplete(id)
-    fetchBills();
-
+    console.log(id, "completed");
+    setBillComplete(id, true);
+    onRefresh();
   };
 
-  const onRefresh = useCallback(() => {
-    fetchBills();
-  }, [fetchBills]);
 
   return (
     <SafeAreaView style={styles.container}>

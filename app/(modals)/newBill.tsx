@@ -69,7 +69,7 @@ export default function NewBillPage() {
     if (newBillId < 0) {
       console.log("insert bill failed for some reason????");
     } else {
-      router.replace({ pathname: "/editBill", params: { id: newBillId } });
+      router.replace({ pathname: "/bill", params: { id: newBillId } });
     }
   };
 
@@ -145,44 +145,6 @@ export default function NewBillPage() {
               <Text style={styles.errorText}>{errors.name.message}</Text>
             )}
 
-            {/* Total Amount Input */}
-            <Text style={styles.label}>Total Price</Text>
-            <View
-              style={[
-                styles.input,
-                errors.userEnteredTotal ? styles.inputError : undefined,
-              ]}
-            >
-              <Controller
-                control={control}
-                name="userEnteredTotal"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      height: "100%",
-                    }}
-                  >
-                    <TextInput
-                      style={{ flex: 1 }}
-                      placeholder="Total Amount"
-                      keyboardType="numeric"
-                      onBlur={onBlur}
-                      onChangeText={(text) => onChange(text)} // Convert text to number
-                      value={value.toString()} // Convert number to string for display
-                    />
-                    <MaterialIcons
-                      name="price-change"
-                      size={20}
-                      color={errors.userEnteredTotal ? "red" : "black"}
-                      style={{
-                        alignSelf: "center",
-                      }}
-                    />
-                  </View>
-                )}
-              />
-            </View>
             {errors.userEnteredTotal && (
               <Text style={styles.errorText}>
                 {errors.userEnteredTotal.message}
@@ -292,6 +254,44 @@ export default function NewBillPage() {
                 {errors.serviceCharge.message}
               </Text>
             )}
+            {/* Total Amount Input */}
+            <Text style={styles.label}>Total Price</Text>
+            <View
+              style={[
+                styles.input,
+                errors.userEnteredTotal ? styles.inputError : undefined,
+              ]}
+            >
+              <Controller
+                control={control}
+                name="userEnteredTotal"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      height: "100%",
+                    }}
+                  >
+                    <TextInput
+                      style={{ flex: 1 }}
+                      placeholder="Total Amount"
+                      keyboardType="numeric"
+                      onBlur={onBlur}
+                      onChangeText={(text) => onChange(text)} // Convert text to number
+                      value={value.toString()} // Convert number to string for display
+                    />
+                    <MaterialIcons
+                      name="price-change"
+                      size={20}
+                      color={errors.userEnteredTotal ? "red" : "black"}
+                      style={{
+                        alignSelf: "center",
+                      }}
+                    />
+                  </View>
+                )}
+              />
+            </View>
           </View>
 
           <View style={{ flex: 1 }}></View>
@@ -324,7 +324,7 @@ export default function NewBillPage() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 100,
+    marginTop: 80,
     padding: 30,
     paddingVertical: 40,
     backgroundColor: "white",

@@ -12,7 +12,7 @@ export const useGetData = () => {
         return await fetchBill(billId);
     }, [fetchBill]);
 
-    const getBillItems = useCallback(async (billId?: number) => {
+    const getBillItems = useCallback(async (billId: number) => {
         return await fetchBillItems(billId);
     }, [fetchBillItems]);
     

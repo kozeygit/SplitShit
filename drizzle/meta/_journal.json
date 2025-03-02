@@ -50,6 +50,13 @@
       "when": 1740072757520,
       "tag": "0006_living_bastion",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1740357694250,
+      "tag": "0007_lazy_skin",
+      "breakpoints": true
     }
   ]
 }

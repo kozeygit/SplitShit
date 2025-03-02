@@ -15,7 +15,7 @@ export type BillItem = {
     price: number;
     quantity: number;
     totalPrice: number;
-    assignedTo: Payer[]; // Array of payer IDs or names
+    assignedToId: number[]; // Array of payer ID
     category?: string;
 };
 

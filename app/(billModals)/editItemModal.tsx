@@ -16,6 +16,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BillItem, NewBillItem } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
+import { set } from "lodash";
 
 const EditItemModal = () => {
   const router = useRouter();
@@ -54,7 +55,6 @@ const EditItemModal = () => {
         if (oldItem === undefined) {
           throw Error("Uh Oh Stinky");
         }
-        console.log(oldItem)
         setItem(oldItem);
         setName(oldItem.name);
         setQuantity(oldItem.quantity.toString());
@@ -85,30 +85,17 @@ const EditItemModal = () => {
     }
   };
 
-  useEffect(() => {
-    if (!isTotalPriceEditing) {
-      calculateTotalPrice();
-    }
-  }, [price, quantity]);
-
-  useEffect(() => {
-    if (isTotalPriceEditing) {
-      calculateUnitPriceFromTotal();
-    }
-  }, [totalPrice, quantity]);
-
-  const handleTotalPriceChange = (newTotalPrice: string) => {
+  const handleTotalPriceChange = () => {
     setIsTotalPriceEditing(true);
-    setTotalPrice(newTotalPrice);
+    calculateUnitPriceFromTotal();
   };
 
-  const handlePriceChange = (newPrice: string) => {
+  const handlePriceChange = () => {
     setIsTotalPriceEditing(false);
-    setPrice(newPrice);
+    calculateTotalPrice();
   };
 
-  const handleQuantityChange = (newQuantity: string) => {
-    setQuantity(newQuantity);
+  const handleQuantityChange = () => {
     if (!isTotalPriceEditing) {
       calculateTotalPrice();
     } else {
@@ -166,7 +153,6 @@ const EditItemModal = () => {
   const handleDelete = () => {
     if (item && editedBill) {
       const index = editedBill.items.indexOf(item)
-      console.log(index)
       editedBill.items.splice(index, 1)
       setEditedBill(editedBill)
       console.log("Deleting");
@@ -217,7 +203,8 @@ const EditItemModal = () => {
               style={{ flex: 1 }}
               keyboardType="numeric"
               value={quantity}
-              onChangeText={handleQuantityChange}
+              onBlur={handleQuantityChange}
+              onChangeText={setQuantity}
               returnKeyType="next"
               onSubmitEditing={() => {
                 priceInputRef.current?.focus();
@@ -233,7 +220,8 @@ const EditItemModal = () => {
               style={{ flex: 1 }}
               keyboardType="numeric"
               value={price}
-              onChangeText={handlePriceChange}
+              onBlur={handlePriceChange}
+              onChangeText={setPrice}
               returnKeyType="next"
               onSubmitEditing={() => {
                 totalPriceInputRef.current?.focus();
@@ -250,7 +238,8 @@ const EditItemModal = () => {
               style={{ flex: 1 }}
               keyboardType="numeric"
               value={totalPrice}
-              onChangeText={handleTotalPriceChange}
+              onBlur={handleTotalPriceChange}
+              onChangeText={setTotalPrice}
               returnKeyType="done"
               onSubmitEditing={handleSave}
             />

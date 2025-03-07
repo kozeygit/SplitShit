@@ -17,7 +17,6 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useGetData } from "@/hooks/useGetData";
 import { Bill, BillItem, NewBill, NewBillItem } from "@/models/bill";
-import { updateBill, updateBillItem } from "@/utils/updateData";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -26,10 +25,6 @@ import { useBillStore } from "@/utils/billStore";
 const EditBillDetailsModal = () => {
   const { getBill } = useGetData();
   const router = useRouter();
-
-  const { billId } = useLocalSearchParams<{
-    billId: string;
-  }>();
 
   const { editedBill, setEditedBill } = useBillStore();
   const [name, setName] = useState("");
@@ -110,8 +105,6 @@ const EditBillDetailsModal = () => {
       editedBill.serviceCharge = updatedBill.serviceCharge;
       editedBill.userEnteredTotal = updatedBill.userEnteredTotal;
       
-      console.log(editedBill.name)
-
       setEditedBill(editedBill)
 
       console.log("Saving editedBill");

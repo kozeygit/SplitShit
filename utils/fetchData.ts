@@ -40,7 +40,6 @@ export const fetchBillItems = async (billId: number): Promise<BillItem[]> => {
           throw Error("Got an item thats not for this bill");
         }
         item.assignedToId.push(assRes.bill_payers.payerId);
-        console.log(assRes);
       }
     }
 

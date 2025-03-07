@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   SafeAreaView,
   ScrollView,
+  Pressable,
+  Alert,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +25,11 @@ import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertBill } from "@/utils/insertData";
+import { useBillStore } from "@/utils/billStore";
+import { useGetData } from "@/hooks/useGetData";
+import * as ImagePicker from "expo-image-picker";
+import { createBillFromImage } from "@/utils/createBillFromImage";
+import { useCamera } from "@/hooks/useCamera";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
@@ -45,6 +52,10 @@ const billSchema = z.object({
 
 export default function NewBillPage() {
   const router = useRouter();
+  const { setOriginalBill, resetEditedBill } = useBillStore();
+  const { getBill } = useGetData();
+  const { openCamera, enableCamera } = useCamera();
+
   const {
     control,
     handleSubmit,
@@ -62,17 +73,21 @@ export default function NewBillPage() {
 
   const onSubmit = async (data: NewBill) => {
     if (serviceType == "percentage") {
-      data.serviceCharge = data.userEnteredTotal * data.serviceCharge / 100
+      data.serviceCharge = (data.userEnteredTotal * data.serviceCharge) / 100;
     }
 
     const newBillId = await insertBill(data);
     if (newBillId < 0) {
       console.log("insert bill failed for some reason????");
     } else {
-      router.replace({ pathname: "/bill", params: { id: newBillId } });
+      const newBill = await getBill(newBillId);
+      setOriginalBill(newBill);
+      resetEditedBill();
+      router.replace("/bill");
     }
   };
 
+  const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
   const [serviceType, setServiceType] = useState<"percentage" | "amount">(
@@ -104,6 +119,21 @@ export default function NewBillPage() {
     setShow(true);
   };
 
+  const openBill = async (newBillId: number) => {
+      const bill = await getBill(newBillId);
+      setOriginalBill(bill);
+      resetEditedBill();
+      router.push("/bill");
+  }
+
+  const handleOpenCamera = async () => {
+    setLoading(true);
+
+    await openCamera(
+      openBill
+    ).then(() => setLoading(false))
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -112,6 +142,7 @@ export default function NewBillPage() {
         paddingHorizontal: 20,
       }}
     >
+      {loading && <View style={styles.loadingView}></View>}
       <KeyboardAvoidingView
         behavior={Platform.OS == "ios" ? "padding" : "height"}
         style={{
@@ -120,9 +151,16 @@ export default function NewBillPage() {
       >
         <ScrollView style={{ overflow: "visible" }}>
           <View style={styles.container}>
-            <ThemedText type="title" style={styles.title}>
-              Add New Bill
-            </ThemedText>
+            <View style={styles.title}>
+              <ThemedText type="title">Add New Bill</ThemedText>
+              <Pressable onLongPress={() => { alert("Camera enabled");  enableCamera() }} delayLongPress={5000} onPress={handleOpenCamera} style={styles.photoButton}>
+                <MaterialIcons
+                  name="photo-camera"
+                  size={20}
+                  color={"black"}
+                />
+              </Pressable>
+            </View>
             {/* Bill Name Input */}
             <Text style={styles.label}>Bill Name</Text>
             <Controller
@@ -222,9 +260,7 @@ export default function NewBillPage() {
                       onChangeText={(text) => onChange(text)} // Convert text to number
                       value={value.toString()} // Convert number to string for display
                     />
-                    <TouchableNativeFeedback
-                      onPress={swapServiceType}
-                    >
+                    <TouchableNativeFeedback onPress={swapServiceType}>
                       {serviceType == "percentage" ? (
                         <MaterialIcons
                           name="percent"
@@ -323,10 +359,26 @@ export default function NewBillPage() {
 }
 
 const styles = StyleSheet.create({
+  photoButton: {
+    borderWidth: 1,
+    borderRadius: "100%",
+    aspectRatio: 1,
+    padding: 10,
+    backgroundColor: "white",
+    elevation: 3
+  },
+  loadingView: {
+    backgroundColor: "rgba(0,0,0,0.3)",
+    position: "absolute",
+    height: 1000,
+    width: 1000,
+    left: 0,
+    top: 0,
+    zIndex: 100,
+  },
   container: {
     marginTop: 80,
     padding: 30,
-    paddingVertical: 40,
     backgroundColor: "white",
     borderWidth: 2,
     borderRadius: 20,
@@ -336,6 +388,9 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderBottomWidth: 1,
     marginBottom: 10,
+    justifyContent: "space-between",
+    flexDirection: "row",
+    alignItems: "baseline",
   },
   label: {
     fontSize: 16,

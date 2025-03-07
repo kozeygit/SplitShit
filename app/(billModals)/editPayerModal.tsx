@@ -71,7 +71,6 @@ const EditItemModal = () => {
 
 
   const handleSave = () => {
-    console.log(JSON.stringify(payers, null, 2));
     editedBill.payers = payers.filter(
       (payer) => payer.partySize && payer.partySize > 0
     );

@@ -8,7 +8,7 @@ import { useBillStore } from "@/utils/billStore";
 import { setBillComplete, updateBill } from "@/utils/updateData";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { isEqual } from "lodash";
+import { isEqual, set } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   SafeAreaView,
@@ -26,9 +26,8 @@ const BillDisplay = () => {
   const router = useRouter();
   const {
     originalBill,
-    setOriginalBill,
     editedBill,
-    setEditedBill,
+    setOriginalBill,
     resetEditedBill,
   } = useBillStore();
 
@@ -43,13 +42,15 @@ const BillDisplay = () => {
     userEnteredTotal: 420.69,
   });
 
+
   useFocusEffect(
     useCallback(() => {
       if (editedBill) {
         setBill(editedBill);
       }
-    }, [editedBill])
+    }, [editedBill]),
   );
+
 
   const onSave = () => {
     if (isEqual(originalBill, editedBill)) {
@@ -60,6 +61,7 @@ const BillDisplay = () => {
     console.log("Changed");
 
     if (editedBill) {
+      setOriginalBill(editedBill);
       updateBill(editedBill);
       router.back();
     }
@@ -78,17 +80,11 @@ const BillDisplay = () => {
   };
 
   const openBillDetailsModal = () => {
-    router.push({
-      pathname: "/(billModals)/editBillDetailsModal",
-      params: { billId: bill.id },
-    });
+    router.push("/(billModals)/editBillDetailsModal");
   };
   
   const openPayerModal = () => {
-    router.push({
-      pathname: "/(billModals)/editPayerModal",
-      params: { billId: bill.id },
-    });
+    router.push("/(billModals)/editPayerModal");
   };
 
   const itemsTotal = bill.items.reduce(

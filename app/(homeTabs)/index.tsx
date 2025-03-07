@@ -49,6 +49,7 @@ const BillPage = () => {
   );
 
   const [expandedBillId, setExpandedBillId] = useState<number | null>(null);
+  const [expandedDeleteId, setExpandedDeleteId] = useState<number | null>(null);
 
   const toggleDropdown = (id: number) => {
     setExpandedBillId(expandedBillId === id ? null : id);
@@ -56,19 +57,21 @@ const BillPage = () => {
 
   const editBill = async (id: number) => {
     setBillComplete(id, false);
-    const bill = await getBill(id)
+    const bill = await getBill(id);
     setOriginalBill(bill);
-    resetEditedBill()
+    resetEditedBill();
 
-    router.push({ pathname: "/bill", params: { id: id } });
+    router.push("/bill");
   };
 
   const completeBill = (id: number) => {
-    console.log(id, "completed");
     setBillComplete(id, true);
     onRefresh();
   };
 
+  const toggleDelete = (id: number) => {
+    setExpandedDeleteId(expandedDeleteId === id ? null : id);
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -85,9 +88,11 @@ const BillPage = () => {
           <BillCard
             billData={item}
             isExpanded={expandedBillId === item.id}
+            isDeleteExpanded={expandedDeleteId === item.id}
             onToggleDropdown={toggleDropdown}
             onEdit={editBill}
             onComplete={completeBill}
+            onDelete={toggleDelete}
           />
         )}
       />

@@ -105,7 +105,7 @@ const EditItemModal = () => {
         billItem.assignedToId = item?.assignedToId;
       }
     });
-    setEditedBill(bill);
+    setEditedBill(bill)
   };
 
   const handleNext = () => {
@@ -144,27 +144,6 @@ const EditItemModal = () => {
     save();
     router.back();
   };
-
-  // if (item == undefined) {
-  //   return (
-  //     <SafeAreaView
-  //       style={{
-  //         flex: 1,
-  //         backgroundColor: Colors.pastel.orange,
-  //         paddingHorizontal: 20,
-  //         paddingBottom: 130,
-  //       }}
-  //     >
-  //       <View style={styles.container}>
-  //         <View
-  //           style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
-  //         >
-  //           <ThemedText type="grital">404 - Not Found</ThemedText>
-  //         </View>
-  //       </View>
-  //     </SafeAreaView>
-  //   );
-  // }
 
   return (
     <SafeAreaView

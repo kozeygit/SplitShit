@@ -1,10 +1,11 @@
 import PayerIcon from "@/components/payer/PayerIcon";
 import { ThemedText } from "@/components/ThemedText";
+import ContainerView from "@/components/ui/ContainerView";
 import { Colors } from "@/constants/Colors";
 import { useGetData } from "@/hooks/useGetData";
 import { Bill, BillItem, NewBillItem } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
-import {getPayerById} from "@/utils/billUtils";
+import { getPayerById } from "@/utils/billUtils";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -17,10 +18,7 @@ import {
 
 const AssignItemsDisplay = () => {
   const router = useRouter();
-  const {
-    editedBill,
-    setEditedBill,
-  } = useBillStore();
+  const { editedBill, setEditedBill } = useBillStore();
 
   const [bill, setBill] = useState<Bill>({
     id: 0,
@@ -41,24 +39,13 @@ const AssignItemsDisplay = () => {
     }, [editedBill])
   );
 
-  const onSave = () => {
-    console.log(JSON.stringify(bill, null, 1));
-    console.log("Submit");
-    router.back();
-  };
-  const onCancel = () => {
-    console.log("Cancelled");
-    router.back();
-  };
-
   const openAssignModal = (item: BillItem | undefined) => {
     if (item)
-    router.push({
-      pathname: "/assignItemModal",
-      params: { itemId: item?.id },
-    });
+      router.push({
+        pathname: "/assignItemModal",
+        params: { itemId: item?.id },
+      });
   };
-
 
   return (
     <SafeAreaView
@@ -66,15 +53,13 @@ const AssignItemsDisplay = () => {
         flex: 1,
         backgroundColor: Colors.pastel.orange,
         paddingHorizontal: 20,
+        paddingBottom: 30,
       }}
     >
-      <View style={styles.container}>
-        <TouchableNativeFeedback onPress={() => {}}>
-          <View style={styles.header}>
-            <ThemedText type="title">{bill.name}</ThemedText>
-          </View>
-        </TouchableNativeFeedback>
-
+      <ContainerView>
+        <View style={styles.header}>
+          <ThemedText type="title">{bill.name}</ThemedText>
+        </View>
         <View style={{ flex: 1 }}>
           <FlatList
             ListEmptyComponent={
@@ -91,7 +76,7 @@ const AssignItemsDisplay = () => {
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <TouchableNativeFeedback onPress={() => openAssignModal(item)}>
-                <View style={{ borderBottomWidth: 1, paddingVertical: 5 }}>
+                <View style={{ borderBottomWidth: 1, borderBottomColor: "lightgrey", paddingVertical: 5 }}>
                   <View style={styles.infoRow}>
                     {item.assignedToId.length < 1 ? (
                       <ThemedText>
@@ -131,7 +116,7 @@ const AssignItemsDisplay = () => {
             )}
           />
         </View>
-      </View>
+      </ContainerView>
     </SafeAreaView>
   );
 };
@@ -154,7 +139,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     elevation: 5,
   },
-
   header: {
     paddingBottom: 20,
     paddingTop: 10,
@@ -176,79 +160,6 @@ const styles = StyleSheet.create({
     height: "50%",
     borderStyle: "dotted",
     marginHorizontal: 5,
-    borderColor: "grey",
-  },
-  payersContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-evenly",
-    borderBottomWidth: 1,
     borderColor: "lightgrey",
-  },
-  payersScrollView: {
-    paddingRight: 50,
-    gap: 3,
-  },
-  buttonContainer: {
-    marginVertical: 30,
-    flexDirection: "row",
-    gap: 10,
-  },
-  addPayerStyleEmpty: {
-    borderWidth: 2,
-    borderRadius: "100%",
-    width: 35,
-    aspectRatio: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "white",
-    elevation: 5,
-  },
-  addPayerStyle: {
-    position: "absolute",
-    borderWidth: 2,
-    borderRadius: "100%",
-    width: 45,
-    aspectRatio: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "white",
-    elevation: 5,
-    right: 0,
-    top: 0,
-  },
-  submitButtonOuter: {
-    flex: 1,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "white",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  submitButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  submitText: {
-    fontSize: 20,
-  },
-  cancelButtonOuter: {
-    flex: 1,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: Colors.pastel.yellow,
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  cancelButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 20,
   },
 });

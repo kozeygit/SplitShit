@@ -45,8 +45,6 @@ export default function NewPayerPage() {
     if (data.email === "") {
       data.email = undefined;
     }
-
-    console.log(data);
     const newPayerId = await insertPayer(data);
     if (newPayerId < 0) {
       console.log("insert payer failed for some reason????");

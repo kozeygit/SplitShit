@@ -2,16 +2,10 @@ import { Tabs, useNavigation } from "expo-router";
 import React, { useState } from "react";
 
 import { Colors } from "@/constants/Colors";
-import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 
-import { useSQLiteContext } from "expo-sqlite";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
 
 export default function TabLayout() {
-  const db = useSQLiteContext();
-  useDrizzleStudio(db);
-  const router = useRouter();
 
   return (
     <Tabs
@@ -40,13 +34,20 @@ export default function TabLayout() {
       <Tabs.Screen
         name="assignItems"
         options={{
-          tabBarActiveTintColor: Colors.pastel.blue,
-          tabBarLabelStyle: {
-            paddingTop: 0,
-          },
+          tabBarActiveTintColor: Colors.pastel.orange,
           title: "Assign Items",
           tabBarIcon: ({ color }) => (
             <MaterialIcons size={30} name="person" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="breakdown"
+        options={{
+          tabBarActiveTintColor: Colors.pastel.turquoise,
+          title: "Breakdown",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons size={30} name="payments" color={color} />
           ),
         }}
       />

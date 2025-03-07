@@ -56,8 +56,6 @@ export const removeBillItem = async (
     
     if (removedItems.length > 1) {
       console.log("uh oh, big problem")
-      console.log(removedItems)
-      console.log(removeAssignedItems)
       throw new Error("More than 1 item deleted????")
     }
 

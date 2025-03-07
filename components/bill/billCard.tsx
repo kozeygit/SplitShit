@@ -20,19 +20,23 @@ const colorKeys = Object.values(Colors.pastel);
 interface BillCardProps {
   billData: Bill;
   isExpanded: boolean;
+  isDeleteExpanded: boolean;
   onToggleDropdown: (id: number) => void;
   onEdit: (id: number) => void;
   onComplete: (id: number) => void;
+  onDelete: (id: number) => void;
 }
 
 const BillCard: React.FC<BillCardProps> = ({
   billData,
   isExpanded,
+  isDeleteExpanded,
   onToggleDropdown,
   onEdit,
-  onComplete
+  onComplete,
+  onDelete: onToggleDelete,
 }) => {
-    const iconColor = colorKeys[billData.id % colorKeys.length];
+  const iconColor = colorKeys[billData.id % colorKeys.length];
 
   const styles = billData.complete ? completeStyles : incompleteStyles;
   const icons = [
@@ -49,17 +53,41 @@ const BillCard: React.FC<BillCardProps> = ({
       height: withTiming(isExpanded ? 45 : 0, { duration: 100 }),
       opacity: withTiming(isExpanded ? 1 : 0, { duration: 100 }),
       transform: [
-        { translateY: withTiming(isExpanded ? 0 : -45, { duration: 101 }) },
+        { translateY: withTiming(isExpanded ? 0 : -45, { duration: 100 }) },
       ],
     };
   });
 
+  const animatedDeleteStyles = useAnimatedStyle(() => {
+    return {
+      right: withTiming(isDeleteExpanded ? 0 : -100, { duration: 100 }),
+      opacity: withTiming(isDeleteExpanded ? 1 : 0, { duration: 100 }),
+    };
+  });
+  const handleToggleDropdown = () => {
+    if (isDeleteExpanded) {
+      onToggleDelete(billData.id);
+      return;
+    }
+    onToggleDropdown(billData.id);
+  };
+
+  const handleToggleDelete = () => {
+    if (isExpanded) {
+      onToggleDropdown(billData.id);
+    }
+    onToggleDelete(billData.id);
+  };
+
   return (
     <View style={styles.billCardOuter}>
-      <TouchableNativeFeedback onPress={() => onToggleDropdown(billData.id)}>
+      <TouchableNativeFeedback
+        onLongPress={handleToggleDelete}
+        onPress={handleToggleDropdown}
+      >
         <View style={styles.billCardInner}>
           <View style={[styles.billIcon, { backgroundColor: iconColor }]}>
-                      <MaterialIcons size={20} name={icon as any} />
+            <MaterialIcons size={20} name={icon as any} />
           </View>
           <View style={styles.billDetails}>
             <ThemedText type="defaultSemiBold" style={styles.billName}>
@@ -80,6 +108,17 @@ const BillCard: React.FC<BillCardProps> = ({
             color="lightgrey"
             style={styles.dropdownIcon}
           />
+          <Animated.View
+            style={
+              animatedDeleteStyles
+            }
+          >
+            {isDeleteExpanded && (
+              <View style={styles.delete}>
+                <ThemedText>Delete</ThemedText>
+              </View>
+            )}
+          </Animated.View>
         </View>
       </TouchableNativeFeedback>
 
@@ -96,16 +135,12 @@ const BillCard: React.FC<BillCardProps> = ({
       >
         {isExpanded && (
           <>
-            <TouchableNativeFeedback
-              onPress={() => onEdit(billData.id)}
-            >
+            <TouchableNativeFeedback onPress={() => onEdit(billData.id)}>
               <View style={styles.dropdownOptionEdit}>
                 <ThemedText type="default">Edit</ThemedText>
               </View>
             </TouchableNativeFeedback>
-            <TouchableNativeFeedback
-              onPress={() => onComplete(billData.id)}
-            >
+            <TouchableNativeFeedback onPress={() => onComplete(billData.id)}>
               <View style={styles.dropdownOptionComplete}>
                 <ThemedText type="default">Complete</ThemedText>
               </View>
@@ -118,6 +153,9 @@ const BillCard: React.FC<BillCardProps> = ({
 };
 
 const completeStyles = StyleSheet.create({
+  delete: {
+    backgroundColor: "red",
+  },
   billCardOuter: {
     backgroundColor: "white",
     borderWidth: 2,
@@ -148,7 +186,7 @@ const completeStyles = StyleSheet.create({
   },
   billDate: {
     fontSize: 14,
-    color: "grey"
+    color: "grey",
   },
   billMeta: {
     alignItems: "flex-end",
@@ -172,6 +210,17 @@ const completeStyles = StyleSheet.create({
 });
 
 const incompleteStyles = StyleSheet.create({
+  delete: {
+    position: "absolute",
+    backgroundColor: "red",
+    height: "200%",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    borderLeftWidth: 2,
+    right: 0,
+    elevation: 5,
+  },
   billCardOuter: {
     backgroundColor: "white",
     borderWidth: 2,
@@ -201,7 +250,7 @@ const incompleteStyles = StyleSheet.create({
   },
   billDate: {
     fontSize: 14,
-    color: "grey"
+    color: "grey",
   },
   billMeta: {
     alignItems: "flex-end",

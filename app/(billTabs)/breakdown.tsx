@@ -48,7 +48,7 @@ const BillBreakdownDisplay = () => {
         for (const payer of editedBill.payers) {
           payerItems.set(payer, []);
           for (const item of editedBill.items) {
-            if (item.assignedToId.includes(payer.id)) {
+            if (item.assignedTo.filter((obj) => obj.payerId === payer.id)) {
               const oldItems = payerItems.get(payer);
               payerItems.set(payer, oldItems ? [...oldItems, item] : [item]);
             }
@@ -60,6 +60,11 @@ const BillBreakdownDisplay = () => {
   );
 
   useEffect(() => {
+    if (bill.serviceCharge === 0) {
+      setServicePerPerson(0)
+      return
+    }
+
     const numberOfPeople = bill.payers.reduce(
       (acc, val) => acc + (val.partySize ?? 1),
       0
@@ -75,8 +80,8 @@ const BillBreakdownDisplay = () => {
       payer.amountToPay += servicePerPerson * (payer.partySize ?? 1);
 
       for (const item of payerItems.get(payer) ?? []) {
-        payer.amountToPay += item.totalPrice / item.assignedToId.length;
-        console.log(item.name, item.assignedToId);
+        payer.amountToPay += item.totalPrice / item.assignedTo.length;
+        console.log(item.name, item.assignedTo);
       }
 
       total += payer.amountToPay;
@@ -109,7 +114,7 @@ const BillBreakdownDisplay = () => {
             fadingEdgeLength={100}
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
-            data={bill.payers}
+            data={payers}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <View style={styles.payersContainer}>
@@ -144,27 +149,29 @@ const BillBreakdownDisplay = () => {
                       <View style={styles.infoRow} key={index}>
                         <ThemedText type="default">
                           {(
-                            billItem.quantity / billItem.assignedToId.length
+                            billItem.quantity / billItem.assignedTo.length
                           ).toLocaleString()}{" "}
                           x {billItem.name}
                         </ThemedText>
                         <ThemedText>
                           £{" "}
                           {(
-                            billItem.totalPrice / billItem.assignedToId.length
+                            billItem.totalPrice / billItem.assignedTo.length
                           ).toFixed(2)}
                         </ThemedText>
                       </View>
                     ))}
-                    <View style={styles.infoRow}>
-                      <ThemedText type="default">
-                        {item.partySize} x Service Charge
-                      </ThemedText>
-                      <ThemedText>
-                        £{" "}
-                        {(servicePerPerson * (item.partySize ?? 1)).toFixed(2)}
-                      </ThemedText>
-                    </View>
+                    {bill.serviceCharge !== 0 ?
+                      <View style={styles.infoRow}>
+                        <ThemedText type="default">
+                          {item.partySize} x Service Charge
+                        </ThemedText>
+                        <ThemedText>
+                          £{" "}
+                          {(servicePerPerson * (item.partySize ?? 1)).toFixed(2)}
+                        </ThemedText>
+                      </View>
+                    : undefined}
                   </View>
                 )}
               </View>

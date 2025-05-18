@@ -30,7 +30,7 @@ const EditItemModal = () => {
     price: 0,
     totalPrice: 0,
     quantity: 0,
-    assignedToId: [],
+    assignedTo: [],
   });
 
   const [bill, setBill] = useState<Bill>({
@@ -79,33 +79,50 @@ const EditItemModal = () => {
     setItemIndex(currentIndex);
   }, [item, bill]);
 
-  const assignPayer = (payerId: number) => {
+  const toggleAssignPayer = (payerId: number) => {
     if (item === undefined) {
       return;
     }
-    if (item.assignedToId.includes(payerId)) {
-      item.assignedToId = item.assignedToId.filter((id) => id !== payerId);
+    if (item.assignedTo.some((ass) => ass.payerId === payerId)) {
+      item.assignedTo = item.assignedTo.filter(
+        (ass) => ass.payerId !== payerId
+      );
       setItem({ ...item });
     } else {
-      item.assignedToId.push(payerId);
+      item.assignedTo.push({ payerId: payerId, quantity: 1 });
       setItem({ ...item });
     }
   };
 
-  const calculatePricePerPayer = () => {
+  const increaseAssignQuantity = (payerId: number) => {
     if (item === undefined) {
-      return 0;
+      return;
     }
-    return item.price / item.assignedToId.length;
+    
+    const assignedTo = item.assignedTo.find((ass) => ass.payerId === payerId);
+    
+    if (assignedTo === undefined) {
+      return;
+    }
+
+    if (assignedTo.quantity == item.quantity) {
+      return
+    }
+
+    // now check if the total quanity for assigned people has enough remoaining for an increase :)
+
+    setItem({ ...item });
   };
+
+  const decreaseAssignQuantity = (payerId: number) => {};
 
   const save = () => {
     bill.items.map((billItem) => {
       if (billItem.id === item?.id) {
-        billItem.assignedToId = item?.assignedToId;
+        billItem.assignedTo = item?.assignedTo;
       }
     });
-    setEditedBill(bill)
+    setEditedBill(bill);
   };
 
   const handleNext = () => {
@@ -172,8 +189,8 @@ const EditItemModal = () => {
               paddingTop: 10,
             }}
           >
-            {item.assignedToId.map((id, index) => {
-              const payer = getPayerById(bill, id);
+            {item.assignedTo.map((ass, index) => {
+              const payer = getPayerById(bill, ass.payerId);
               if (payer === undefined) {
                 return;
               }
@@ -191,7 +208,10 @@ const EditItemModal = () => {
                       {payer.name} - {payer.partySize}
                     </ThemedText>
                   </View>
-                  <Pressable hitSlop={10} onPress={() => assignPayer(id)}>
+                  <Pressable
+                    hitSlop={10}
+                    onPress={() => toggleAssignPayer(ass.payerId)}
+                  >
                     <MaterialIcons
                       name="delete-outline"
                       size={20}
@@ -207,8 +227,14 @@ const EditItemModal = () => {
           {bill.payers.map((payer, index) => {
             return (
               <View key={index}>
-                <Pressable onPress={() => assignPayer(payer.id)}>
-                  <PayerIcon payer={payer} size={50} checked={ item.assignedToId.includes(payer.id)} />
+                <Pressable onPress={() => toggleAssignPayer(payer.id)}>
+                  <PayerIcon
+                    payer={payer}
+                    size={50}
+                    checked={item.assignedTo.some(
+                      (obj) => obj.payerId === payer.id
+                    )}
+                  />
                 </Pressable>
               </View>
             );
@@ -246,7 +272,9 @@ const EditItemModal = () => {
                   name="arrow-forward"
                   size={30}
                   color={
-                    itemIndex === bill.items.length - 1 ? Colors.pastel.red : "black"
+                    itemIndex === bill.items.length - 1
+                      ? Colors.pastel.red
+                      : "black"
                   }
                 />
               </View>

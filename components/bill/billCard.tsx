@@ -20,21 +20,21 @@ const colorKeys = Object.values(Colors.pastel);
 interface BillCardProps {
   billData: Bill;
   isExpanded: boolean;
-  isDeleteExpanded: boolean;
+  isSelected: boolean;
   onToggleDropdown: (id: number) => void;
   onEdit: (id: number) => void;
   onComplete: (id: number) => void;
-  onDelete: (id: number) => void;
+  onSelect: (id: number) => void;
 }
 
 const BillCard: React.FC<BillCardProps> = ({
   billData,
   isExpanded,
-  isDeleteExpanded,
+  isSelected,
   onToggleDropdown,
   onEdit,
   onComplete,
-  onDelete: onToggleDelete,
+  onSelect: onToggleSelect,
 }) => {
   const iconColor = colorKeys[billData.id % colorKeys.length];
 
@@ -58,37 +58,27 @@ const BillCard: React.FC<BillCardProps> = ({
     };
   });
 
-  const animatedDeleteStyles = useAnimatedStyle(() => {
-    return {
-      right: withTiming(isDeleteExpanded ? 0 : -100, { duration: 100 }),
-      opacity: withTiming(isDeleteExpanded ? 1 : 0, { duration: 100 }),
-    };
-  });
   const handleToggleDropdown = () => {
-    if (isDeleteExpanded) {
-      onToggleDelete(billData.id);
-      return;
-    }
     onToggleDropdown(billData.id);
   };
 
-  const handleToggleDelete = () => {
-    if (isExpanded) {
-      onToggleDropdown(billData.id);
-    }
-    onToggleDelete(billData.id);
+  const handleToggleSelect = () => {
+    onToggleSelect(billData.id);
   };
 
   return (
     <View style={styles.billCardOuter}>
       <TouchableNativeFeedback
-        onLongPress={handleToggleDelete}
+        onLongPress={handleToggleSelect}
         onPress={handleToggleDropdown}
       >
         <View style={styles.billCardInner}>
+          {isSelected ? <View style={[styles.billIcon, { backgroundColor: "white" }]}>
+            <MaterialIcons size={20} name="check" />
+          </View> :
           <View style={[styles.billIcon, { backgroundColor: iconColor }]}>
             <MaterialIcons size={20} name={icon as any} />
-          </View>
+          </View>}
           <View style={styles.billDetails}>
             <ThemedText type="defaultSemiBold" style={styles.billName}>
               {billData.name}
@@ -108,17 +98,11 @@ const BillCard: React.FC<BillCardProps> = ({
             color="lightgrey"
             style={styles.dropdownIcon}
           />
-          <Animated.View
-            style={
-              animatedDeleteStyles
-            }
-          >
-            {isDeleteExpanded && (
-              <View style={styles.delete}>
-                <ThemedText>Delete</ThemedText>
-              </View>
-            )}
-          </Animated.View>
+          {isSelected && (
+            <View style={incompleteStyles.selected}>
+              <ThemedText>Delete</ThemedText>
+            </View>
+          )}
         </View>
       </TouchableNativeFeedback>
 
@@ -153,7 +137,7 @@ const BillCard: React.FC<BillCardProps> = ({
 };
 
 const completeStyles = StyleSheet.create({
-  delete: {
+  selected: {
     backgroundColor: "red",
   },
   billCardOuter: {
@@ -210,16 +194,17 @@ const completeStyles = StyleSheet.create({
 });
 
 const incompleteStyles = StyleSheet.create({
-  delete: {
+  selected: {
     position: "absolute",
-    backgroundColor: "red",
-    height: "200%",
-    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.3)",
+    padding: 0,
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
     justifyContent: "center",
     paddingHorizontal: 20,
-    borderLeftWidth: 2,
-    right: 0,
-    elevation: 5,
+    zIndex: 10,
   },
   billCardOuter: {
     backgroundColor: "white",
@@ -240,6 +225,7 @@ const incompleteStyles = StyleSheet.create({
     borderRadius: "100%",
     aspectRatio: 1,
     marginRight: 10,
+    zIndex: 100,
   },
   billDetails: {
     flex: 1,

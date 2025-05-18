@@ -1,3 +1,8 @@
+export type AssignItem = {
+    payerId: number,
+    quantity: number
+}
+
 export type Bill = {
     id: number;
     name: string;
@@ -15,7 +20,7 @@ export type BillItem = {
     price: number;
     quantity: number;
     totalPrice: number;
-    assignedToId: number[]; // Array of payer ID
+    assignedTo: AssignItem[]; 
     category?: string;
 };
 

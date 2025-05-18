@@ -78,14 +78,14 @@ const AssignItemsDisplay = () => {
               <TouchableNativeFeedback onPress={() => openAssignModal(item)}>
                 <View style={{ borderBottomWidth: 1, borderBottomColor: "lightgrey", paddingVertical: 5 }}>
                   <View style={styles.infoRow}>
-                    {item.assignedToId.length < 1 ? (
+                    {item.assignedTo.length < 1 ? (
                       <ThemedText>
                         {item.quantity} {item.name}
                       </ThemedText>
                     ) : (
                       <ThemedText>
                         {item.quantity} {item.name} (
-                        {(item.totalPrice / item.assignedToId.length).toFixed(
+                        {(item.totalPrice / item.assignedTo.length).toFixed(
                           2
                         )}{" "}
                         per payer)
@@ -103,8 +103,8 @@ const AssignItemsDisplay = () => {
                       overflow: "hidden",
                     }}
                   >
-                    {item.assignedToId.map((id, index) => {
-                      const payer = getPayerById(bill, id);
+                    {item.assignedTo.map((obj, index) => {
+                      const payer = getPayerById(bill, obj.payerId);
                       if (payer === undefined) {
                         return;
                       }

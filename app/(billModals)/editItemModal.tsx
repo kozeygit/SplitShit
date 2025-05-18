@@ -17,6 +17,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { BillItem, NewBillItem } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
 import { set } from "lodash";
+import Toggle from "@/components/ui/Toggle";
+import { is } from "drizzle-orm";
 
 const EditItemModal = () => {
   const router = useRouter();
@@ -36,7 +38,6 @@ const EditItemModal = () => {
   const nameInputRef = useRef<TextInput>(null);
   const quantityInputRef = useRef<TextInput>(null);
   const priceInputRef = useRef<TextInput>(null);
-  const totalPriceInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (itemId === undefined) {
@@ -50,7 +51,7 @@ const EditItemModal = () => {
     const fetchItem = async () => {
       if (editedBill) {
         const oldItem = editedBill.items.find(
-          (item) => (item.id == parseInt(itemId))
+          (item) => item.id == parseInt(itemId)
         );
         if (oldItem === undefined) {
           throw Error("Uh Oh Stinky");
@@ -64,53 +65,33 @@ const EditItemModal = () => {
     };
 
     fetchItem();
-  }, [itemId, editedBill]);
+  }, []);
 
-  const calculateTotalPrice = () => {
-    const numQuantity = parseInt(quantity, 10) || 0;
-    const numPrice = parseFloat(price) || 0;
-    const newTotalPrice = (numQuantity * numPrice).toFixed(2);
-    setTotalPrice(newTotalPrice);
+  const handlePriceChange = (value: string) => {
+      setTotalPrice(value);
+      setPrice(value);
   };
 
-  const calculateUnitPriceFromTotal = () => {
-    const numQuantity = parseInt(quantity, 10) || 0;
-    const numTotalPrice = parseFloat(totalPrice) || 0;
-
-    if (numQuantity > 0) {
-      const newPrice = (numTotalPrice / numQuantity).toFixed(2);
-      setPrice(newPrice);
-    } else {
-      setPrice("0.00");
-    }
-  };
-
-  const handleTotalPriceChange = () => {
-    setIsTotalPriceEditing(true);
-    calculateUnitPriceFromTotal();
-  };
-
-  const handlePriceChange = () => {
-    setIsTotalPriceEditing(false);
-    calculateTotalPrice();
-  };
-
-  const handleQuantityChange = () => {
-    if (!isTotalPriceEditing) {
-      calculateTotalPrice();
-    } else {
-      calculateUnitPriceFromTotal();
-    }
-  };
 
   const handleSave = () => {
+    let savePrice = 0
+    let saveTotalPrice = 0
+
+    if (isTotalPriceEditing) {
+      savePrice = (parseFloat(totalPrice) / parseInt(quantity)) || 0;
+      saveTotalPrice = parseFloat(totalPrice) || 0;
+    } else {
+      saveTotalPrice = (parseFloat(price) * parseInt(quantity)) || 0;
+      savePrice = parseFloat(price) || 0;
+    }
+
     const updatedItem: BillItem = {
       id: Date.now(),
       name: name || "New Item",
       quantity: parseInt(quantity, 10) || 1,
-      price: parseFloat(price) || 0,
-      totalPrice: parseFloat(totalPrice) || 0,
-      assignedToId: []
+      price: savePrice,
+      totalPrice: saveTotalPrice,
+      assignedTo: [],
     };
 
     if (item) {
@@ -132,14 +113,13 @@ const EditItemModal = () => {
 
       console.log("Saving item");
 
-      setEditedBill(editedBill)
+      setEditedBill(editedBill);
       router.back();
       return;
     }
 
-
-    editedBill?.items.push(updatedItem)
-    setEditedBill(editedBill)
+    editedBill?.items.push(updatedItem);
+    setEditedBill(editedBill);
 
     console.log("Adding new item");
     router.back();
@@ -152,9 +132,9 @@ const EditItemModal = () => {
 
   const handleDelete = () => {
     if (item && editedBill) {
-      const index = editedBill.items.indexOf(item)
-      editedBill.items.splice(index, 1)
-      setEditedBill(editedBill)
+      const index = editedBill.items.indexOf(item);
+      editedBill.items.splice(index, 1);
+      setEditedBill(editedBill);
       console.log("Deleting");
     }
     router.back();
@@ -196,14 +176,13 @@ const EditItemModal = () => {
           </View>
 
           <Text style={styles.label}>Quantity</Text>
-          <View style={[styles.input, { borderColor: Colors.pastel.orange }]}>
+          <View style={[styles.input, { borderColor: Colors.pastel.green }]}>
             <TextInput
               ref={quantityInputRef}
               placeholder="0"
               style={{ flex: 1 }}
               keyboardType="numeric"
               value={quantity}
-              onBlur={handleQuantityChange}
               onChangeText={setQuantity}
               returnKeyType="next"
               onSubmitEditing={() => {
@@ -212,38 +191,26 @@ const EditItemModal = () => {
             />
           </View>
 
-          <Text style={styles.label}>Price</Text>
-          <View style={[styles.input, { borderColor: Colors.pastel.green }]}>
+          <Text style={styles.label}>{isTotalPriceEditing ? "Total Price" : "Unit Price"}</Text>
+          <View style={[styles.input, { borderColor: Colors.pastel.blue }]}>
             <TextInput
               ref={priceInputRef}
               placeholder="0"
               style={{ flex: 1 }}
               keyboardType="numeric"
-              value={price}
-              onBlur={handlePriceChange}
-              onChangeText={setPrice}
+              value={isTotalPriceEditing ? totalPrice : price}
+              onChangeText={handlePriceChange}
               returnKeyType="next"
-              onSubmitEditing={() => {
-                totalPriceInputRef.current?.focus();
-              }}
-            />
-            {!isTotalPriceEditing && <MaterialIcons name="edit" size={14} />}
-          </View>
-
-          <Text style={styles.label}>Total Price</Text>
-          <View style={[styles.input, { borderColor: Colors.pastel.indigo }]}>
-            <TextInput
-              ref={totalPriceInputRef}
-              placeholder="0"
-              style={{ flex: 1 }}
-              keyboardType="numeric"
-              value={totalPrice}
-              onBlur={handleTotalPriceChange}
-              onChangeText={setTotalPrice}
-              returnKeyType="done"
               onSubmitEditing={handleSave}
             />
-            {isTotalPriceEditing && <MaterialIcons name="edit" size={14} />}
+          </View>
+          <View style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingTop: 30,
+          }}>
+            <Toggle state={isTotalPriceEditing} onToggle={(state) => {setIsTotalPriceEditing(state)}} leftLabel="Unit Price" rightLabel="Total Price" />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -345,12 +312,11 @@ const styles = StyleSheet.create({
   input: {
     flexDirection: "row",
     alignItems: "center",
-    height: 50,
+    justifyContent: "center",
+    height: 40,
     borderBottomWidth: 1,
-    borderColor: "lightgrey",
     paddingHorizontal: 10,
     backgroundColor: "white",
-    justifyContent: "center",
   },
   inputError: {
     borderColor: "red",

@@ -183,11 +183,6 @@ export default function NewBillPage() {
               <Text style={styles.errorText}>{errors.name.message}</Text>
             )}
 
-            {errors.userEnteredTotal && (
-              <Text style={styles.errorText}>
-                {errors.userEnteredTotal.message}
-              </Text>
-            )}
 
             {/* Date Picker */}
             {show && (
@@ -328,6 +323,11 @@ export default function NewBillPage() {
                 )}
               />
             </View>
+            {errors.userEnteredTotal && (
+              <Text style={styles.errorText}>
+                {errors.userEnteredTotal.message}
+              </Text>
+            )}
           </View>
 
           <View style={{ flex: 1 }}></View>

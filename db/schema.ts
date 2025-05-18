@@ -28,6 +28,7 @@ export const billItems = sqliteTable("bill_items", {
 
 export const assignedItems = sqliteTable("assigned_items", {
     id: integer("id").primaryKey({ autoIncrement: true }),
+    quantity: integer("quantity").notNull(),
     billItemId: integer("bill_item_id").references(() => billItems.id),
     billPayerId: integer("bill_payer_id").references(() => billPayers.id),
 });

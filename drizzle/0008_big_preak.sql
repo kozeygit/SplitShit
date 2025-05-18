@@ -1,0 +1,1 @@
+ALTER TABLE `assigned_items` ADD `quantity` integer NOT NULL;

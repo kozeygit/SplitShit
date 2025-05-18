@@ -82,7 +82,7 @@ Here are the rules to follow:
     ** 'name': This is the name of the item
     ** 'price': Extract the per unit price of each item, if there is none, calculate from the totalPrice and quantity
     ** 'totalPrice': Extract the total price for the items, e.g. 4x milkshake at 2.00 each, total price = 8.00
-* Do not include the keys 'assignedToId' or 'payers' in the returned JSON.
+* Do not include the keys 'assignedTo' or 'payers' in the returned JSON.
 
 If any field cannot be extracted, or if the LLM cannot parse a monetary value, set its value to null.
 
@@ -160,7 +160,7 @@ export const ingestBill = async (bill: Bill): Promise<number> => {
         quantity: item.quantity,
         price: item.price,
         totalPrice: item.totalPrice,
-        assignedToId: item.assignedToId,
+        assignedTo: item.assignedTo,
       }
   );
 
@@ -227,7 +227,7 @@ export const verifyExtractedBill = (extractedBill: any): Bill | string => {
             price: item.price,
             quantity: item.quantity,
             totalPrice: item.totalPrice,
-            assignedToId: [],
+            assignedTo: [],
           }
       ),
       payers: [],

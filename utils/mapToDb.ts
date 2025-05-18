@@ -41,20 +41,3 @@ export const mapBillItemToDB = (item: NewBillItem): billItem_db => {
 
     return mappedItem;
 };
-// export const mapBillItemToModel = async (dbBillItem: typeof billItemsSchema.$inferSelect): Promise<BillItem> => {
-
-//     const mappedBillItem: BillItem = {
-//         id: dbBillItem.id,
-//         name: dbBillItem.name,
-//         price: dbBillItem.price,
-//         quantity: dbBillItem.quantity,
-//         totalPrice: dbBillItem.price * dbBillItem.quantity,
-//         assignedTo: [],
-//         isDiscounted: Boolean(dbBillItem.isDiscounted),
-//         discountedPrice: dbBillItem.discountedPrice || 0,
-//         category: dbBillItem.category || undefined,
-//         discounts: []
-        
-//     };
-//     return mappedBillItem;
-// };

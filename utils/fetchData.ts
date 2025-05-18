@@ -39,7 +39,7 @@ export const fetchBillItems = async (billId: number): Promise<BillItem[]> => {
         if (assRes.bill_payers.payerId === null) {
           throw Error("Got an item thats not for this bill");
         }
-        item.assignedToId.push(assRes.bill_payers.payerId);
+        item.assignedTo.push({ payerId: assRes.bill_payers.payerId, quantity: assRes.assigned_items.quantity });
       }
     }
 

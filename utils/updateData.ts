@@ -77,7 +77,7 @@ const updateItemAssignments = async (bill: Bill): Promise<void> => {
       for (const bp of billPayers) {
         if (bp.id == oldAssignment.billPayerId) {
           found = true;
-          if (item.assignedToId.find((id) => id == bp.payerId) === undefined) {
+          if (item.assignedTo.find((obj) => obj.payerId == bp.payerId) === undefined) {
             found = false;
           }
         }
@@ -96,10 +96,13 @@ const updateItemAssignments = async (bill: Bill): Promise<void> => {
       if (isOldAssignment) {
         continue;
       }
-      if (item.assignedToId.find((id) => id == bp.payerId) === undefined) {
-        continue;
+      const assignedTo = item.assignedTo.find((obj) => obj.payerId == bp.payerId)
+      if (assignedTo === undefined) {
+        continue
       }
+
       await db.insert(schema.assignedItems).values({
+        quantity: assignedTo.quantity,
         billItemId: item.id,
         billPayerId: bp.id,
       });

@@ -99,8 +99,7 @@ const BillCard: React.FC<BillCardProps> = ({
             style={styles.dropdownIcon}
           />
           {isSelected && (
-            <View style={incompleteStyles.selected}>
-              <ThemedText>Delete</ThemedText>
+            <View style={styles.selected}>
             </View>
           )}
         </View>
@@ -137,8 +136,17 @@ const BillCard: React.FC<BillCardProps> = ({
 };
 
 const completeStyles = StyleSheet.create({
-  selected: {
-    backgroundColor: "red",
+selected: {
+    position: "absolute",
+    backgroundColor: "rgba(0,0,0,0.3)",
+    padding: 0,
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    zIndex: 10,
   },
   billCardOuter: {
     backgroundColor: "white",
@@ -159,6 +167,7 @@ const completeStyles = StyleSheet.create({
     borderRadius: "100%",
     aspectRatio: 1,
     marginRight: 10,
+    zIndex: 100,
   },
   billDetails: {
     flex: 1,

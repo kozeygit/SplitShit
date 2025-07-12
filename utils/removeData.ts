@@ -13,16 +13,16 @@ import { eq, lt, gte, ne, count } from "drizzle-orm";
 
 const db = getDrizzleDb();
 
-export const removeBill = async (newBill: NewBill): Promise<number> => {
+export const removeBill = async (billId: number): Promise<number> => {
   try {
-    const insertedBill: { id: number }[] = await db
-      .insert(schema.bills)
-      .values(mapBillToDB(newBill))
-      .returning({ id: schema.bills.id });
+    // Check if bill id is in table,
+    // remove all billPayer links
+    // remove all billItems (use method and assigned items will be handles as well)
+    // remove bill
+    
 
-    console.log(new Date().toLocaleTimeString(), " - insertBill called"); // Log inside insertBill
-
-    return insertedBill[0].id;
+    console.log(new Date().toLocaleTimeString(), " - removeBill called"); // Log inside insertBill
+    return 1
   } catch (error) {
     console.error("Error in insertBill:", error);
     return -1;

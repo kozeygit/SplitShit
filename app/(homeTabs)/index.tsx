@@ -20,6 +20,11 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { ThemedText } from "@/components/ThemedText";
 import { LinearGradient } from "expo-linear-gradient";
 
+import Animated, {
+  SlideInRight,
+  SlideOutRight,
+} from "react-native-reanimated";
+
 const BillPage = () => {
   const router = useRouter();
   const { getBills, getBill } = useGetData();
@@ -58,8 +63,8 @@ const BillPage = () => {
 
   const toggleDropdown = (id: number) => {
     if (selectedBillsIds.length > 0) {
-      handleSelect(id)
-      return
+      handleSelect(id);
+      return;
     }
     setExpandedBillId(expandedBillId === id ? null : id);
   };
@@ -77,11 +82,20 @@ const BillPage = () => {
     setBillComplete(id, true);
     onRefresh();
   };
+  
+  const handleCompleteBills = (ids: number[]) => {
+    for (const billId of ids) {
+      setBillComplete(billId, true)
+      onRefresh();
+    }
+    setSelectedBillsIds([])
+  }
 
   const handleDeleteBills = (billIds: number[]) => {
-    billIds.forEach(element => {
-      console.log("Deleting bill:", element)
-    });
+    for (const billId of billIds) {
+      console.log("Deleting bill:", billId);
+    };
+    setSelectedBillsIds([])
   };
 
   const handleSelect = (id: number) => {
@@ -90,7 +104,7 @@ const BillPage = () => {
       return;
     }
     setSelectedBillsIds([...selectedBillsIds, id]);
-    setExpandedBillId(null)
+    setExpandedBillId(null);
   };
 
   useEffect(() => {
@@ -126,18 +140,39 @@ const BillPage = () => {
           />
         )}
       />
+
       {showSelectionOptions && (
-        <LinearGradient colors={["rgba(0,0,0,0)", "rgba(0,0,0,1)"]} style={styles.selectionOptions}>
-          <Pressable style={[styles.selectionOption, styles.selectionOptionCancel]} onPress={() => {setSelectedBillsIds([])}}>
-            <MaterialIcons name="cancel" size={35} />
-          </Pressable>
-          <Pressable style={styles.selectionOption}>
-            <ThemedText type="subtitle" style={{fontSize: 25}}>{selectedBillsIds.length}</ThemedText>
-          </Pressable>
-          <Pressable style={[styles.selectionOption, styles.selectionOptionDelete]} onPress={() => handleDeleteBills(selectedBillsIds)}>
-            <MaterialIcons name="delete" size={35} color={"white"} />
-          </Pressable>
-        </LinearGradient>
+        <Animated.View
+          entering={SlideInRight}
+          exiting={SlideOutRight}
+          style={styles.selectionOptions}
+        >
+            <Pressable
+              style={[styles.selectionOption, styles.selectionOptionCancel]}
+              onPress={() => {
+                setSelectedBillsIds([]);
+              }}
+            >
+              <MaterialIcons name="cancel" size={30} />
+            </Pressable>
+            <Pressable style={styles.selectionOption}>
+              <ThemedText type="subtitle" style={{ fontSize: 25 }}>
+                {selectedBillsIds.length}
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[styles.selectionOption, styles.selectionOptionComplete]}
+              onPress={() => handleCompleteBills(selectedBillsIds)}
+            >
+              <MaterialIcons name="check" size={30} color={"black"} />
+            </Pressable>
+            <Pressable
+              style={[styles.selectionOption, styles.selectionOptionDelete]}
+              onPress={() => handleDeleteBills(selectedBillsIds)}
+            >
+              <MaterialIcons name="delete" size={30} color={"white"} />
+            </Pressable>
+        </Animated.View>
       )}
     </SafeAreaView>
   );
@@ -145,16 +180,22 @@ const BillPage = () => {
 
 const styles = StyleSheet.create({
   selectionOptions: {
+    backgroundColor: Colors.light.background,
     position: "absolute",
-    paddingBottom: 70,
-    paddingTop: 50,
+    borderTopLeftRadius: 50,
+    borderBottomLeftRadius: 50,
+    borderWidth: 2,
+    borderRightWidth: 0,
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    marginBottom: 40,
     bottom: 0,
-    left: 0,
     right: 0,
-    alignSelf: "center",
-    height: 200,
+    height: 90,
     flexDirection: "row",
     justifyContent: "space-evenly",
+    gap: 10,
+    elevation: 5,
   },
   selectionOption: {
     borderRadius: 100,
@@ -165,11 +206,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  selectionOptionComplete: {
+    backgroundColor: Colors.pastel.green,
+  },
   selectionOptionCancel: {
-    backgroundColor: Colors.pastel.green
+    backgroundColor: Colors.pastel.cyan,
   },
   selectionOptionDelete: {
-    backgroundColor: "red"
+    backgroundColor: "red",
   },
   container: {
     flex: 1,

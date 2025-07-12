@@ -80,11 +80,15 @@ Here are the rules to follow:
 * 'items': Extract a list of purchased items, including description, quantity, and price. If quantity is not present, default to 1.
     ** 'id': this should just be the index of the item in the bill you return
     ** 'name': This is the name of the item
+    ** 'quantity': This is the amount of this item, if there is none, or it is unable to be extracted, use 1 as default
     ** 'price': Extract the per unit price of each item, if there is none, calculate from the totalPrice and quantity
     ** 'totalPrice': Extract the total price for the items, e.g. 4x milkshake at 2.00 each, total price = 8.00
 * Do not include the keys 'assignedTo' or 'payers' in the returned JSON.
 
-If any field cannot be extracted, or if the LLM cannot parse a monetary value, set its value to null.
+If any field cannot be extracted, or if the LLM cannot parse a monetary value, set its value to NULL or default, whichever is more suitable for the data type.
+If you can extract either the individual price, or the total price, use that value to calculate the other.
+If BOTH unit price and total price are unable to be extracted for an item, use £10 for the unit price and multiply that by the quantity for the total price.
+THE PRICE AND TOTAL PRICE SHOULD NOT BE NULL!
 
 Your output MUST be a valid JSON object, and nothing else.
 `;

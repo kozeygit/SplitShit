@@ -19,6 +19,7 @@ import { useBillStore } from "@/utils/billStore";
 import { set } from "lodash";
 import Toggle from "@/components/ui/Toggle";
 import { is } from "drizzle-orm";
+import { Price } from "@/utils/priceUtils";
 
 const EditItemModal = () => {
   const router = useRouter();
@@ -59,8 +60,8 @@ const EditItemModal = () => {
         setItem(oldItem);
         setName(oldItem.name);
         setQuantity(oldItem.quantity.toString());
-        setPrice(oldItem.price.toFixed(2).toString());
-        setTotalPrice(oldItem.totalPrice.toFixed(2).toString());
+        setPrice(oldItem.price.toDisplay());
+        setTotalPrice(oldItem.totalPrice.toDisplay());
       }
     };
 
@@ -74,32 +75,34 @@ const EditItemModal = () => {
 
 
   const handleSave = () => {
-    let savePrice = 0
-    let saveTotalPrice = 0
+    let savePriceObj: Price;
+    let saveTotalPriceObj: Price;
 
     if (isTotalPriceEditing) {
-      savePrice = (parseFloat(totalPrice) / parseInt(quantity)) || 0;
-      saveTotalPrice = parseFloat(totalPrice) || 0;
+      saveTotalPriceObj = Price.fromDecimal(parseFloat(totalPrice) || 0);
+      const quantityInt = parseInt(quantity) || 1;
+      savePriceObj = saveTotalPriceObj.divide(quantityInt);
     } else {
-      saveTotalPrice = (parseFloat(price) * parseInt(quantity)) || 0;
-      savePrice = parseFloat(price) || 0;
+      savePriceObj = Price.fromDecimal(parseFloat(price) || 0);
+      const quantityInt = parseInt(quantity) || 1;
+      saveTotalPriceObj = savePriceObj.multiply(quantityInt);
     }
 
     const updatedItem: BillItem = {
       id: Date.now(),
       name: name || "New Item",
       quantity: parseInt(quantity, 10) || 1,
-      price: savePrice,
-      totalPrice: saveTotalPrice,
+      price: savePriceObj,
+      totalPrice: saveTotalPriceObj,
       assignedTo: [],
     };
 
     if (item) {
       if (
         updatedItem.name == item.name &&
-        updatedItem.price == item.price &&
+        updatedItem.price.equals(item.price) &&
         updatedItem.quantity == item.quantity &&
-        updatedItem.totalPrice == item.totalPrice
+        updatedItem.totalPrice.equals(item.totalPrice)
       ) {
         console.log("No changes to save");
         router.back();

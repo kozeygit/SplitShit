@@ -1,6 +1,7 @@
 import PayerIcon from "@/components/payer/PayerIcon";
 import { ThemedText } from "@/components/ThemedText";
 import ContainerView from "@/components/ui/ContainerView";
+import InfoRow from "@/components/ui/InfoRow";
 import { Colors } from "@/constants/Colors";
 import { useGetData } from "@/hooks/useGetData";
 import { Bill, BillItem, NewBillItem } from "@/models/bill";
@@ -15,6 +16,7 @@ import {
   View,
   FlatList,
 } from "react-native";
+import { Price } from "@/utils/priceUtils";
 
 const AssignItemsDisplay = () => {
   const router = useRouter();
@@ -27,8 +29,8 @@ const AssignItemsDisplay = () => {
     items: [],
     complete: false,
     payers: [],
-    serviceCharge: 0,
-    userEnteredTotal: 420.69,
+    serviceCharge: Price.fromCents(0),
+    userEnteredTotal: Price.fromCents(42069),
   });
 
   useFocusEffect(
@@ -77,40 +79,42 @@ const AssignItemsDisplay = () => {
             renderItem={({ item }) => (
               <TouchableNativeFeedback onPress={() => openAssignModal(item)}>
                 <View style={{ borderBottomWidth: 1, borderBottomColor: "lightgrey", paddingVertical: 5 }}>
-                  <View style={styles.infoRow}>
-                    {item.assignedTo.length < 1 ? (
-                      <ThemedText>
-                        {item.quantity} {item.name}
-                      </ThemedText>
-                    ) : (
-                      <ThemedText>
-                        {item.quantity} {item.name} (
-                        {(item.totalPrice / item.assignedTo.length).toFixed(
-                          2
-                        )}{" "}
-                        per payer)
-                      </ThemedText>
-                    )}
-                    <View style={styles.itemPriceSeparator}></View>
-                    <ThemedText>{item.totalPrice.toFixed(2)}</ThemedText>
-                  </View>
-                  <View
-                    style={{
-                      paddingBottom: 10,
-                      gap: 5,
-                      paddingTop: 10,
-                      flexDirection: "row",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {item.assignedTo.map((obj, index) => {
-                      const payer = getPayerById(bill, obj.payerId);
-                      if (payer === undefined) {
-                        return;
-                      }
-                      return <PayerIcon key={index} payer={payer} />;
-                    })}
-                  </View>
+                  <InfoRow
+                    label={
+                      item.assignedTo.length < 2 ? (
+                        <ThemedText>
+                          {item.quantity} {item.name}
+                        </ThemedText>
+                      ) : (
+                        <ThemedText>
+                          {item.quantity} {item.name}{" "}
+                          <ThemedText type="darkGrital">
+                            ({item.totalPrice.divide(item.assignedTo.length).toDisplay()})
+                          </ThemedText>
+                        </ThemedText>
+                      )
+                    }
+                    value={<ThemedText>£{item.totalPrice.toDisplay()}</ThemedText>}
+                    showSeparator={false}
+                  />
+                  {item.assignedTo.length >= 1 ?
+                    <View
+                      style={{
+                        paddingBottom: 5,
+                        gap: 5,
+                        paddingTop: 10,
+                        flexDirection: "row",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {item.assignedTo.map((obj, index) => {
+                        const payer = getPayerById(bill, obj.payerId);
+                        if (payer === undefined) {
+                          return;
+                        }
+                        return <PayerIcon key={index} payer={payer} />;
+                      })}
+                    </View> : ""}
                 </View>
               </TouchableNativeFeedback>
             )}
@@ -145,21 +149,10 @@ const styles = StyleSheet.create({
     gap: 10,
     borderBottomWidth: 1,
   },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+
   itemsContainer: {
     marginTop: 10,
     gap: 5,
   },
-  itemPriceSeparator: {
-    borderBottomWidth: 1,
-    flex: 1,
-    height: "50%",
-    borderStyle: "dotted",
-    marginHorizontal: 5,
-    borderColor: "lightgrey",
-  },
+
 });

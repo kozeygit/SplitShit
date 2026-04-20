@@ -14,6 +14,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Price } from "@/utils/priceUtils";
 
 const colorKeys = Object.values(Colors.pastel);
 
@@ -89,7 +90,7 @@ const BillCard: React.FC<BillCardProps> = ({
           </View>
           <View style={styles.billMeta}>
             <ThemedText type="subtitle" style={styles.billTotal}>
-              {`£${billData.userEnteredTotal.toFixed(2)}`}
+              {`£${billData.userEnteredTotal.toDisplay()}`}
             </ThemedText>
           </View>
           <MaterialIcons
@@ -191,7 +192,7 @@ selected: {
   dropdownOptionEdit: {
     flex: 1,
     alignItems: "center",
-    paddingVertical: 10,
+    justifyContent: "center",
     backgroundColor: Colors.pastel.blue,
   },
   dropdownOptionComplete: {
@@ -257,14 +258,14 @@ const incompleteStyles = StyleSheet.create({
   dropdownOptionEdit: {
     flex: 1,
     alignItems: "center",
-    paddingVertical: 10,
+    justifyContent: "center",
     backgroundColor: Colors.pastel.blue,
     borderRightWidth: 1,
   },
   dropdownOptionComplete: {
     flex: 1,
     alignItems: "center",
-    paddingVertical: 10,
+    justifyContent: "center",
     backgroundColor: Colors.pastel.green,
     borderLeftWidth: 1,
   },

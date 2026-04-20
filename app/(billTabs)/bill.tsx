@@ -1,6 +1,7 @@
 import PayerIcon from "@/components/payer/PayerIcon";
 import { ThemedText } from "@/components/ThemedText";
 import ContainerView from "@/components/ui/ContainerView";
+import InfoRow from "@/components/ui/InfoRow";
 import { Colors } from "@/constants/Colors";
 import { useGetData } from "@/hooks/useGetData";
 import { Bill, BillItem, NewBillItem } from "@/models/bill";
@@ -10,6 +11,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { isEqual, set } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
+import { Price } from "@/utils/priceUtils";
 import {
   SafeAreaView,
   ScrollView,
@@ -20,7 +22,6 @@ import {
   Text,
   Pressable,
 } from "react-native";
-import BouncyCheckbox from "react-native-bouncy-checkbox";
 
 const BillDisplay = () => {
   const router = useRouter();
@@ -38,8 +39,8 @@ const BillDisplay = () => {
     items: [],
     complete: false,
     payers: [],
-    serviceCharge: 0,
-    userEnteredTotal: 420.69,
+    serviceCharge: Price.fromCents(0),
+    userEnteredTotal: Price.fromCents(42069),
   });
 
 
@@ -88,9 +89,10 @@ const BillDisplay = () => {
   };
 
   const itemsTotal = bill.items.reduce(
-    (acc: number, item: BillItem) => acc + item.totalPrice,
-    0
+    (acc: Price, item: BillItem) => acc.add(item.totalPrice),
+    Price.fromCents(0)
   );
+
 
   return (
     <SafeAreaView
@@ -151,18 +153,21 @@ const BillDisplay = () => {
                 onPress={() => openItemModal(item)}
                 key={item.id}
               >
-                <View key={item.id} style={styles.infoRow}>
-                  {item.price == item.totalPrice ? (
-                    <ThemedText>
-                      {item.quantity} {item.name}
-                    </ThemedText>
-                  ) : (
-                    <ThemedText>
-                      {item.quantity} {item.name} ({item.price.toFixed(2)})
-                    </ThemedText>
-                  )}
-                  <View style={styles.itemPriceSeparator}></View>
-                  <ThemedText>{item.totalPrice.toFixed(2)}</ThemedText>
+                <View key={item.id}>
+                  <InfoRow
+                    label={
+                      item.quantity == 1 ? (
+                        <ThemedText>
+                          {item.quantity} {item.name}
+                        </ThemedText>
+                      ) : (
+                        <ThemedText>
+                          {item.quantity} {item.name} <ThemedText type="darkGrital">({item.price.toDisplay()})</ThemedText>
+                        </ThemedText>
+                      )
+                    }
+                    value={<ThemedText>{item.totalPrice.toDisplay()}</ThemedText>}
+                  />
                 </View>
               </TouchableNativeFeedback>
             ))}
@@ -176,55 +181,53 @@ const BillDisplay = () => {
           </View>
         </View>
 
+        <TouchableNativeFeedback onPress={openBillDetailsModal}>
         <View style={styles.billDataContainer}>
-          <View style={styles.infoRow}>
-            <ThemedText>
-              Service Charge: (
-              {(
-                (bill.serviceCharge /
-                  (bill.userEnteredTotal - bill.serviceCharge)) *
-                100
-              ).toPrecision(3)}
-              %)
-            </ThemedText>
-            <ThemedText>{"£" + bill.serviceCharge.toFixed(2)}</ThemedText>
-            {/* Handle optional service charge */}
-          </View>
-          <View style={styles.infoRow}>
-            <ThemedText type="subtitle" style={{ flex: 1 }}>
-              Total:
-            </ThemedText>
-            {bill.userEnteredTotal == itemsTotal + bill.serviceCharge ? (
-              <>
+          <InfoRow
+            label={
+              <ThemedText>
+                Service Charge: (
+                {(
+                  (bill.serviceCharge.getCents() /
+                    (bill.userEnteredTotal.getCents() - bill.serviceCharge.getCents())) *
+                  100
+                ).toPrecision(3)}
+                %)
+              </ThemedText>
+            }
+            value={<ThemedText>{"£ " + bill.serviceCharge.toDisplay()}</ThemedText>}
+          />
+          <InfoRow
+            label=<ThemedText type="subtitle">Total:</ThemedText>
+            value={
+              bill.userEnteredTotal.equals(itemsTotal.add(bill.serviceCharge)) ? (
                 <ThemedText type="subtitle">
-                  {"£ " + bill.userEnteredTotal.toFixed(2)}
+                  {"£ " + bill.userEnteredTotal.toDisplay()}
                 </ThemedText>
-              </>
-            ) : (
-              <>
-                <ThemedText
-                  type="default"
-                  style={{ color: "red", fontSize: 18 }}
-                >
-                  (
-                  {itemsTotal + bill.serviceCharge > bill.userEnteredTotal
-                    ? "+"
-                    : ""}
-                  {(
-                    itemsTotal +
-                    bill.serviceCharge -
-                    bill.userEnteredTotal
-                  ).toFixed(2)}
-                  )
-                </ThemedText>
-                <Text> </Text>
-                <ThemedText type="subtitle">
-                  {"£ " + bill.userEnteredTotal.toFixed(2)}
-                </ThemedText>
-              </>
-            )}
+              ) : (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <ThemedText
+                    type="default"
+                    style={{ color: "red", fontSize: 18 }}
+                  >
+                    (
+                    {itemsTotal.add(bill.serviceCharge).isGreaterThan(bill.userEnteredTotal)
+                      ? "+"
+                      : ""}
+                    {itemsTotal.add(bill.serviceCharge).subtract(bill.userEnteredTotal).toDisplay()}
+                    )
+                  </ThemedText>
+                  <Text> </Text>
+                  <ThemedText type="subtitle">
+                    {"£ " + bill.userEnteredTotal.toDisplay()}
+                  </ThemedText>
+                </View>
+              )
+            }
+          
+          />
           </View>
-        </View>
+        </TouchableNativeFeedback>
       </ContainerView>
       <View style={styles.buttonContainer}>
         <View style={styles.cancelButtonOuter}>
@@ -278,23 +281,12 @@ const styles = StyleSheet.create({
     gap: 10,
     borderBottomWidth: 1,
   },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+
   itemsContainer: {
     marginTop: 10,
     gap: 5,
   },
-  itemPriceSeparator: {
-    borderBottomWidth: 1,
-    flex: 1,
-    height: "50%",
-    borderStyle: "dotted",
-    marginHorizontal: 5,
-    borderColor: "grey",
-  },
+
   payersContainer: {
     flexDirection: "row",
     alignItems: "center",

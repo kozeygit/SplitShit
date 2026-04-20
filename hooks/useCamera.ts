@@ -43,7 +43,7 @@ export const useCamera = () => {
     await createBillFromImage(result.assets[0].uri).then(async (newBillId) => {
       if (newBillId < 0) {
         Alert.alert("Error", "Error in parsing bill from photo.\n\nEnter details manually")
-        setIsCameraEnabled(false);
+        // setIsCameraEnabled(false);
         if (failureFunc !== undefined)
           failureFunc();
         return

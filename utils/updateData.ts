@@ -3,6 +3,7 @@ import { mapBillItemToDB, mapBillToDB, mapPayerToDB } from "./mapToDb";
 import {
   Bill,
   BillItem,
+  Group,
   NewBill,
   NewBillItem,
   NewPayer,
@@ -10,7 +11,7 @@ import {
 } from "../models/bill";
 import { getDrizzleDb } from "./database";
 import { eq, lt, gte, ne, and } from "drizzle-orm";
-import { fetchBillItems, fetchPayers } from "./fetchData";
+import { fetchBillItems, fetchGroupPayers, fetchPayers } from "./fetchData";
 import { insertBillItem } from "./insertData";
 import { isEqual } from "lodash";
 import { removeBillItem } from "./removeData";
@@ -27,8 +28,6 @@ export const setBillComplete = async (
       .set({ complete: complete ? 1 : 0 })
       .where(eq(schema.bills.id, billId))
       .returning({ id: schema.bills.id, complete: schema.bills.complete });
-
-
     return insertedBill[0].id;
   } catch (error) {
     console.error("Error in setBillComplete:", error);
@@ -109,6 +108,49 @@ const updateItemAssignments = async (bill: Bill): Promise<void> => {
     }
   }
 };
+
+
+const updateGroupPayers = async (group: Group): Promise<void> => {
+  // Change group payers
+  const oldPayers = await fetchGroupPayers(group.id);
+  // Delete old payers that are not in the new group
+  for (const oldPayer of oldPayers) {
+    let found = false;
+    for (const payer of group.payers) {
+      if (payer.id == oldPayer.id) {
+        found = true;
+      }
+    }
+    if (!found) {
+      const deletedGP = await db
+        .delete(schema.groupPayers)
+        .where(
+          and(
+            eq(schema.groupPayers.payerId, oldPayer.id),
+            eq(schema.groupPayers.groupId, group.id)
+          )
+        )
+        .returning();
+
+      await db
+        .delete(schema.assignedItems)
+        .where(eq(schema.assignedItems.billPayerId, deletedGP[0].id));
+    }
+  }
+
+  for (const payer of group.payers) {
+    const isOldPayer = oldPayers.some((oldPayer) => oldPayer.id == payer.id);
+      if (isOldPayer) {
+        continue;
+      }
+      await db.insert(schema.groupPayers).values({
+        groupId: group.id,
+        payerId: payer.id,
+      });
+  }
+};
+
+
 
 const updateBillPayers = async (bill: Bill): Promise<void> => {
   // Change bill payers

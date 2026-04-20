@@ -21,6 +21,8 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { useBillStore } from "@/utils/billStore";
+import { parse } from "@babel/core";
+import { Price } from "@/utils/priceUtils";
 
 const EditBillDetailsModal = () => {
   const { getBill } = useGetData();
@@ -70,30 +72,35 @@ const EditBillDetailsModal = () => {
       const oldBill = editedBill!;
       setName(oldBill.name);
       setDate(oldBill.date);
-      setServiceCharge(oldBill.serviceCharge.toFixed(2).toString());
-      setTotalPrice(oldBill.userEnteredTotal.toFixed(2).toString());
+      setServiceCharge(oldBill.serviceCharge.toDisplay());
+      setTotalPrice(oldBill.userEnteredTotal.toDisplay());
     };
 
     fetchBill();
   }, [getBill]);
 
   const handleSave = () => {
+    const totalPriceObj = Price.fromDecimal(parseFloat(totalPrice) || 0);
+    let serviceChargeObj = Price.fromDecimal(parseFloat(serviceCharge) || 0);
+
+    if (serviceType == "percentage") {
+      // Calculate service charge as percentage of subtotal
+      const subTotal = totalPriceObj.divide(1 + (parseFloat(serviceCharge) / 100));
+      serviceChargeObj = totalPriceObj.subtract(subTotal);
+    }
+
     const updatedBill: NewBill = {
       name: name || "New Item",
       date: date,
-      serviceCharge:
-        serviceType == "percentage"
-          ? ((parseFloat(serviceCharge) || 0) * (parseFloat(totalPrice) || 0)) /
-            100
-          : parseFloat(serviceCharge) || 0,
-      userEnteredTotal: parseFloat(totalPrice) || 0,
+      serviceCharge: serviceChargeObj,
+      userEnteredTotal: totalPriceObj,
     };
     if (editedBill) {
       if (
         updatedBill.name == editedBill.name &&
         updatedBill.date == editedBill.date &&
-        updatedBill.serviceCharge == editedBill.serviceCharge &&
-        updatedBill.userEnteredTotal == editedBill.userEnteredTotal
+        updatedBill.serviceCharge.equals(editedBill.serviceCharge) &&
+        updatedBill.userEnteredTotal.equals(editedBill.userEnteredTotal)
       ) {
         console.log("No changes to save");
         router.back();

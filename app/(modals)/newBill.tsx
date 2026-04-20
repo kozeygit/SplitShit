@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   View,
   TextInput,
-  Button,
   StyleSheet,
   Text,
   Platform,
@@ -11,7 +10,7 @@ import {
   SafeAreaView,
   ScrollView,
   Pressable,
-  Alert,
+  ActivityIndicator
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,9 +26,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertBill } from "@/utils/insertData";
 import { useBillStore } from "@/utils/billStore";
 import { useGetData } from "@/hooks/useGetData";
-import * as ImagePicker from "expo-image-picker";
-import { createBillFromImage } from "@/utils/createBillFromImage";
 import { useCamera } from "@/hooks/useCamera";
+import { Price } from "@/utils/priceUtils";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
@@ -72,11 +70,23 @@ export default function NewBillPage() {
   });
 
   const onSubmit = async (data: NewBill) => {
+    const totalPrice = Price.fromDecimal((data.userEnteredTotal as any) || 0);
+    let serviceChargePrice = Price.fromDecimal((data.serviceCharge as any) || 0);
+
     if (serviceType == "percentage") {
-      data.serviceCharge = (data.userEnteredTotal * data.serviceCharge) / 100;
+      // Calculate service charge as percentage of subtotal
+      const subTotal = totalPrice.divide(1 + (((data.serviceCharge as any) || 0) / 100));
+      serviceChargePrice = totalPrice.subtract(subTotal);
     }
 
-    const newBillId = await insertBill(data);
+    const billToInsert: NewBill = {
+      name: data.name,
+      date: data.date,
+      userEnteredTotal: totalPrice,
+      serviceCharge: serviceChargePrice,
+    };
+
+    const newBillId = await insertBill(billToInsert);
     if (newBillId < 0) {
       console.log("insert bill failed for some reason????");
     } else {
@@ -123,7 +133,7 @@ export default function NewBillPage() {
       const bill = await getBill(newBillId);
       setOriginalBill(bill);
       resetEditedBill();
-      router.push("/bill");
+      router.replace("/bill");
   }
 
   const handleOpenCamera = async () => {
@@ -142,7 +152,17 @@ export default function NewBillPage() {
         paddingHorizontal: 20,
       }}
     >
-      {loading && <View style={styles.loadingView}></View>}
+      {loading && (
+        <View style={styles.loadingView}>
+          <ActivityIndicator size="large" color="white" />
+          <ThemedText style={{ color: "white", marginTop: 10 }}>
+            Extracting bill data...
+          </ThemedText>
+        </View>
+      )}
+      {/* ... rest of the code */}
+
+
       <KeyboardAvoidingView
         behavior={Platform.OS == "ios" ? "padding" : "height"}
         style={{
@@ -153,7 +173,7 @@ export default function NewBillPage() {
           <View style={styles.container}>
             <View style={styles.title}>
               <ThemedText type="title">Add New Bill</ThemedText>
-              <Pressable onLongPress={() => { alert("Camera enabled");  enableCamera() }} delayLongPress={5000} onPress={handleOpenCamera} style={styles.photoButton}>
+              <Pressable onLongPress={() => { alert("Camera enabled");  enableCamera() }} delayLongPress={2000} onPress={handleOpenCamera} style={styles.photoButton}>
                 <MaterialIcons
                   name="photo-camera"
                   size={20}
@@ -368,13 +388,15 @@ const styles = StyleSheet.create({
     elevation: 3
   },
   loadingView: {
-    backgroundColor: "rgba(0,0,0,0.3)",
+    backgroundColor: "rgba(0,0,0,0.6)", // Darkened slightly more for contrast
     position: "absolute",
-    height: 1000,
-    width: 1000,
-    left: 0,
     top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 100,
+    justifyContent: "center", // Centers spinner vertically
+    alignItems: "center",     // Centers spinner horizontally
   },
   container: {
     marginTop: 80,

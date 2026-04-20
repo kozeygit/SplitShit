@@ -1,111 +1,212 @@
 import { payers } from "@/db/schema";
 import { Bill, BillItem, NewBill, NewBillItem } from "@/models/bill";
+import { Price } from "@/utils/priceUtils";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { insertBill, insertBillItem } from "./insertData";
 import MlkitOcr from "react-native-mlkit-ocr";
 
-const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY as string; // Replace with your actual API key
-
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash-lite",
-  generationConfig: {
-    temperature: 0.1,
-    responseMimeType: "application/json",
-  },
-});
-
 const systemPrompt = `
-You are an expert data extraction tool. Your sole task is to parse raw text extracted from receipts and bills and return the information as a JSON object. You MUST ONLY return a valid JSON object, and nothing else. Absolutely no additional text, explanations, markdown code blocks, or any other characters are allowed outside of the JSON.
 
-This is the strict structure of the JSON object you must return:
+### Receipt Data Extraction System Prompt
+
+You are a deterministic data extraction tool. Your only task is to parse raw text from receipts or bills and return a valid JSON object that strictly follows the schema below.
+
+JSON Structure (STRICT)
+You MUST return exactly this structure and nothing else:
 
 {
   "name": "string",
   "date": "string (ISO 8601 Date/Time)",
-  "userEnteredTotal": "number",
-  "serviceCharge": "number",
-  "complete": "boolean",
-  "items": [
-    {
-      "id": "number",
-      "name": "string",
-      "price": "number",
-      "quantity": "number",
-      "totalPrice": "number"
-    },
-    "..." // More items
-  ]
-}
-
-Here is and example with data:
-{
-  "name": "Restaurant Bill",
-  "date": "2023-10-27T18:30:00.000Z",
-  "userEnteredTotal": 100.00,
-  "serviceCharge": 10.00,
+  "userEnteredTotal": number,
+  "serviceCharge": number,
   "complete": false,
   "items": [
     {
-      "id": 1,
-      "name": "Pizza",
-      "price": 15.00,
-      "quantity": 2,
-      "totalPrice": 30.00
-    },
-    {
-      "id": 2,
-      "name": "Salad",
-      "price": 8.00,
-      "quantity": 1,
-      "totalPrice": 8.00
-    },
-    {
-      "id": 3,
-      "name": "Drinks",
-      "price": 5.00,
-      "quantity": 4,
-      "totalPrice": 20.00
+      "id": number,
+      "name": "string",
+      "price": number,
+      "quantity": number,
+      "totalPrice": number
     }
   ]
 }
 
-Here are the rules to follow:
+Global Rules
 
-* 'name': Extract the name of the restaurant from the bill, or use 'New Bill' as default.
-* 'date': Extract the seating date and format it as (ISO 8601 Date/Time), if no data is present on the bill, use "2023-10-27T18:30:00.000Z" as default.
-* 'userEnteredTotal': Extract the final total amount of the bill.
-* 'serviceCharge': this is the service charge / tip. This should always be in monetary value. If the service charge is given as 'X%', calculate the decimal value and use that as the monetary value.
-* 'complete': This should always be false
-* 'items': Extract a list of purchased items, including description, quantity, and price. If quantity is not present, default to 1.
-    ** 'id': this should just be the index of the item in the bill you return
-    ** 'name': This is the name of the item
-    ** 'quantity': This is the amount of this item, if there is none, or it is unable to be extracted, use 1 as default
-    ** 'price': Extract the per unit price of each item, if there is none, calculate from the totalPrice and quantity
-    ** 'totalPrice': Extract the total price for the items, e.g. 4x milkshake at 2.00 each, total price = 8.00
-* Do not include the keys 'assignedTo' or 'payers' in the returned JSON.
+- Return ONLY the JSON object.
+- Do NOT include any explanations, text, or markdown.
+- All numeric fields MUST be valid JSON numbers (not strings).
+- Never return null, undefined, or missing fields.
+- Trim whitespace from all string values.
+- Normalize text by removing obvious OCR artifacts where possible.
 
-If any field cannot be extracted, or if the LLM cannot parse a monetary value, set its value to NULL or default, whichever is more suitable for the data type.
-If you can extract either the individual price, or the total price, use that value to calculate the other.
-If BOTH unit price and total price are unable to be extracted for an item, use £10 for the unit price and multiply that by the quantity for the total price.
-THE PRICE AND TOTAL PRICE SHOULD NOT BE NULL!
+Extraction & Sanitization Rules
 
-Your output MUST be a valid JSON object, and nothing else.
-`;
+1. OCR Correction
+- Correct common OCR errors:
+  - "0" ↔ "O", "1" ↔ "I", "5.O0" → "5.00"
+  - "200Z" or "20OZ" → "20oz"
+  - "E10" → "10.00"
 
-export const createBillFromImage2 = async (uri: string): Promise<number> => {
-  const resultFromUri = await MlkitOcr.detectFromUri(uri);
+2. Restaurant Name (name)
+- Extract the business/restaurant name.
+- Prefer the most prominent or header-style text.
+- Default: "New Bill"
 
-  const text = resultFromUri?.map((block) => block.text).toString() || "";
+3. Date (date)
+- Extract the transaction date and time.
+- Convert to ISO 8601 format (UTC): YYYY-MM-DDTHH:mm:ss.000Z
+- If format is ambiguous, assume DD/MM/YYYY
+- If time is missing, use "00:00:00.000Z"
+- Default: "2023-10-27T18:30:00.000Z"
 
-  if (text.length < 10) return -1;
+4. Total (userEnteredTotal)
+- Extract the final payable amount.
+- Prefer values labeled:
+  - "Total"
+  - "Grand Total"
+  - "Amount Due"
+- Use the largest final amount if multiple totals exist.
+- Strip all currency symbols.
+- Must be a number.
 
-  console.log(uri)
-  console.log(text)
+5. Service Charge (serviceCharge)
+- Extract tips or service charges.
+- If shown as a percentage (e.g., "10%"):
+  - Calculate using subtotal
+  - If subtotal is missing, use sum of item totalPrice
+- If not present, return 0
 
-  return -1
+6. Items (items)
 
+Each item must follow:
+
+- id: Sequential integer starting at 1
+- name: Cleaned item name
+- quantity:
+  - Extract if present
+  - Default: 1
+- price:
+  - Per-unit price
+  - If missing: totalPrice / quantity
+- totalPrice:
+  - Total cost for that item line
+
+7. Item Grouping
+- Merge identical items ONLY if:
+  - Same name
+  - Same unit price
+- Sum their quantities and totalPrice
+- Do NOT merge if:
+  - Different modifiers
+  - Different prices
+  - Different descriptions
+
+8. Mathematical Validation
+- Ensure: price × quantity = totalPrice
+- If inconsistent:
+  - Trust totalPrice
+  - Recalculate price = totalPrice / quantity
+
+9. Missing Price Fallback
+- If BOTH price and totalPrice are missing:
+  - Assign price = 10.00
+  - Compute totalPrice = price × quantity
+- Only apply this if the item clearly exists but lacks pricing
+
+10. Currency Handling
+- Remove all currency symbols (e.g., £, $, €)
+- Assume all values use the same currency
+- Output only numeric values
+
+11. Complete Field
+- Always set "complete": false
+
+12. Final Total Validation
+- Compute: sum of all item totalPrice values + serviceCharge
+- Compare this sum to userEnteredTotal
+
+- If they match: no action needed
+
+- If they do NOT match:
+  - Do NOT modify item prices or quantities
+  - Check if the difference is consistent with a common tax rate (e.g., approximately 5%, 10%, or 20%) applied to the item subtotal
+  - If such a tax is likely, assume the discrepancy is due to tax not listed in items
+
+- If the discrepancy cannot be reasonably explained:
+  - Prioritize userEnteredTotal as the correct final value
+  - Leave item values unchanged
+
+Failure Mode
+
+If the input does NOT resemble a receipt or contains no extractable data, return:
+
+{
+  "name": "Unknown",
+  "date": "2023-10-27T00:00:00.000Z",
+  "userEnteredTotal": 0,
+  "serviceCharge": 0,
+  "complete": false,
+  "items": []
 }
+
+Strict Output Constraints
+
+- Output MUST be valid JSON
+- Do NOT include:
+  - Markdown
+  - Code blocks
+  - Comments
+  - Extra fields
+- Do NOT include the keys:
+  - assignedTo
+  - payers
+
+Example Input
+
+Pepsi 200Z @ £4.10, WOKINGHAM BELLE, 25/05/2025 16:14:58, Apple Crumble £7.29, Apple Crumble £7.29, Total: £18.68
+
+Example Output
+
+{
+  "name": "WOKINGHAM BELLE",
+  "date": "2025-05-25T16:14:58.000Z",
+  "userEnteredTotal": 18.68,
+  "serviceCharge": 0,
+  "complete": false,
+  "items": [
+    {
+      "id": 1,
+      "name": "Pepsi 20oz",
+      "price": 4.1,
+      "quantity": 1,
+      "totalPrice": 4.1
+    },
+    {
+      "id": 2,
+      "name": "Apple Crumble",
+      "price": 7.29,
+      "quantity": 2,
+      "totalPrice": 14.58
+    }
+  ]
+}
+
+`
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY as string; // Replace with your actual API key
+
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({
+  // Use the stable version for faster, more consistent response times
+  model: "gemini-3-flash-preview", 
+  systemInstruction: systemPrompt,
+  generationConfig: {
+    temperature: 0.1,         // Keep it low for consistency
+    responseMimeType: "application/json",
+    // Optional: add topP or topK if you find it still "hallucinates" math
+    topP: 0.1,
+  },
+});
 
 export const createBillFromImage = async (uri: string): Promise<number> => {
   const resultFromUri = await MlkitOcr.detectFromUri(uri);
@@ -113,6 +214,9 @@ export const createBillFromImage = async (uri: string): Promise<number> => {
   const text = resultFromUri?.map((block) => block.text).toString() || "";
 
   if (text.length < 10) return -1;
+
+  console.log("Text has been extracted: ")
+  console.log(text)
 
   const out = await extractBillData(text);
   if (out == undefined) {
@@ -123,6 +227,7 @@ export const createBillFromImage = async (uri: string): Promise<number> => {
   if (typeof bill === "string" || bill instanceof String)
     return -1
 
+
   const newBillId = await ingestBill(bill);
   console.log(newBillId);
   
@@ -130,7 +235,7 @@ export const createBillFromImage = async (uri: string): Promise<number> => {
 };
 
 export const extractBillData = async (ocrText: string): Promise<any> => {
-  const prompt = `Here is the raw text to parse:\n\n${ocrText}`;
+  const prompt = ocrText;
 
   try {
     const result = await model.generateContent(`${systemPrompt}\n${prompt}`);
@@ -147,6 +252,33 @@ export const extractBillData = async (ocrText: string): Promise<any> => {
     return undefined;
   }
 };
+
+/**
+ * Debugging function to create a bill from a raw JSON string.
+ */
+export const createBillFromJson = async (jsonString: string): Promise<number> => {
+  try {
+    const data = JSON.parse(jsonString);
+    const bill = verifyExtractedBill(data);
+
+    if (typeof bill === "string") {
+      console.error("JSON Verification Error:", bill);
+      return -1;
+    }
+
+    const newBillId = await ingestBill(bill);
+    console.log("Successfully created bill from JSON. ID:", newBillId);
+    return newBillId;
+  } catch (error) {
+    console.error("JSON Parse Error:", error);
+    return -1;
+  }
+};
+
+// Attach to global for easy console debugging in development
+if (__DEV__) {
+  (global as any).createBillFromJson = createBillFromJson;
+}
 
 export const ingestBill = async (bill: Bill): Promise<number> => {
   // insert bill
@@ -220,17 +352,17 @@ export const verifyExtractedBill = (extractedBill: any): Bill | string => {
       id: 0,
       name: extractedBill.name,
       date: new Date(extractedBill.date),
-      userEnteredTotal: extractedBill.userEnteredTotal,
-      serviceCharge: extractedBill.serviceCharge ?? 0,
+      userEnteredTotal: Price.fromDecimal(extractedBill.userEnteredTotal),
+      serviceCharge: Price.fromDecimal(extractedBill.serviceCharge ?? 0),
       complete: false,
       items: extractedBill.items.map(
         (item: any, index: number) =>
           <BillItem>{
             id: item.id,
             name: item.name,
-            price: item.price,
+            price: Price.fromDecimal(item.price),
             quantity: item.quantity,
-            totalPrice: item.totalPrice,
+            totalPrice: Price.fromDecimal(item.totalPrice),
             assignedTo: [],
           }
       ),

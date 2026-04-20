@@ -14,6 +14,7 @@ import { useBillStore } from "@/utils/billStore";
 import { getPayerById } from "@/utils/billUtils";
 import PayerIcon from "@/components/payer/PayerIcon";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Price } from "@/utils/priceUtils";
 
 const EditItemModal = () => {
   const router = useRouter();
@@ -27,8 +28,8 @@ const EditItemModal = () => {
   const [item, setItem] = useState<BillItem>({
     id: 0,
     name: "",
-    price: 0,
-    totalPrice: 0,
+    price: Price.fromCents(0),
+    totalPrice: Price.fromCents(0),
     quantity: 0,
     assignedTo: [],
   });
@@ -40,8 +41,8 @@ const EditItemModal = () => {
     items: [],
     complete: false,
     payers: [],
-    serviceCharge: 0,
-    userEnteredTotal: 420.69,
+    serviceCharge: Price.fromCents(0),
+    userEnteredTotal: Price.fromCents(42069),
   });
 
   useFocusEffect(
@@ -179,7 +180,7 @@ const EditItemModal = () => {
             </ThemedText>
             <ThemedText type="subtitle">
               {" "}
-              £{item.price.toFixed(2)} {item.quantity > 1 ? "each" : ""}{" "}
+              £{item.price.toDisplay()} {item.quantity > 1 ? "each" : ""}{" "}
             </ThemedText>
           </View>
           <View

@@ -5,7 +5,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link' | "grital";
+  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link' | "grital" | "darkGrital" ;
 };
 
 export function ThemedText({
@@ -27,6 +27,7 @@ export function ThemedText({
         type === 'subtitle' ? styles.subtitle : undefined,
         type === 'link' ? styles.link : undefined,
         type === 'grital' ? styles.grital : undefined,
+        type === 'darkGrital' ? styles.darkGrital : undefined,
         style,
       ]}
       {...rest}
@@ -62,6 +63,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     color: "lightgrey",
+    fontStyle: "italic"
+  },
+  darkGrital: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: "grey",
     fontStyle: "italic"
   }
 });

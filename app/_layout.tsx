@@ -34,7 +34,7 @@ export default function RootLayout() {
         console.log(error);
     }
 
-    const colorScheme = useColorScheme();
+    // const colorScheme = useColorScheme();
 
     const [loaded] = useFonts({
         SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),

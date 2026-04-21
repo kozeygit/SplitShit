@@ -24,7 +24,7 @@ Add group functionality to Splitshit where groups serve as templates for common 
 
 ## 2. Models & Types
 
-- [X]] **Update `Bill` type** in `models/bill.ts`
+- [X] **Update `Bill` type** in `models/bill.ts`
   - Add `groupId?: number` field
 
 - [X] **Update `Payer` type** in `models/bill.ts`
@@ -67,8 +67,6 @@ Add group functionality to Splitshit where groups serve as templates for common 
 - [ ] **`getAllGroups()`**
   - Fetch all groups (for Groups tab)
 
-- [ ] **`getGroupsByBillId(billId)`** (optional)
-  - Get group associated with bill (probably just use bill.groupId directly)
 
 ### Remove/Delete Functions:
 

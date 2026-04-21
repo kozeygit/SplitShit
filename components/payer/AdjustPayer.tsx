@@ -9,6 +9,7 @@ import PayerIcon from "@/components/payer/PayerIcon";
 import { ThemedText } from "@/components/ThemedText";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Payer } from "@/models/bill";
+import { Colors } from "@/constants/Colors";
 
 type Props = {
   payer: Payer;
@@ -58,8 +59,8 @@ const AdjustPayer = ({payer, party}: Props) => {
       </View>
       {isInBill ? (
         <View style={styles.adjustParty}>
-          <TouchableOpacity onPress={partyDecrease} style={{ padding: 5 }}>
-            <Ionicons name="remove" size={20} />
+          <TouchableOpacity onPress={partyDecrease} style={{ padding: 5}}>
+            <Ionicons name="remove" size={20}/>
           </TouchableOpacity>
           <ThemedText>{partySize.toString()}</ThemedText>
           <TouchableOpacity onPress={partyIncrease} style={{ padding: 5 }}>

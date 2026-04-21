@@ -20,7 +20,18 @@ export const Colors = {
     blue: '#A7C7E7',
     indigo: '#A0C4FF',
     violet: '#BDB2FF'
-
+  },
+  darkPastel: {
+    pink: '#B370B3',
+    red: '#C16060',
+    orange: '#B58352',
+    yellow: '#A9AD5E',
+    green: '#6B8E6B',
+    turquoise: '#4A9E8A',
+    cyan: '#5B8A9E',
+    blue: '#56799C',
+    indigo: '#5271AD',
+    violet: '#6B5BB3',
   },
   light: {
     text: '#11181C',

@@ -5,7 +5,6 @@ const placeholder = () => {
   return (
     <View>
       <Text>This page should not be shown</Text>
-      <Text>penis.</Text>
     </View>
   )
 }

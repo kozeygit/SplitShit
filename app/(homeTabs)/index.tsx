@@ -33,11 +33,11 @@ const BillPage = () => {
   const [refreshing, setRefreshing] = useState(false); // State for refreshing
   const [bills, setBills] = useState<Bill[]>([]); // State for bills
 
-  const onRefresh = useCallback(async () => {
+  const loadBills = useCallback(async () => {
     setRefreshing(true);
     try {
       const fetchedBills = await getBills();
-      setBills(fetchedBills); // Correct: Functional update
+      setBills(fetchedBills);
     } catch (error) {
       console.error("Error fetching bills:", error);
     } finally {
@@ -45,16 +45,12 @@ const BillPage = () => {
     }
   }, [getBills]);
 
-  useFocusEffect(
-    useCallback(() => {
-      let bills: Bill[];
-      const foo = async () => {
-        bills = await getBills();
-        setBills(bills); // Correct: Functional update
-      };
-      foo();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => {
+    loadBills();
+  }, [loadBills]));
+
+  // onRefresh already points to loadBills
+  const onRefresh = loadBills;
 
   const [expandedBillId, setExpandedBillId] = useState<number | null>(null);
   const [selectedBillsIds, setSelectedBillsIds] = useState<number[]>([]);
@@ -86,8 +82,8 @@ const BillPage = () => {
   const handleCompleteBills = (ids: number[]) => {
     for (const billId of ids) {
       setBillComplete(billId, true)
-      onRefresh();
     }
+    onRefresh();
     setSelectedBillsIds([])
   }
 
@@ -95,6 +91,7 @@ const BillPage = () => {
     for (const billId of billIds) {
       console.log("Deleting bill:", billId);
     };
+    onRefresh();
     setSelectedBillsIds([])
   };
 
@@ -174,7 +171,7 @@ const BillPage = () => {
             </Pressable>
         </Animated.View>
       )}
-    </SafeAreaView>
+      </SafeAreaView>
   );
 };
 

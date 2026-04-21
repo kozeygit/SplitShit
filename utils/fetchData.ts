@@ -113,8 +113,8 @@ export const fetchPayers = async (billId?: number): Promise<Payer[]> => {
   }
 };
 
-export const fetchBills = async (): Promise<Bill[]> => {
-  console.log("fetchBills called: ", new Date().toLocaleTimeString()); // Log inside getBills
+export const fetchAllBills = async (): Promise<Bill[]> => {
+  console.log("fetchAllBills called: ", new Date().toLocaleTimeString()); // Log inside getBills
   try {
     const result = await db
       .select()
@@ -126,7 +126,7 @@ export const fetchBills = async (): Promise<Bill[]> => {
 
     return mappedBills;
   } catch (error) {
-    console.error("Error in fetchBills:", error);
+    console.error("Error in fetchAllBills:", error);
     return [];
   }
 };
@@ -167,6 +167,23 @@ export const fetchBill = async (billId: number): Promise<Bill | undefined> => {
   } catch (error) {
     console.error("Error in fetchBill:", error);
     return undefined;
+  }
+};
+
+export const fetchAllGroups = async (): Promise<Group[]> => {
+  console.log("fetchAllGroups called: ", new Date().toLocaleTimeString()); // Log inside getBills
+  try {
+    const result = await db
+      .select()
+      .from(schema.groups)
+    const mappedGroups: Group[] = await Promise.all(
+      result.map(async (group) => mapGroupToModel(group)),
+    );
+
+    return mappedGroups;
+  } catch (error) {
+    console.error("Error in fetchAllGroups:", error);
+    return [];
   }
 };
 

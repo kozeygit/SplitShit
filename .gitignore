@@ -36,6 +36,33 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-app-example
+# Editor folders
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Android artifacts
+.gradle/
+build/
+*.apk
+*.aab
+*.bundle
+
+# iOS artifacts
+ios/Pods/
+ios/DerivedData/
+*.moved-aside
+*.xcuserstate
+
+# Coverage reports
+coverage/
+
+# Misc
+*.log
+.eslintcache
 
 gitstatus.txt

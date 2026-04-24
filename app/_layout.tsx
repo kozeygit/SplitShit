@@ -64,7 +64,6 @@ export default function RootLayout() {
                         <Stack.Screen
                             name="(homeTabs)"
                             options={{
-                                
                                 headerShown: false,
                             }}
                         />
@@ -78,6 +77,14 @@ export default function RootLayout() {
                         />
                         <Stack.Screen
                             name="(modals)/newPayer"
+                            options={{
+                                headerShown: false,
+                                presentation: "modal",
+                                animation: "slide_from_bottom"
+                            }}
+                        />
+                        <Stack.Screen
+                            name="(modals)/newGroup"
                             options={{
                                 headerShown: false,
                                 presentation: "modal",

@@ -4,49 +4,33 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
 import PayerIcon from "@/components/payer/PayerIcon";
 import { ThemedText } from "@/components/ThemedText";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Payer } from "@/models/bill";
-import { Colors } from "@/constants/Colors";
 
 type Props = {
   payer: Payer;
   party: number,
+  onValueChange: (newSize: number) => void
 }
 
-const AdjustPayer = ({payer, party}: Props) => {
-  const [isInBill, setIsInBill] = useState(party > 0);
-  const [partySize, setPartySize] = useState(party);
-
-  useEffect(() => {
-    payer.partySize = partySize;
-    if (partySize > 0) {
-      setIsInBill(true);
-    } else {
-      setIsInBill(false);
-    }
-  }, [partySize]);
-
+const AdjustPayer = ({payer, party, onValueChange}: Props) => {
+  const isInBill = party > 0;
 
   const handleTogglePayer = () => {
-    if (isInBill) {
-      setPartySize(0);
-    } else {
-      setPartySize(1);
-    }
+    onValueChange(isInBill ? 0 : 1);
   };
 
   const partyIncrease = () => {
     console.log("Party Increase");
-    setPartySize(partySize + 1);
+    onValueChange(party + 1)
   };
 
   const partyDecrease = () => {
     console.log("Party Decrease");
-    if (partySize === 0) return;
-    setPartySize(partySize - 1);
+    if (party === 0) return;
+    onValueChange(party - 1)
   };
 
   return (
@@ -62,14 +46,14 @@ const AdjustPayer = ({payer, party}: Props) => {
           <TouchableOpacity onPress={partyDecrease} style={{ padding: 5}}>
             <Ionicons name="remove" size={20}/>
           </TouchableOpacity>
-          <ThemedText>{partySize.toString()}</ThemedText>
+          <ThemedText>{party.toString()}</ThemedText>
           <TouchableOpacity onPress={partyIncrease} style={{ padding: 5 }}>
             <Ionicons name="add" size={20} />
           </TouchableOpacity>
         </View>
       ) : (
         <Pressable onPress={handleTogglePayer} style={styles.addButton}>
-          <ThemedText>{isInBill ? "Remove" : "Add"}</ThemedText>
+          <ThemedText>Add</ThemedText>
         </Pressable>
       )}
     </View>

@@ -1,31 +1,27 @@
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   TouchableNativeFeedback,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useGetData } from "@/hooks/useGetData";
-import { Bill, BillItem, NewBill, NewBillItem } from "@/models/bill";
+import { useRouter } from "expo-router";
+import { Bill } from "@/models/bill";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { useBillStore } from "@/utils/billStore";
-import { parse } from "@babel/core";
 import { Price } from "@/utils/priceUtils";
 
 const EditBillDetailsModal = () => {
-  const { getBill } = useGetData();
   const router = useRouter();
 
   const { editedBill, setEditedBill } = useBillStore();
@@ -40,12 +36,12 @@ const EditBillDetailsModal = () => {
 
   const [show, setShow] = useState(false);
   const [serviceType, setServiceType] = useState<"percentage" | "amount">(
-    "amount"
+    "amount",
   );
 
   const onChangeDate = (
     event: DateTimePickerEvent,
-    selectedDate: Date | undefined
+    selectedDate: Date | undefined,
   ) => {
     if (selectedDate) {
       setShow(Platform.OS === "ios");
@@ -61,6 +57,7 @@ const EditBillDetailsModal = () => {
     } else {
       setServiceType("percentage");
     }
+    setServiceCharge("0")
   };
 
   const showDatepicker = () => {
@@ -68,64 +65,70 @@ const EditBillDetailsModal = () => {
   };
 
   useEffect(() => {
-    const fetchBill = async () => {
-      const oldBill = editedBill!;
-      setName(oldBill.name);
-      setDate(oldBill.date);
-      setServiceCharge(oldBill.serviceCharge.toDisplay());
-      setTotalPrice(oldBill.userEnteredTotal.toDisplay());
-    };
+    if (!editedBill) return;
 
-    fetchBill();
-  }, [getBill]);
+    setName(editedBill.name);
+    setDate(editedBill.date);
+    setServiceCharge(editedBill.serviceCharge.toDisplay());
+    setTotalPrice(editedBill.userEnteredTotal.toDisplay());
+  }, []);
 
   const handleSave = () => {
+    if (!editedBill) return;
+
     const totalPriceObj = Price.fromDecimal(parseFloat(totalPrice) || 0);
     let serviceChargeObj = Price.fromDecimal(parseFloat(serviceCharge) || 0);
 
-    if (serviceType == "percentage") {
-      // Calculate service charge as percentage of subtotal
-      const subTotal = totalPriceObj.divide(1 + (parseFloat(serviceCharge) / 100));
+    if (serviceType === "percentage") {
+      const servicePercent = parseFloat(serviceCharge) || 0;
+      const subTotal = totalPriceObj.divide(1 + servicePercent / 100);
       serviceChargeObj = totalPriceObj.subtract(subTotal);
     }
 
-    const updatedBill: NewBill = {
-      name: name || "New Item",
+    const updatedBill: Bill = {
+      ...editedBill,
+      name: name.trim() || "Untitled Bill",
       date: date,
       serviceCharge: serviceChargeObj,
       userEnteredTotal: totalPriceObj,
     };
-    if (editedBill) {
-      if (
-        updatedBill.name == editedBill.name &&
-        updatedBill.date == editedBill.date &&
-        updatedBill.serviceCharge.equals(editedBill.serviceCharge) &&
-        updatedBill.userEnteredTotal.equals(editedBill.userEnteredTotal)
-      ) {
-        console.log("No changes to save");
-        router.back();
-        return;
-      }
 
-      editedBill.name = updatedBill.name;
-      editedBill.date = updatedBill.date;
-      editedBill.serviceCharge = updatedBill.serviceCharge;
-      editedBill.userEnteredTotal = updatedBill.userEnteredTotal;
-      
-      setEditedBill(editedBill)
-
-      console.log("Saving editedBill");
+    const isUnchanged = (
+      updatedBill.name === editedBill.name &&
+      updatedBill.date.getTime() === editedBill.date.getTime() &&
+      updatedBill.serviceCharge.equals(editedBill.serviceCharge) &&
+      updatedBill.userEnteredTotal.equals(editedBill.userEnteredTotal)
+    )
+    
+    if (isUnchanged) {
       router.back();
       return;
     }
 
-    console.log("This shouldn't be logged :/");
+    setEditedBill(updatedBill);
     router.back();
   };
 
   const handleCancel = () => {
-    console.log("cancelled");
-    router.back();
+    // Compare current state vs the store
+    const hasChanges =
+      name !== editedBill?.name ||
+      date.getTime() !== editedBill?.date.getTime() ||
+      serviceCharge !== editedBill?.serviceCharge.toDisplay() ||
+      totalPrice !== editedBill?.userEnteredTotal.toDisplay();
+
+    if (hasChanges) {
+      Alert.alert(
+        "Discard Changes?",
+        "You have unsaved changes to this bill's details.",
+        [
+          { text: "Keep Editing", style: "cancel" },
+          { text: "Discard", style: "destructive", onPress: () => router.back()}
+        ],
+      );
+    } else {
+      router.back();
+    }
   };
 
   return (
@@ -240,15 +243,15 @@ const EditBillDetailsModal = () => {
         </View>
       </KeyboardAvoidingView>
       <View style={styles.buttonContainer}>
-          <View style={styles.cancelButtonOuter}>
-            <TouchableNativeFeedback onPress={handleCancel}>
-              <View style={styles.submitButtonInner}>
-                <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                  Cancel
-                </ThemedText>
-              </View>
-            </TouchableNativeFeedback>
-          </View>
+        <View style={styles.cancelButtonOuter}>
+          <TouchableNativeFeedback onPress={handleCancel}>
+            <View style={styles.submitButtonInner}>
+              <ThemedText type="defaultSemiBold" style={styles.cancelText}>
+                Cancel
+              </ThemedText>
+            </View>
+          </TouchableNativeFeedback>
+        </View>
         <View style={styles.submitButtonOuter}>
           <TouchableNativeFeedback onPress={handleSave}>
             <View style={styles.submitButtonInner}>

@@ -1,6 +1,11 @@
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import { useEffect, useState } from "react";
+import { Pressable, StyleSheet, Text, View, LayoutChangeEvent } from "react-native";
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  interpolate 
+} from "react-native-reanimated";
 import { Colors } from "@/constants/Colors";
 
 type ToggleProps = {
@@ -10,26 +15,39 @@ type ToggleProps = {
   rightLabel: string;
 };
 
-const Toggle = (props: ToggleProps) => {
-  const [currentState, setCurrentState] = useState(props.state);
-  const left = useSharedValue(-2);
-  const handleToggle = () => {
-    console.log("Toggle pressed");
-    setCurrentState(!currentState);
-    left.value = withSpring(currentState ? -2 : 148, { duration: 500 });
-    props.onToggle(!currentState);
+const Toggle = ({ state, onToggle, leftLabel, rightLabel }: ToggleProps) => {
+  // Initialize exactly where the prop says to start
+  const offset = useSharedValue(state ? 1 : 0);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  const onLayout = (event: LayoutChangeEvent) => {
+    setContainerWidth(event.nativeEvent.layout.width);
   };
 
+const animatedStyle = useAnimatedStyle(() => {
+  return {
+    // We animate from 0% to 50% left position
+    left: withSpring(state ? "50.5%" : "-0.5%", {
+      duration: 500
+    }),
+  };
+});
+
   return (
-    <Pressable onPress={handleToggle} style={{ flex: 1 }}>
-      <View style={styles.container}>
-          <View style={styles.labelContainer}>
-            <Text style={[styles.label, currentState ? "" : styles.selectedLabel]}>{props.leftLabel}</Text>
-          </View>
-          <View style={styles.labelContainer}>
-            <Text style={[styles.label, currentState ? styles.selectedLabel : ""]}>{props.rightLabel}</Text>
-          </View>
-        <Animated.View style={[styles.selector, { left }]}></Animated.View>
+    <Pressable onPress={() => onToggle(!state)} style={{ flex: 1 }}>
+      <View style={styles.container} onLayout={onLayout}>
+        <View style={styles.labelContainer}>
+          <Text style={[styles.label, !state && styles.selectedLabel]}>
+            {leftLabel}
+          </Text>
+        </View>
+        <View style={styles.labelContainer}>
+          <Text style={[styles.label, state && styles.selectedLabel]}>
+            {rightLabel}
+          </Text>
+        </View>
+
+        <Animated.View style={[styles.selector, animatedStyle]} />
       </View>
     </Pressable>
   );
@@ -61,11 +79,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   selector: {
+    alignSelf: "center",
     borderWidth: 1,
     backgroundColor: Colors.pastel.green,
-    top: -2,
-    width: "52%",
-    height: "112%",
+    width: "50%",
+    height: "110%",
     position: "absolute",
   },
 });

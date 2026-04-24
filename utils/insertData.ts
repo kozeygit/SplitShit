@@ -47,39 +47,43 @@ export const insertPayer = async (newPayer: NewPayer): Promise<number> => {
 };
 
 export const insertGroup = async(newGroup: NewGroup): Promise<number> => {
-  try {
-    const insertedGroup: { id: number }[] = await db
+    const mappedGroup = mapGroupToDB(newGroup)
+
+    const inserted = await db
       .insert(schema.groups)
-      .values(mapGroupToDB(newGroup))
+      .values(mappedGroup)
       .returning({ id: schema.groups.id });
 
     console.log(new Date().toLocaleTimeString(), " - insertGroup called");
 
-    return insertedGroup[0].id;
-  } catch (error) {
-    console.error("Error in insertGroup", error)
-    return -1
-  }
+    return inserted[0].id;
 }
 
-export const insertBillItem = async (
-  newBillItem: NewBillItem,
-  billId: number
-): Promise<number> => {
-  try {
-    const mappedItem = mapBillItemToDB(newBillItem);
-    mappedItem.billId = billId;
+export const insertBillPayer = async (billId: number, payer: Payer): Promise<number> => {
+  const inserted = await db
+    .insert(schema.billPayers)
+    .values({
+      billId: billId,
+      payerId: payer.id,
+      partySize: payer.partySize ?? 1 })
+    .returning({ id: schema.billPayers.id });
 
-    const insertedItem: { id: number }[] = await db
-      .insert(schema.billItems)
-      .values(mappedItem)
-      .returning({ id: schema.billItems.id });
+  console.log(new Date().toLocaleTimeString(), " - insertBillPayer called");
+  
+  return inserted[0].id;
+};
 
-    console.log(new Date().toLocaleTimeString(), " - insertBillItem called"); // Log inside insertBill
 
-    return insertedItem[0].id;
-  } catch (error) {
-    console.error("Error in insertPayer:", error);
-    return -1;
-  }
+export const insertBillItem = async (newBillItem: NewBillItem, billId: number): Promise<number> => {
+  const mappedItem = mapBillItemToDB(newBillItem);
+  mappedItem.billId = billId;
+
+  const inserted = await db
+    .insert(schema.billItems)
+    .values(mappedItem)
+    .returning({ id: schema.billItems.id });
+
+    console.log(new Date().toLocaleTimeString(), " - insertBillItem called");
+    
+  return inserted[0].id;
 };

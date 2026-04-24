@@ -15,40 +15,32 @@ import { Colors } from "@/constants/Colors";
 
 import { Bill, BillItem, Payer } from "../../models/bill";
 import PayerCard from "@/components/payer/PayerCard";
-import { useGetData } from "@/hooks/useGetData";
 import Logo from "@/components/ui/logo";
 import { useFocusEffect, useRouter } from "expo-router";
+import { fetchPayers } from "@/utils/fetchData";
 
 const PayerPage = () => {
   const router = useRouter();
 
-  const { getPayers } = useGetData();
-
-  const [refreshing, setRefreshing] = useState(false); // State for refreshing
-
-  const [payers, setPayers] = useState<Payer[]>([]); // State for payers
+  const [refreshing, setRefreshing] = useState(false);
+  const [payers, setPayers] = useState<Payer[]>([]);
   
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const fetchedPayers = await getPayers();
-      setPayers(fetchedPayers); // Correct: Functional update
+      const fetchedPayers = await fetchPayers();
+      setPayers(fetchedPayers);
     } catch (error) {
       console.error("Error fetching payers:", error);
     } finally {
       setRefreshing(false);
     }
-  }, [getPayers]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      let payers: Payer[];
-      const foo = async () => {
-        payers = await getPayers();
-        setPayers(payers); // Correct: Functional update
-      };
-      foo();
-    }, [])
+      onRefresh();
+    }, [onRefresh])
   );
   
   return (

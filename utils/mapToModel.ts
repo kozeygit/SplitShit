@@ -30,11 +30,13 @@ export const mapPayerToModel = (dbPayer: typeof payersSchema.$inferSelect, dbBil
         number: dbPayer.number || undefined,
         email: dbPayer.email || undefined,
         partySize: 1,
-        amountToPay: undefined
+        amountToPay: undefined,
+        isArchived: dbPayer.isArchived
     };
 
     if (dbBillPayer !== undefined) {
         mappedPayer.partySize = dbBillPayer.partySize
+        mappedPayer.addedWithGroup = dbBillPayer.addedWithGroup
     };
 
 
@@ -47,7 +49,8 @@ export const mapGroupToModel = (dbGroup: typeof groupsSchema.$inferSelect): Grou
         id: dbGroup.id,
         name: dbGroup.name,
         description: dbGroup.description || undefined,
-        payers: []
+        payers: [],
+        isArchived: dbGroup.isArchived
     };
 
     return mappedGroup;

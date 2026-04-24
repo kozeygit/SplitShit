@@ -3,7 +3,6 @@ import { ThemedText } from "@/components/ThemedText";
 import ContainerView from "@/components/ui/ContainerView";
 import InfoRow from "@/components/ui/InfoRow";
 import { Colors } from "@/constants/Colors";
-import { useGetData } from "@/hooks/useGetData";
 import { Bill, BillItem, NewBillItem } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
 import { setBillComplete, updateBill } from "@/utils/updateData";
@@ -85,7 +84,7 @@ const BillDisplay = () => {
   };
   
   const openPayerModal = () => {
-    router.push("/(billModals)/editPayerModal");
+    router.push("/(billModals)/editBillPayersModal");
   };
 
   const itemsTotal = bill.items.reduce(

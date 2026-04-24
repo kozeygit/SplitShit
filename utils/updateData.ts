@@ -12,9 +12,9 @@ import {
 import { getDrizzleDb } from "./database";
 import { eq, lt, gte, ne, and } from "drizzle-orm";
 import { fetchBillItems, fetchGroupPayers, fetchPayers } from "./fetchData";
-import { insertBillItem } from "./insertData";
+import { insertBillItem, insertBillPayer } from "./insertData";
 import { isEqual } from "lodash";
-import { removeBillItem } from "./removeData";
+import { removeBillItem, removeBillPayer } from "./removeData";
 
 const db = getDrizzleDb();
 
@@ -109,7 +109,6 @@ const updateItemAssignments = async (bill: Bill): Promise<void> => {
   }
 };
 
-
 const updateGroupPayers = async (group: Group): Promise<void> => {
   // Change group payers
   const oldPayers = await fetchGroupPayers(group.id);
@@ -150,85 +149,63 @@ const updateGroupPayers = async (group: Group): Promise<void> => {
   }
 };
 
-
-
 const updateBillPayers = async (bill: Bill): Promise<void> => {
-  // Change bill payers
   const oldPayers = await fetchPayers(bill.id);
-  // Delete old payers that are not in the new bill
-  for (const oldPayer of oldPayers) {
-    let found = false;
-    for (const payer of bill.payers) {
-      if (payer.id == oldPayer.id) {
-        found = true;
-      }
-    }
-    if (!found) {
-      const deletedBP = await db
-        .delete(schema.billPayers)
-        .where(
-          and(
-            eq(schema.billPayers.payerId, oldPayer.id),
-            eq(schema.billPayers.billId, bill.id)
-          )
-        )
-        .returning();
+  
+  const oldIds = oldPayers.map(p => p.id);
+  const newIds = bill.payers.map(p => p.id);
 
-      await db
-        .delete(schema.assignedItems)
-        .where(eq(schema.assignedItems.billPayerId, deletedBP[0].id));
-    }
+  // 1. DELETE: Payers in DB but NOT in the new draft
+  const toDelete = oldPayers.filter(p => !newIds.includes(p.id));
+  for (const payer of toDelete) {
+    await removeBillPayer(bill.id, payer.id);
   }
 
-  for (const payer of bill.payers) {
-    const isOldPayer = oldPayers.some((oldPayer) => oldPayer.id == payer.id);
-    if (payer.partySize !== undefined) {
-      if (isOldPayer) {
-        const returnBP = await db
-          .update(schema.billPayers)
-          .set({ partySize: payer.partySize })
-          .where(eq(schema.billPayers.payerId, payer.id))
-          .returning();
-        continue;
-      }
-      await db.insert(schema.billPayers).values({
-        billId: bill.id,
-        payerId: payer.id,
-        partySize: payer.partySize,
-      });
+  // 2. INSERT: Payers in draft but NOT in DB
+  const toInsert = bill.payers.filter(p => !oldIds.includes(p.id));
+  for (const payer of toInsert) {
+    await insertBillPayer(bill.id, payer);
+  }
+
+  // 3. UPDATE: Payers in both, but partySize might have changed
+  const toUpdate = bill.payers.filter(p => oldIds.includes(p.id));
+  for (const payer of toUpdate) {
+    const oldPayer = oldPayers.find(op => op.id === payer.id);
+    // Only touch the DB if the data actually changed
+    if (oldPayer && oldPayer.partySize !== payer.partySize) {
+       await updateBillPayerPartySize(bill.id, payer);
     }
   }
 };
 
 const updateBillItems = async (bill: Bill): Promise<void> => {
-  // Change bill items
   const oldItems = await fetchBillItems(bill.id);
-  for (const oldItem of oldItems) {
-    let found = false;
-    for (const item of bill.items) {
-      if (item.id == oldItem.id) {
-        found = true;
-      }
-    }
-    if (!found) {
-      removeBillItem(oldItem.id);
+  
+  const oldIds = oldItems.map(i => i.id);
+  const newIds = bill.items.map(i => i.id);
 
-      await db
-        .delete(schema.assignedItems)
-        .where(eq(schema.assignedItems.billPayerId, oldItem.id));
-    }
+  // 1. DELETE: Items in DB but NOT in the draft
+  const toDelete = oldItems.filter(i => !newIds.includes(i.id));
+  for (const item of toDelete) {
+    // Cascade handles assignedItems cleanup automatically!
+    await removeBillItem(item.id);
   }
-  for (const item of bill.items) {
-    const isOldItem = oldItems.some((oldItem) => isEqual(oldItem, item));
-    if (isOldItem) {
-      continue;
+
+  // 2. INSERT: Truly new items (IDs > 1 billion)
+  const toInsert = bill.items.filter(i => i.id > 1_000_000_000);
+  for (const item of toInsert) {
+    const newId = await insertBillItem(item, bill.id);
+    item.id = newId; // Update local ID for subsequent steps
+  }
+
+  // 3. UPDATE: Existing items that have actually changed
+  const toUpdate = bill.items.filter(i => oldIds.includes(i.id));
+  for (const item of toUpdate) {
+    const oldItem = oldItems.find(oi => oi.id === item.id);
+    // Use isEqual to check if properties like price, name, or quantity changed
+    if (oldItem && !isEqual(oldItem, item)) {
+      await updateBillItem(item);
     }
-    if (item.id > 1_000_000_000) {
-      const newId = await insertBillItem(item, bill.id);
-      item.id = newId;
-      continue;
-    }
-    await updateBillItem(item);
   }
 };
 
@@ -236,17 +213,25 @@ export const updateBillItem = async (item: BillItem): Promise<number> => {
   try {
     const mappedItem = mapBillItemToDB(item);
 
-    const insertedItem = (
-      await db
-        .update(schema.billItems)
-        .set(mappedItem)
-        .where(eq(schema.billItems.id, item.id))
-        .returning()
-    )[0];
+    const updated = await db
+      .update(schema.billItems)
+      .set(mappedItem)
+      .where(eq(schema.billItems.id, item.id))
+      .returning({ id: schema.billItems.id });
 
-    return insertedItem.id;
+    return updated[0]?.id ?? -1;
   } catch (error) {
     console.error("Error in updateBillItem:", error);
     return -1;
   }
+};
+
+export const updateBillPayerPartySize = async (billId: number, payer: Payer) => {
+  return await db
+    .update(schema.billPayers)
+    .set({ partySize: payer.partySize })
+    .where(and(
+      eq(schema.billPayers.billId, billId),
+      eq(schema.billPayers.payerId, payer.id)
+    ));
 };

@@ -21,7 +21,7 @@ export default function BillModalsLayout() {
         }}
       />
       <Stack.Screen
-        name="editPayerModal"
+        name="editBillPayersModal"
         options={{
           headerShown: false,
           presentation: "modal",

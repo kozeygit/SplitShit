@@ -1,4 +1,5 @@
 import {
+  Alert,
   FlatList,
   SafeAreaView,
   StyleSheet,
@@ -11,15 +12,21 @@ import { Colors } from "@/constants/Colors";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Payer } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
-import { useGetData } from "@/hooks/useGetData";
+import { fetchPayers } from "@/utils/fetchData"; // Direct fetch
 import AdjustPayerComponent from "../../components/payer/AdjustPayer";
 import ContainerView from "@/components/ui/ContainerView";
-import NewPayerPage from "../(modals)/newPayer";
 
-const EditItemModal = () => {
+const syncPayersWithDraft = (dbPayers: Payer[], draftPayers: Payer[]) => {
+  const draftMap = new Map(draftPayers.map((p) => [p.id, p.partySize]));
+  return dbPayers.map((payer) => ({
+    ...payer,
+    partySize: draftMap.get(payer.id) ?? 0,
+  }));
+};
+
+const EditBillPayersModal = () => {
   const router = useRouter();
 
-  const { getPayers } = useGetData();
   const { editedBill, setEditedBill } = useBillStore();
   const flatListRef = useRef<FlatList>(null);
 
@@ -28,64 +35,93 @@ const EditItemModal = () => {
 
   if (!editedBill) {
     router.back();
-    return;
+    return null;
   }
 
   useEffect(() => {
-    const fetchPayers = async () => {
-      const payers = await getPayers();
-      payers.forEach((payer) => {
-        const billPayer = editedBill.payers.find((p) => p.id === payer.id);
-        if (billPayer) {
-          payer.partySize = billPayer.partySize;
-        } else {
-          payer.partySize = 0;
-        }
-      });
-      setPayers(payers);
+    const loadData = async () => {
+      try {
+        const dbPayers = await fetchPayers();
+        const synced = syncPayersWithDraft(dbPayers, editedBill.payers);
+        setPayers(synced);
+      } catch (error) {
+        console.error("Error loading payers:", error);
+      }
     };
-    fetchPayers();
-  }, [editedBill]);
+    loadData();
+  }, [editedBill.id]);
 
   useFocusEffect(
     useCallback(() => {
-      const fetchPayers = async () => {
-        const newPayers = await getPayers();
-        newPayers.forEach((payer) => {
-          const oldPayer = payers.find((p) => p.id === payer.id);
-          if (oldPayer) {
-            payer.partySize = oldPayer.partySize;
-          } else {
-            payer.partySize = 0;
-          }
-        });
-        setPayers(newPayers);
-      };
-      if (updatePayers) {
+      if (!updatePayers) return;
+
+      const refreshAndScroll = async () => {
+        const dbPayers = await fetchPayers();
+        const synced = syncPayersWithDraft(dbPayers, editedBill.payers);
+        
+        setPayers(synced);
         setUpdatePayers(false);
-        fetchPayers();
-      }
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, [updatePayers])
+
+        // Ensure the list has rendered the new person before scrolling
+        requestAnimationFrame(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        });
+      };
+
+      refreshAndScroll();
+    }, [updatePayers, editedBill.payers])
   );
 
+  const handleBack = () => {
+    const savedMap = new Map(editedBill.payers.map(p => [p.id, p.partySize ?? 0]));
 
-  const handleSave = () => {
-    editedBill.payers = payers.filter(
-      (payer) => payer.partySize && payer.partySize > 0
-    );
-    setEditedBill(editedBill);
-    router.back();
+    const hasChanges = payers.some(p => {
+      const savedSize = savedMap.get(p.id) ?? 0;
+      const currentSize = p.partySize ?? 0;
+      return currentSize !== savedSize;
+    });
+
+    if (hasChanges) {
+      Alert.alert(
+        "Discard Changes?",
+        "You have unsaved changes to your payers. Are you sure you want to go back?",
+        [
+          { text: "Keep Editing", style: "cancel" },
+          { 
+            text: "Discard", 
+            style: "destructive", 
+            onPress: () => router.back() 
+          },
+        ]
+      );
+    } else {
+      router.back();
+    }
   };
 
-  const handleBack = () => {
+  const handlePayerSizeChange = (id: number, newSize: number) => {
+    setPayers((prevPayers) =>
+      prevPayers.map((p) =>
+        p.id === id ? { ...p, partySize: newSize } : p
+      )
+    );
+  };
+
+  const handleSave = () => {
+    // Create a new bill object (Immutability) for Zustand
+    const updatedBill = {
+      ...editedBill,
+      payers: payers.filter((p) => (p.partySize ?? 0) > 0),
+    };
+    
+    setEditedBill(updatedBill);
     router.back();
   };
 
   const handleNewPayer = () => {
     setUpdatePayers(true);
     router.push({ pathname: "/newPayer" });
-  }
+  };
 
   return (
     <SafeAreaView style={styles.outer}>
@@ -95,7 +131,7 @@ const EditItemModal = () => {
           <ThemedText type="subtitle">
             {editedBill.payers.length}
             {" • "}
-            {payers.reduce((acc, payer) => acc + (payer.partySize ?? 1), 0)}
+            {payers.reduce((acc, payer) => acc + (payer.partySize ?? 0), 0)}
           </ThemedText>
         </View>
 
@@ -107,7 +143,7 @@ const EditItemModal = () => {
           data={payers}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <AdjustPayerComponent payer={item} party={item.partySize ?? 0} />
+            <AdjustPayerComponent onValueChange={(newSize) => {handlePayerSizeChange(item.id, newSize)}} payer={item} party={item.partySize ?? 0} />
           )}
         />
             <View style={styles.newPayerButtonOuter}>
@@ -143,7 +179,7 @@ const EditItemModal = () => {
   );
 };
 
-export default EditItemModal;
+export default EditBillPayersModal;
 
 const styles = StyleSheet.create({
   newPayerButtonInner: {

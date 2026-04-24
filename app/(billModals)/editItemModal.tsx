@@ -1,4 +1,5 @@
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -31,10 +32,17 @@ const EditItemModal = () => {
   const { editedBill, setEditedBill } = useBillStore();
   const [item, setItem] = useState<BillItem | undefined>(undefined);
   const [name, setName] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [price, setPrice] = useState("");
-  const [totalPrice, setTotalPrice] = useState("");
+
+  const [quantity, setQuantity] = useState("1");
+  const [priceInput, setPriceInput] = useState("");
   const [isTotalPriceEditing, setIsTotalPriceEditing] = useState(false);
+
+  const quantityInt = Math.max(1, parseInt(quantity) || 1);
+  const currentPrice = parseFloat(priceInput) || 0;
+
+  const derivedOtherPrice = isTotalPriceEditing 
+    ? (currentPrice / quantityInt).toFixed(2) // Calculating Unit Price
+    : (currentPrice * quantityInt).toFixed(2); // Calculating Total Price
 
   const nameInputRef = useRef<TextInput>(null);
   const quantityInputRef = useRef<TextInput>(null);
@@ -44,15 +52,14 @@ const EditItemModal = () => {
     if (itemId === undefined) {
       setName("");
       setQuantity("");
-      setPrice("");
-      setTotalPrice("");
+      setPriceInput("");
       return;
     }
 
     const fetchItem = async () => {
       if (editedBill) {
         const oldItem = editedBill.items.find(
-          (item) => item.id == parseInt(itemId)
+          (item) => item.id == parseInt(itemId),
         );
         if (oldItem === undefined) {
           throw Error("Uh Oh Stinky");
@@ -60,85 +67,94 @@ const EditItemModal = () => {
         setItem(oldItem);
         setName(oldItem.name);
         setQuantity(oldItem.quantity.toString());
-        setPrice(oldItem.price.toDisplay());
-        setTotalPrice(oldItem.totalPrice.toDisplay());
+        setPriceInput(oldItem.price.toDisplay());
       }
     };
 
     fetchItem();
   }, []);
 
-  const handlePriceChange = (value: string) => {
-      setTotalPrice(value);
-      setPrice(value);
-  };
-
-
   const handleSave = () => {
-    let savePriceObj: Price;
-    let saveTotalPriceObj: Price;
+    if (!editedBill) return;
+
+
+    let finalUnitPrice: Price;
+    let finalTotalPrice: Price;
 
     if (isTotalPriceEditing) {
-      saveTotalPriceObj = Price.fromDecimal(parseFloat(totalPrice) || 0);
-      const quantityInt = parseInt(quantity) || 1;
-      savePriceObj = saveTotalPriceObj.divide(quantityInt);
+      finalTotalPrice = Price.fromDecimal(currentPrice);
+      finalUnitPrice = finalTotalPrice.divide(quantityInt);
     } else {
-      savePriceObj = Price.fromDecimal(parseFloat(price) || 0);
-      const quantityInt = parseInt(quantity) || 1;
-      saveTotalPriceObj = savePriceObj.multiply(quantityInt);
+      finalUnitPrice = Price.fromDecimal(currentPrice);
+      finalTotalPrice = finalUnitPrice.multiply(quantityInt);
     }
 
     const updatedItem: BillItem = {
-      id: Date.now(),
-      name: name || "New Item",
-      quantity: parseInt(quantity, 10) || 1,
-      price: savePriceObj,
-      totalPrice: saveTotalPriceObj,
-      assignedTo: [],
+      id: item ? item.id : Date.now(),
+      name: name.trim() || "New Item",
+      quantity: quantityInt,
+      price: finalUnitPrice,
+      totalPrice: finalTotalPrice,
+      assignedTo: item ? item.assignedTo : [],
     };
 
+    let newItemsList: BillItem[];
+
     if (item) {
-      if (
-        updatedItem.name == item.name &&
-        updatedItem.price.equals(item.price) &&
-        updatedItem.quantity == item.quantity &&
-        updatedItem.totalPrice.equals(item.totalPrice)
-      ) {
-        console.log("No changes to save");
-        router.back();
-        return;
-      }
-
-      item.name = updatedItem.name;
-      item.quantity = updatedItem.quantity;
-      item.price = updatedItem.price;
-      item.totalPrice = updatedItem.totalPrice;
-
-      console.log("Saving item");
-
-      setEditedBill(editedBill);
-      router.back();
-      return;
+      // UPDATE: Replace the old item with the new one in the array
+      newItemsList = editedBill.items.map((i) =>
+        i.id === item.id ? updatedItem : i,
+      );
+    } else {
+      // ADD: Append to the end
+      newItemsList = [...editedBill.items, updatedItem];
     }
 
-    editedBill?.items.push(updatedItem);
-    setEditedBill(editedBill);
+    setEditedBill({
+      ...editedBill,
+      items: newItemsList,
+    });
 
-    console.log("Adding new item");
     router.back();
   };
 
   const handleCancel = () => {
-    console.log("cancelled");
-    router.back();
+  // Compare the raw input string against the displayed version of the saved price
+    const savedDisplayPrice = isTotalPriceEditing 
+      ? (item?.totalPrice.toDisplay() ?? "")
+      : (item?.price.toDisplay() ?? "");
+
+    const hasChanges =
+      name !== (item?.name ?? "") ||
+      quantity !== (item?.quantity.toString() ?? "") ||
+      priceInput !== savedDisplayPrice;
+
+    if (hasChanges) {
+      Alert.alert(
+        "Discard Changes?",
+        "You have unsaved changes to this item.",
+        [
+          { text: "Keep Editing", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => router.back(),
+          },
+        ],
+      );
+    } else {
+      router.back();
+    }
   };
 
   const handleDelete = () => {
     if (item && editedBill) {
-      const index = editedBill.items.indexOf(item);
-      editedBill.items.splice(index, 1);
-      setEditedBill(editedBill);
-      console.log("Deleting");
+      const newItemsList = editedBill.items.filter((i) => i.id !== item.id);
+
+      setEditedBill({
+        ...editedBill,
+        items: newItemsList,
+      });
     }
     router.back();
   };
@@ -194,26 +210,38 @@ const EditItemModal = () => {
             />
           </View>
 
-          <Text style={styles.label}>{isTotalPriceEditing ? "Total Price" : "Unit Price"}</Text>
+          <Text style={styles.label}>
+            {isTotalPriceEditing ? "Total Price" : "Unit Price"}
+          </Text>
           <View style={[styles.input, { borderColor: Colors.pastel.blue }]}>
             <TextInput
               ref={priceInputRef}
               placeholder="0"
               style={{ flex: 1 }}
               keyboardType="numeric"
-              value={isTotalPriceEditing ? totalPrice : price}
-              onChangeText={handlePriceChange}
+              value={priceInput}
+              onChangeText={setPriceInput}
               returnKeyType="next"
               onSubmitEditing={handleSave}
             />
           </View>
-          <View style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingTop: 30,
-          }}>
-            <Toggle state={isTotalPriceEditing} onToggle={(state) => {setIsTotalPriceEditing(state)}} leftLabel="Unit Price" rightLabel="Total Price" />
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingTop: 30,
+            }}
+          >
+          <Toggle 
+            state={isTotalPriceEditing} 
+            onToggle={(newState) => {
+              setPriceInput(derivedOtherPrice); 
+              setIsTotalPriceEditing(newState);
+            }} 
+            leftLabel="Unit Price" 
+            rightLabel="Total Price" 
+          />
           </View>
         </View>
       </KeyboardAvoidingView>

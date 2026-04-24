@@ -86,7 +86,7 @@ Add group functionality to Splitshit where groups serve as templates for common 
 
 ---
 
-## 4. Edit Payer Modal (`editPayerModal.tsx`)
+## 4. Edit Payer Modal (`editBillPayersModal.tsx`)
 
 - [ ] **Add group selector at top**
   - Dropdown/list of available groups

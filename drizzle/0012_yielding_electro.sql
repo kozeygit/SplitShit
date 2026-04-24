@@ -1,0 +1,1 @@
+ALTER TABLE `bill_payers` ADD `added_with_group` integer DEFAULT false NOT NULL;

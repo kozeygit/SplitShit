@@ -2,7 +2,6 @@ import PayerIcon from "@/components/payer/PayerIcon";
 import { ThemedText } from "@/components/ThemedText";
 import InfoRow from "@/components/ui/InfoRow";
 import { Colors } from "@/constants/Colors";
-import { useGetData } from "@/hooks/useGetData";
 import { Bill, BillItem, NewBillItem, Payer } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
 import { getPayerById } from "@/utils/billUtils";

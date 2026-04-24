@@ -1,9 +1,9 @@
+import { Price } from "@/utils/priceUtils";
+
 export type AssignItem = {
     payerId: number,
     quantity: number
 }
-
-import { Price } from "@/utils/priceUtils";
 
 export type Bill = {
     id: number;
@@ -35,6 +35,7 @@ export type Payer = {
     partySize?: number;
     amountToPay?: Price;
     addedWithGroup?: boolean;
+    isArchived: boolean;
 };
 
 export type Group = {
@@ -42,10 +43,11 @@ export type Group = {
     name: string;
     description?: string;
     payers: Payer[];
+    isArchived: boolean;
 }
 
 
 export type NewBill = Omit<Bill, "id" | "payers" | "discounts" | "items" | "complete" >
 export type NewBillItem = Omit<BillItem, "id" | "assignedTo" | "isDiscounted" | "discountedPrice" | "discounts" >
-export type NewPayer = Omit<Payer, "id" | "partySize" | "amountToPay" | "addedWithGroup" >
-export type NewGroup = Omit<Group, "id" | "payers" >
+export type NewPayer = Omit<Payer, "id" | "partySize" | "amountToPay" | "addedWithGroup" | "isArchived">
+export type NewGroup = Omit<Group, "id" | "payers" | "isArchived" >

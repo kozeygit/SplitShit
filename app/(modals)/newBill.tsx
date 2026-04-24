@@ -25,9 +25,9 @@ import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertBill } from "@/utils/insertData";
 import { useBillStore } from "@/utils/billStore";
-import { useGetData } from "@/hooks/useGetData";
 import { useCamera } from "@/hooks/useCamera";
 import { Price } from "@/utils/priceUtils";
+import { fetchBill } from "@/utils/fetchData";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
@@ -51,7 +51,6 @@ const billSchema = z.object({
 export default function NewBillPage() {
   const router = useRouter();
   const { setOriginalBill, resetEditedBill } = useBillStore();
-  const { getBill } = useGetData();
   const { openCamera, enableCamera } = useCamera();
 
   const {
@@ -90,7 +89,7 @@ export default function NewBillPage() {
     if (newBillId < 0) {
       console.log("insert bill failed for some reason????");
     } else {
-      const newBill = await getBill(newBillId);
+      const newBill = await fetchBill(newBillId);
       setOriginalBill(newBill);
       resetEditedBill();
       router.replace("/bill");
@@ -130,7 +129,7 @@ export default function NewBillPage() {
   };
 
   const openBill = async (newBillId: number) => {
-      const bill = await getBill(newBillId);
+      const bill = await fetchBill(newBillId);
       setOriginalBill(bill);
       resetEditedBill();
       router.replace("/bill");

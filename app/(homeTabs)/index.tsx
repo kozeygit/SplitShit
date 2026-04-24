@@ -11,7 +11,6 @@ import { Colors } from "@/constants/Colors";
 
 import { Bill } from "@/models/bill";
 import BillCard from "@/components/bill/BillCard";
-import { useGetData } from "@/hooks/useGetData";
 import Logo from "@/components/ui/logo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { setBillComplete } from "@/utils/updateData";
@@ -24,10 +23,10 @@ import Animated, {
   SlideInRight,
   SlideOutRight,
 } from "react-native-reanimated";
+import { fetchAllBills, fetchBill } from "@/utils/fetchData";
 
 const BillPage = () => {
   const router = useRouter();
-  const { getBills, getBill } = useGetData();
   const { setOriginalBill, resetEditedBill } = useBillStore();
 
   const [refreshing, setRefreshing] = useState(false); // State for refreshing
@@ -36,14 +35,14 @@ const BillPage = () => {
   const loadBills = useCallback(async () => {
     setRefreshing(true);
     try {
-      const fetchedBills = await getBills();
+      const fetchedBills = await fetchAllBills();
       setBills(fetchedBills);
     } catch (error) {
       console.error("Error fetching bills:", error);
     } finally {
       setRefreshing(false);
     }
-  }, [getBills]);
+  }, [fetchAllBills]);
 
   useFocusEffect(useCallback(() => {
     loadBills();
@@ -67,7 +66,7 @@ const BillPage = () => {
 
   const editBill = async (id: number) => {
     setBillComplete(id, false);
-    const bill = await getBill(id);
+    const bill = await fetchBill(id);
     setOriginalBill(bill);
     resetEditedBill();
 

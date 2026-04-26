@@ -5,9 +5,6 @@ import {
   View,
   StyleSheet,
   FlatList,
-  TouchableNativeFeedback,
-  SafeAreaView,
-  Image,
   RefreshControl,
 } from "react-native";
 
@@ -44,7 +41,7 @@ const PayerPage = () => {
   );
   
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Logo />
 
       {/* Payer Cards */}
@@ -57,7 +54,7 @@ const PayerPage = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

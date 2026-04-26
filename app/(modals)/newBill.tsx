@@ -7,7 +7,6 @@ import {
   Platform,
   TouchableNativeFeedback,
   KeyboardAvoidingView,
-  SafeAreaView,
   ScrollView,
   Pressable,
   ActivityIndicator
@@ -144,7 +143,7 @@ export default function NewBillPage() {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.red,
@@ -373,7 +372,7 @@ export default function NewBillPage() {
           </TouchableNativeFeedback>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

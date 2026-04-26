@@ -3,7 +3,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -160,7 +159,7 @@ const EditItemModal = () => {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.red,
@@ -278,7 +277,7 @@ const EditItemModal = () => {
           </TouchableNativeFeedback>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -1,9 +1,8 @@
 import {
   Pressable,
-  SafeAreaView,
+  View,
   StyleSheet,
   TouchableNativeFeedback,
-  View,
 } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import { ThemedText } from "@/components/ThemedText";
@@ -164,7 +163,7 @@ const EditItemModal = () => {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.orange,
@@ -283,7 +282,7 @@ const EditItemModal = () => {
           </View>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

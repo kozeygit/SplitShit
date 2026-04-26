@@ -1,7 +1,6 @@
 import {
   Alert,
   FlatList,
-  SafeAreaView,
   StyleSheet,
   TouchableNativeFeedback,
   View,
@@ -124,7 +123,7 @@ const EditBillPayersModal = () => {
   };
 
   return (
-    <SafeAreaView style={styles.outer}>
+    <View style={styles.outer}>
       <ContainerView>
         <View style={styles.title}>
           <ThemedText type="subtitle">{editedBill.name}</ThemedText>
@@ -137,7 +136,7 @@ const EditBillPayersModal = () => {
 
         <FlatList
         ref={flatListRef}
-          fadingEdgeLength={200}
+          fadingEdgeLength={{ start: 0, end: 100}}
           contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
           numColumns={1}
           data={payers}
@@ -175,7 +174,7 @@ const EditBillPayersModal = () => {
           </TouchableNativeFeedback>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

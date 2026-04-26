@@ -12,7 +12,6 @@ import { isEqual, set } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
 import { Price } from "@/utils/priceUtils";
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   TouchableHighlight,
@@ -94,7 +93,7 @@ const BillDisplay = () => {
 
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.red,
@@ -124,7 +123,7 @@ const BillDisplay = () => {
             {bill.payers.length > 0 ? (
               <ScrollView
                 horizontal={true}
-                fadingEdgeLength={100}
+                fadingEdgeLength={{ start: 0, end: 100}}
                 contentContainerStyle={styles.payersScrollView}
               >
                 {bill.payers.slice(0, 7).map((payer, index) => (
@@ -143,7 +142,7 @@ const BillDisplay = () => {
         {/* Example for items: */}
         <View style={{ flex: 1 }}>
           <ScrollView
-            fadingEdgeLength={20}
+            fadingEdgeLength={{ start: 0, end: 20 }}
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
           >
@@ -248,7 +247,7 @@ const BillDisplay = () => {
           </TouchableNativeFeedback>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -291,7 +290,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-evenly",
     borderBottomWidth: 1,
-    borderColor: "lightgrey",
+    borderColor: "black",
   },
   payersScrollView: {
     paddingRight: 50,

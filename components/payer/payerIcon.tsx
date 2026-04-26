@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import { SafeAreaView, ScrollView, StyleSheet, View, Text } from "react-native";
+import { View, ScrollView, StyleSheet, Text } from "react-native";
 import { ThemedText } from "../ThemedText";
 import { Payer } from "@/models/bill";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";

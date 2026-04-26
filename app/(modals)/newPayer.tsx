@@ -7,7 +7,6 @@ import {
   Platform,
   TouchableNativeFeedback,
   KeyboardAvoidingView,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
@@ -54,7 +53,7 @@ export default function NewPayerPage() {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.blue,
@@ -223,7 +222,7 @@ export default function NewPayerPage() {
           <View style={{ flex: 1 }}></View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

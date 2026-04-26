@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { View, StyleSheet, Text } from 'react-native'
 import React, { ReactElement } from 'react'
 import { Colors } from '@/constants/Colors'
 

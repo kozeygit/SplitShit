@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { StyleSheet, FlatList, SafeAreaView, RefreshControl } from "react-native";
+import { StyleSheet, FlatList, View, RefreshControl } from "react-native";
 import { Colors } from "@/constants/Colors";
 import Logo from "@/components/ui/logo";
 import { useFocusEffect } from "expo-router";
@@ -26,7 +26,7 @@ const GroupPage = () => {
   useFocusEffect(useCallback(() => { onRefresh(); }, [onRefresh]));
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Logo />
       <FlatList
         numColumns={2}
@@ -35,7 +35,7 @@ const GroupPage = () => {
         renderItem={({ item }) => <GroupCard groupData={item} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

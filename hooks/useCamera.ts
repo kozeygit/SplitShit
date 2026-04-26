@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import * as ImagePicker from "expo-image-picker";
-import { createBillFromImage } from "@/utils/createBillFromImage";
 import { Alert } from "react-native";
+import { processReceipt } from "@/utils/imageProcessor";
 
 export const useCamera = () => {
   const [isCameraEnabled, setIsCameraEnabled] = useState(false)
@@ -40,7 +40,8 @@ export const useCamera = () => {
     };
 
 
-    await createBillFromImage(result.assets[0].uri).then(async (newBillId) => {
+    await processReceipt(result.assets[0].uri)
+      .then(async (newBillId) => {
       if (newBillId < 0) {
         Alert.alert("Error", "Error in parsing bill from photo.\n\nEnter details manually")
         // setIsCameraEnabled(false);

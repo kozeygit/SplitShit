@@ -7,7 +7,6 @@ import {
   Platform,
   TouchableNativeFeedback,
   KeyboardAvoidingView,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
@@ -53,7 +52,7 @@ export default function NewGroupPage() {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.green, // Theme color for Groups
@@ -128,7 +127,7 @@ export default function NewGroupPage() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

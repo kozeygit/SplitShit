@@ -1,9 +1,8 @@
-import { payers } from "@/db/schema";
 import { Bill, BillItem, NewBill, NewBillItem } from "@/models/bill";
 import { Price } from "@/utils/priceUtils";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { insertBill, insertBillItem } from "./insertData";
-import MlkitOcr from "react-native-mlkit-ocr";
+import { File } from 'expo-file-system';
 
 const systemPrompt = `
 
@@ -193,69 +192,69 @@ Example Output
 }
 
 `
-const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY as string; // Replace with your actual API key
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY as string;
 
 const genAI = new GoogleGenerativeAI(API_KEY);
+
 const model = genAI.getGenerativeModel({
-  // Use the stable version for faster, more consistent response times
-  model: "gemini-3-flash-preview", 
+  model: "gemini-3.1-flash-lite-preview",
   systemInstruction: systemPrompt,
   generationConfig: {
-    temperature: 0.1,         // Keep it low for consistency
+    temperature: 0.1,
     responseMimeType: "application/json",
-    // Optional: add topP or topK if you find it still "hallucinates" math
-    topP: 0.1,
   },
 });
 
+const fileToGenerativePart = async (uri: string) => {
+  const file = new File(uri);
+  
+  const base64Data = await file.base64();
+  return {
+    inlineData: {
+      data: base64Data,
+      mimeType: "image/jpeg",
+    },
+  };
+};
+
 export const createBillFromImage = async (uri: string): Promise<number> => {
-  const resultFromUri = await MlkitOcr.detectFromUri(uri);
+  try {
+    const imagePart = await fileToGenerativePart(uri);
 
-  const text = resultFromUri?.map((block) => block.text).toString() || "";
+    const result = await model.generateContent([
+      imagePart,
+      { text: "Extract the data from this receipt according to your instructions." }
+    ]);
 
-  if (text.length < 10) return -1;
+    const cleanJson = result.response.text().replace(/```json|```/gi, '').trim();
+    const data = JSON.parse(cleanJson);
 
-  console.log("Text has been extracted: ")
-  console.log(text)
+    const bill = verifyExtractedBill(data);
+    if (typeof bill === "string") return -1;
 
-  const out = await extractBillData(text);
-  if (out == undefined) {
+    return await ingestBill(bill);
+  } catch (error) {
+    console.error("Error in Gemini Image Processing:", error);
     return -1;
   }
-
-  const bill = verifyExtractedBill(out);
-  if (typeof bill === "string" || bill instanceof String)
-    return -1
-
-
-  const newBillId = await ingestBill(bill);
-  console.log(newBillId);
-  
-  return newBillId;
 };
 
 export const extractBillData = async (ocrText: string): Promise<any> => {
-  const prompt = ocrText;
 
   try {
-    const result = await model.generateContent(`${systemPrompt}\n${prompt}`);
-    const responseText = result.response.text();
+    const result = await model.generateContent(ocrText);
+    const responseText = result.response.text().replace(/```json|```/gi, '').trim();
+    
     console.log(responseText);
 
-    if (responseText) {
-      return JSON.parse(responseText);
-    } else {
-      return undefined;
-    }
+    return responseText ? JSON.parse(responseText) : undefined;
+    
   } catch (error) {
     console.error("Error extracting receipt data:", error);
     return undefined;
   }
 };
 
-/**
- * Debugging function to create a bill from a raw JSON string.
- */
 export const createBillFromJson = async (jsonString: string): Promise<number> => {
   try {
     const data = JSON.parse(jsonString);
@@ -274,11 +273,6 @@ export const createBillFromJson = async (jsonString: string): Promise<number> =>
     return -1;
   }
 };
-
-// Attach to global for easy console debugging in development
-if (__DEV__) {
-  (global as any).createBillFromJson = createBillFromJson;
-}
 
 export const ingestBill = async (bill: Bill): Promise<number> => {
   // insert bill
@@ -347,11 +341,14 @@ export const verifyExtractedBill = (extractedBill: any): Bill | string => {
     }
   }
 
+  const parsedDate = new Date(extractedBill.date);
+  const finalDate = isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+
   try {
     const bill: Bill = {
       id: 0,
       name: extractedBill.name,
-      date: new Date(extractedBill.date),
+      date: finalDate,
       userEnteredTotal: Price.fromDecimal(extractedBill.userEnteredTotal),
       serviceCharge: Price.fromDecimal(extractedBill.serviceCharge ?? 0),
       complete: false,

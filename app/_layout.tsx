@@ -1,8 +1,6 @@
 import {
-    DarkTheme,
-    DefaultTheme,
-    NavigationContainer,
-    ThemeProvider,
+  DefaultTheme,
+  ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -17,9 +15,8 @@ import { SQLiteProvider, openDatabaseSync } from "expo-sqlite";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import migrations from "@/drizzle/migrations";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { getDrizzleDb } from "../utils/database";
-import { BottomTabBar } from "@react-navigation/bottom-tabs";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export const DATABASE_NAME = "bills";
 const db = getDrizzleDb(); // Initialize drizzle *outside* the component
@@ -28,97 +25,95 @@ const db = getDrizzleDb(); // Initialize drizzle *outside* the component
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-    const { success, error } = useMigrations(db, migrations);
+  const { success, error } = useMigrations(db, migrations);
 
-    if (!success) {
-        console.log(error);
+  if (!success) {
+    console.log(error);
+  }
+
+  const [loaded] = useFonts({
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+  });
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
     }
+  }, [loaded]);
 
-    // const colorScheme = useColorScheme();
+  if (!loaded) {
+    return null;
+  }
 
-    const [loaded] = useFonts({
-        SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-    });
-
-    useEffect(() => {
-        if (loaded) {
-            SplashScreen.hideAsync();
-        }
-    }, [loaded]);
-
-    if (!loaded) {
-        return null;
-    }
-
-    return (
-        <Suspense fallback={<ActivityIndicator size="large" />}>
-            <SQLiteProvider
-                databaseName={DATABASE_NAME}
-                options={{ enableChangeListener: true }}
-                useSuspense
-            >
-                <ThemeProvider
-                    value={DefaultTheme}
-                >
-                    <Stack>
-                        <Stack.Screen
-                            name="(homeTabs)"
-                            options={{
-                                headerShown: false,
-                            }}
-                        />
-                        <Stack.Screen
-                            name="(modals)/newBill"
-                            options={{
-                                headerShown: false,
-                                presentation: "modal",
-                                animation: "slide_from_bottom"
-                            }}
-                        />
-                        <Stack.Screen
-                            name="(modals)/newPayer"
-                            options={{
-                                headerShown: false,
-                                presentation: "modal",
-                                animation: "slide_from_bottom"
-                            }}
-                        />
-                        <Stack.Screen
-                            name="(modals)/newGroup"
-                            options={{
-                                headerShown: false,
-                                presentation: "modal",
-                                animation: "slide_from_bottom"
-                            }}
-                        />
-                        <Stack.Screen
-                            name="(billTabs)"
-                            options={{
-                                headerShown: false,
-                                animation: "fade_from_bottom"
-                            }}
-                        />
-                        <Stack.Screen
-                            name="(billModals)"
-                            options={{
-                                headerShown: false,
-                                presentation: "modal",
-                                animation: "none"
-                            }}
-                        />
-                        <Stack.Screen
-                            name="(assignModals)"
-                            options={{
-                                headerShown: false,
-                                presentation: "modal",
-                                animation: "none"
-                            }}
-                        />
-                        <Stack.Screen name="+not-found" />
-                    </Stack>
-                    <StatusBar style="inverted" />
-                </ThemeProvider>
-            </SQLiteProvider>
-        </Suspense>
-    );
+  return (
+    <SafeAreaProvider>
+      <Suspense fallback={<ActivityIndicator size="large" />}>
+        <SQLiteProvider
+          databaseName={DATABASE_NAME}
+          options={{ enableChangeListener: true }}
+          useSuspense
+        >
+          <ThemeProvider value={DefaultTheme}>
+            <Stack>
+              <Stack.Screen
+                name="(homeTabs)"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="(modals)/newBill"
+                options={{
+                  headerShown: false,
+                  presentation: "modal",
+                  animation: "slide_from_bottom",
+                }}
+              />
+              <Stack.Screen
+                name="(modals)/newPayer"
+                options={{
+                  headerShown: false,
+                  presentation: "modal",
+                  animation: "slide_from_bottom",
+                }}
+              />
+              <Stack.Screen
+                name="(modals)/newGroup"
+                options={{
+                  headerShown: false,
+                  presentation: "modal",
+                  animation: "slide_from_bottom",
+                }}
+              />
+              <Stack.Screen
+                name="(billTabs)"
+                options={{
+                  headerShown: false,
+                  animation: "fade_from_bottom",
+                }}
+              />
+              <Stack.Screen
+                name="(billModals)"
+                options={{
+                  headerShown: false,
+                  presentation: "modal",
+                  animation: "none",
+                }}
+              />
+              <Stack.Screen
+                name="(assignModals)"
+                options={{
+                  headerShown: false,
+                  presentation: "modal",
+                  animation: "none",
+                }}
+              />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="inverted" />
+          </ThemeProvider>
+        </SQLiteProvider>
+      </Suspense>
+    </SafeAreaProvider>
+  );
 }

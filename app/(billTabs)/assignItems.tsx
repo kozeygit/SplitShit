@@ -9,7 +9,6 @@ import { getPayerById } from "@/utils/billUtils";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  SafeAreaView,
   StyleSheet,
   TouchableNativeFeedback,
   View,
@@ -49,7 +48,7 @@ const AssignItemsDisplay = () => {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.orange,
@@ -70,7 +69,7 @@ const AssignItemsDisplay = () => {
                 <ThemedText>Go back to the bill and add some!</ThemedText>
               </View>
             }
-            fadingEdgeLength={100}
+            fadingEdgeLength={{ start: 0, end: 200}}
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
             data={bill.items}
@@ -120,7 +119,7 @@ const AssignItemsDisplay = () => {
           />
         </View>
       </ContainerView>
-    </SafeAreaView>
+    </View>
   );
 };
 

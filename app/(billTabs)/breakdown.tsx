@@ -4,13 +4,10 @@ import InfoRow from "@/components/ui/InfoRow";
 import { Colors } from "@/constants/Colors";
 import { Bill, BillItem, NewBillItem, Payer } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
-import { getPayerById } from "@/utils/billUtils";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { set } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
 import { Price } from "@/utils/priceUtils";
 import {
-  SafeAreaView,
   StyleSheet,
   TouchableNativeFeedback,
   View,
@@ -106,7 +103,7 @@ const BillBreakdownDisplay = () => {
   }, [payers, payerItems, servicePerPerson]);
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.turquoise,
@@ -126,7 +123,7 @@ const BillBreakdownDisplay = () => {
                 <ThemedText type="grital">dine and dash huh?</ThemedText>
               </View>
             }
-            fadingEdgeLength={100}
+            fadingEdgeLength={{ start: 0, end: 100}}
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
             data={payers}
@@ -212,7 +209,7 @@ const BillBreakdownDisplay = () => {
           </View>
         </Pressable>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

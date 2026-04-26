@@ -4,17 +4,24 @@ import React, { useState } from "react";
 import { Colors } from "@/constants/Colors";
 
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
 
+  const insets = useSafeAreaInsets();
+
+
   return (
+    <View style={{ flex: 1, paddingBottom: insets.bottom, backgroundColor: "black"}}>
     <Tabs
+      safeAreaInsets={{ bottom: 0 }} // 1. Tell the navigator NOT to add space at the bottom
       screenOptions={{
         tabBarActiveBackgroundColor: "#000",
         headerShown: false,
-        tabBarStyle: {
+          tabBarStyle: {
           height: 60,
-          borderTopWidth: 3,
+          borderTopWidth: 2,
           borderColor: "black",
         },
         tabBarInactiveTintColor: "black",
@@ -51,6 +58,6 @@ export default function TabLayout() {
           ),
         }}
       />
-    </Tabs>
+    </Tabs></View>
   );
 }

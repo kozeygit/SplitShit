@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   FlatList,
-  SafeAreaView,
+  View,
   RefreshControl,
   Pressable,
 } from "react-native";
@@ -19,11 +19,9 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { ThemedText } from "@/components/ThemedText";
 import { LinearGradient } from "expo-linear-gradient";
 
-import Animated, {
-  SlideInRight,
-  SlideOutRight,
-} from "react-native-reanimated";
+import Animated, { SlideInRight, SlideOutRight, useReducedMotion } from "react-native-reanimated";
 import { fetchAllBills, fetchBill } from "@/utils/fetchData";
+import ActionFAB from "@/components/ui/ActionFAB";
 
 const BillPage = () => {
   const router = useRouter();
@@ -31,6 +29,8 @@ const BillPage = () => {
 
   const [refreshing, setRefreshing] = useState(false); // State for refreshing
   const [bills, setBills] = useState<Bill[]>([]); // State for bills
+
+  const billsFlatList = useRef<FlatList>(null);
 
   const loadBills = useCallback(async () => {
     setRefreshing(true);
@@ -44,17 +44,17 @@ const BillPage = () => {
     }
   }, [fetchAllBills]);
 
-  useFocusEffect(useCallback(() => {
-    loadBills();
-  }, [loadBills]));
+  useFocusEffect(
+    useCallback(() => {
+      loadBills();
+    }, [loadBills]),
+  );
 
   // onRefresh already points to loadBills
   const onRefresh = loadBills;
 
   const [expandedBillId, setExpandedBillId] = useState<number | null>(null);
   const [selectedBillsIds, setSelectedBillsIds] = useState<number[]>([]);
-  const [showSelectionOptions, setShowSelectionOptions] =
-    useState<boolean>(false);
 
   const toggleDropdown = (id: number) => {
     if (selectedBillsIds.length > 0) {
@@ -69,7 +69,6 @@ const BillPage = () => {
     const bill = await fetchBill(id);
     setOriginalBill(bill);
     resetEditedBill();
-
     router.push("/bill");
   };
 
@@ -77,21 +76,22 @@ const BillPage = () => {
     setBillComplete(id, true);
     onRefresh();
   };
-  
-  const handleCompleteBills = (ids: number[]) => {
+
+  const handleComplete = (ids: number[]) => {
     for (const billId of ids) {
-      setBillComplete(billId, true)
+      setBillComplete(billId, true);
     }
     onRefresh();
-    setSelectedBillsIds([])
-  }
+    setSelectedBillsIds([]);
+  };
 
-  const handleDeleteBills = (billIds: number[]) => {
+  const handleDelete = (billIds: number[]) => {
     for (const billId of billIds) {
+      setBillComplete(billId, false)
       console.log("Deleting bill:", billId);
-    };
+    }
     onRefresh();
-    setSelectedBillsIds([])
+    setSelectedBillsIds([]);
   };
 
   const handleSelect = (id: number) => {
@@ -103,23 +103,14 @@ const BillPage = () => {
     setExpandedBillId(null);
   };
 
-  useEffect(() => {
-    if (selectedBillsIds.length > 0) {
-      console.log("something is selected");
-      setShowSelectionOptions(true);
-    } else {
-      console.log("Selection Cleared");
-      setShowSelectionOptions(false);
-    }
-  }, [selectedBillsIds]);
-
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Logo />
 
       {/* Bill Cards */}
       <FlatList
         data={bills}
+        ref={billsFlatList}
         keyExtractor={(item) => item.id.toString()}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -137,40 +128,17 @@ const BillPage = () => {
         )}
       />
 
-      {showSelectionOptions && (
-        <Animated.View
-          entering={SlideInRight}
-          exiting={SlideOutRight}
-          style={styles.selectionOptions}
-        >
-            <Pressable
-              style={[styles.selectionOption, styles.selectionOptionCancel]}
-              onPress={() => {
-                setSelectedBillsIds([]);
-              }}
-            >
-              <MaterialIcons name="cancel" size={30} />
-            </Pressable>
-            <Pressable style={styles.selectionOption}>
-              <ThemedText type="subtitle" style={{ fontSize: 25 }}>
-                {selectedBillsIds.length}
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              style={[styles.selectionOption, styles.selectionOptionComplete]}
-              onPress={() => handleCompleteBills(selectedBillsIds)}
-            >
-              <MaterialIcons name="check" size={30} color={"black"} />
-            </Pressable>
-            <Pressable
-              style={[styles.selectionOption, styles.selectionOptionDelete]}
-              onPress={() => handleDeleteBills(selectedBillsIds)}
-            >
-              <MaterialIcons name="delete" size={30} color={"white"} />
-            </Pressable>
-        </Animated.View>
-      )}
-      </SafeAreaView>
+      <ActionFAB 
+        activeColor={Colors.pastel.red}
+        count={selectedBillsIds.length}
+        onAdd={() => router.push("/(modals)/newBill")}
+        onCancel={() => setSelectedBillsIds([])}
+        actions={[
+          { icon: "check", color: Colors.pastel.green, onPress: () => handleComplete(selectedBillsIds) },
+          { icon: "delete", color: "red", iconColor: "white", onPress: () => handleDelete(selectedBillsIds) }
+        ]}
+      />
+    </View>
   );
 };
 

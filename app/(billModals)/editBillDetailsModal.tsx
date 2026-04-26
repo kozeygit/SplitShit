@@ -2,7 +2,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -132,7 +131,7 @@ const EditBillDetailsModal = () => {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.red,
@@ -262,7 +261,7 @@ const EditBillDetailsModal = () => {
           </TouchableNativeFeedback>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

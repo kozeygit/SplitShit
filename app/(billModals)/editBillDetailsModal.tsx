@@ -154,6 +154,7 @@ const EditBillDetailsModal = () => {
             <TextInput
               ref={nameInputRef}
               placeholder="Item Name"
+              placeholderTextColor={Colors.light.placeholderText}
               style={{ flex: 1 }}
               keyboardType="default"
               value={name}
@@ -194,6 +195,7 @@ const EditBillDetailsModal = () => {
             <TextInput
               ref={serviceChargeInputRef}
               placeholder="0"
+              placeholderTextColor={Colors.light.placeholderText}
               style={{ flex: 1 }}
               keyboardType="numeric"
               value={serviceCharge}
@@ -231,6 +233,7 @@ const EditBillDetailsModal = () => {
             <TextInput
               ref={totalPriceInputRef}
               placeholder="0"
+              placeholderTextColor={Colors.light.placeholderText}
               style={{ flex: 1 }}
               keyboardType="numeric"
               value={totalPrice}

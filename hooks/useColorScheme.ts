@@ -3,7 +3,7 @@
 import { ColorSchemeName, useColorScheme as useCS} from 'react-native';
 
 export function useColorScheme(): ColorSchemeName {
-    useCS()
+    console.log(useCS())
     return 'light'
 }
 

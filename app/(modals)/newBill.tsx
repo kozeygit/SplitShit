@@ -191,6 +191,7 @@ export default function NewBillPage() {
                     errors.name ? styles.inputError : undefined,
                   ]}
                   placeholder="Bill Name"
+                  placeholderTextColor={Colors.light.placeholderText}
                   onBlur={onBlur}
                   onChangeText={onChange} // Update form state on text change
                   value={value} // Bind the value to the form state
@@ -268,6 +269,7 @@ export default function NewBillPage() {
                     <TextInput
                       style={{ flex: 1 }}
                       placeholder="Service Charge"
+                      placeholderTextColor={Colors.light.placeholderText}
                       keyboardType="numeric"
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)} // Convert text to number
@@ -324,6 +326,7 @@ export default function NewBillPage() {
                     <TextInput
                       style={{ flex: 1 }}
                       placeholder="Total Amount"
+                      placeholderTextColor={Colors.light.placeholderText}
                       keyboardType="numeric"
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)} // Convert text to number

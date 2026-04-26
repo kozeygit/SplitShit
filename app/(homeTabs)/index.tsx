@@ -22,6 +22,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Animated, { SlideInRight, SlideOutRight, useReducedMotion } from "react-native-reanimated";
 import { fetchAllBills, fetchBill } from "@/utils/fetchData";
 import ActionFAB from "@/components/ui/ActionFAB";
+import { removeBill } from "@/utils/removeData";
 
 const BillPage = () => {
   const router = useRouter();
@@ -85,9 +86,9 @@ const BillPage = () => {
     setSelectedBillsIds([]);
   };
 
-  const handleDelete = (billIds: number[]) => {
+  const handleDelete = async (billIds: number[]) => {
     for (const billId of billIds) {
-      setBillComplete(billId, false)
+      await removeBill(billId);
       console.log("Deleting bill:", billId);
     }
     onRefresh();

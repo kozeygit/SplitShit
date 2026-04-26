@@ -92,6 +92,7 @@ export default function NewPayerPage() {
                     <TextInput
                       style={{ flex: 1 }}
                       placeholder="John Smith"
+                      placeholderTextColor={Colors.light.placeholderText}
                       keyboardType="default"
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)}
@@ -134,6 +135,7 @@ export default function NewPayerPage() {
                     <TextInput
                       style={{ flex: 1 }}
                       placeholder="email@domain.com"
+                      placeholderTextColor={Colors.light.placeholderText}
                       keyboardType="email-address"
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)}
@@ -176,6 +178,7 @@ export default function NewPayerPage() {
                     <TextInput
                       style={{ flex: 1 }}
                       placeholder="Number"
+                      placeholderTextColor={Colors.light.placeholderText}
                       keyboardType="phone-pad"
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)} // Convert text to number

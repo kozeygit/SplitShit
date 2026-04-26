@@ -182,6 +182,7 @@ const EditItemModal = () => {
             <TextInput
               ref={nameInputRef}
               placeholder="Item Name"
+              placeholderTextColor={Colors.light.placeholderText}
               style={{ flex: 1 }}
               keyboardType="default"
               value={name}
@@ -198,6 +199,7 @@ const EditItemModal = () => {
             <TextInput
               ref={quantityInputRef}
               placeholder="0"
+              placeholderTextColor={Colors.light.placeholderText}
               style={{ flex: 1 }}
               keyboardType="numeric"
               value={quantity}
@@ -216,6 +218,7 @@ const EditItemModal = () => {
             <TextInput
               ref={priceInputRef}
               placeholder="0"
+              placeholderTextColor={Colors.light.placeholderText}
               style={{ flex: 1 }}
               keyboardType="numeric"
               value={priceInput}

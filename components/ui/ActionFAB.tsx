@@ -5,9 +5,6 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   useSharedValue,
-  SlideOutRight,
-  SlideInRight,
-  SlideInUp,
   SlideInDown,
   SlideOutDown,
 } from "react-native-reanimated";
@@ -87,6 +84,7 @@ const ActionFAB = ({
           entering={SlideInDown}
           exiting={SlideOutDown}
           style={styles.accordionContainer}
+          
         >
           {/* Cancel Button */}
           <Pressable

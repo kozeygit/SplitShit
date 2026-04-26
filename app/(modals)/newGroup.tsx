@@ -84,6 +84,7 @@ export default function NewGroupPage() {
                     <TextInput
                       style={{ flex: 1 }}
                       placeholder="e.g. Spain Trip"
+                      placeholderTextColor={Colors.light.placeholderText}
                       keyboardType="default"
                       onBlur={onBlur}
                       onChangeText={onChange}

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { StyleSheet, Pressable, View, TouchableOpacity } from "react-native";
+import { StyleSheet, Pressable, View } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Animated, {
   useAnimatedStyle,
@@ -10,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
+import Touchable from "@/components/ui/Touchable";
 
 export type FABAction = {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -61,7 +62,7 @@ const ActionFAB = ({
       ]}
     >
       {/* CENTER HUB: THE MASTER CIRCLE */}
-      <TouchableOpacity
+      <Touchable
         onPress={isSelecting ? undefined : onAdd}
         style={styles.masterHub}
       >
@@ -82,7 +83,7 @@ const ActionFAB = ({
             </ThemedText>
           </Animated.View>
         </View>
-      </TouchableOpacity>
+      </Touchable>
 
       {/* ACCORDION BLOCK */}
       {isSelecting && (

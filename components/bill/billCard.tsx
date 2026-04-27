@@ -115,15 +115,17 @@ const BillCard: React.FC<BillCardProps> = ({
       >
         {isExpanded && (
           <>
-            <Touchable onPress={() => onEdit(billData.id)}>
-              <View style={styles.dropdownOptionEdit}>
-                <ThemedText type="default">Edit</ThemedText>
-              </View>
+            <Touchable
+              style={styles.dropdownOptionEdit}
+              onPress={() => onEdit(billData.id)}
+            >
+              <ThemedText type="default">Edit</ThemedText>
             </Touchable>
-            <Touchable onPress={() => onComplete(billData.id)}>
-              <View style={styles.dropdownOptionComplete}>
-                <ThemedText type="default">Complete</ThemedText>
-              </View>
+            <Touchable
+              style={styles.dropdownOptionComplete}
+              onPress={() => onComplete(billData.id)}
+            >
+              <ThemedText type="default">Complete</ThemedText>
             </Touchable>
           </>
         )}

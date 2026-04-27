@@ -120,7 +120,7 @@ const BillBreakdownDisplay = () => {
                 <ThemedText type="grital">dine and dash huh?</ThemedText>
               </View>
             }
-            fadingEdgeLength={{ start: 0, end: 100 }}
+            fadingEdgeLength={50}
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
             data={payers}

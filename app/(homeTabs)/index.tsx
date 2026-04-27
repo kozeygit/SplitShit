@@ -15,11 +15,7 @@ import Logo from "@/components/ui/logo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { setBillComplete } from "@/utils/updateData";
 import { useBillStore } from "@/utils/billStore";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { ThemedText } from "@/components/ThemedText";
-import { LinearGradient } from "expo-linear-gradient";
 
-import Animated, { SlideInRight, SlideOutRight, useReducedMotion } from "react-native-reanimated";
 import { fetchAllBills, fetchBill } from "@/utils/fetchData";
 import ActionFAB from "@/components/ui/ActionFAB";
 import { removeBill } from "@/utils/removeData";
@@ -129,14 +125,23 @@ const BillPage = () => {
         )}
       />
 
-      <ActionFAB 
+      <ActionFAB
         activeColor={Colors.pastel.red}
         count={selectedBillsIds.length}
         onAdd={() => router.push("/(modals)/newBill")}
         onCancel={() => setSelectedBillsIds([])}
         actions={[
-          { icon: "check", color: Colors.pastel.green, onPress: () => handleComplete(selectedBillsIds) },
-          { icon: "delete", color: "red", iconColor: "white", onPress: () => handleDelete(selectedBillsIds) }
+          {
+            icon: "check",
+            color: Colors.pastel.green,
+            onPress: () => handleComplete(selectedBillsIds),
+          },
+          {
+            icon: "delete",
+            color: "red",
+            iconColor: "white",
+            onPress: () => handleDelete(selectedBillsIds),
+          },
         ]}
       />
     </View>

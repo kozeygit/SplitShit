@@ -11,14 +11,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { isEqual, set } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
 import { Price } from "@/utils/priceUtils";
-import {
-  ScrollView,
-  StyleSheet,
-  TouchableHighlight,
-  View,
-  Text,
-  Pressable,
-} from "react-native";
+import { ScrollView, StyleSheet, View, Text, Pressable } from "react-native";
 import Touchable from "@/components/ui/Touchable";
 
 const BillDisplay = () => {
@@ -116,7 +109,7 @@ const BillDisplay = () => {
             {bill.payers.length > 0 ? (
               <ScrollView
                 horizontal={true}
-                fadingEdgeLength={{ start: 0, end: 100 }}
+                fadingEdgeLength={50}
                 contentContainerStyle={styles.payersScrollView}
               >
                 {bill.payers.slice(0, 7).map((payer, index) => (
@@ -135,7 +128,7 @@ const BillDisplay = () => {
         {/* Example for items: */}
         <View style={{ flex: 1 }}>
           <ScrollView
-            fadingEdgeLength={{ start: 0, end: 20 }}
+            fadingEdgeLength={50}
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
           >

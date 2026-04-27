@@ -25,45 +25,36 @@ const EditBillPayersModal = () => {
   const flatListRef = useRef<FlatList>(null);
 
   const [payers, setPayers] = useState<Payer[]>([]);
-  const [updatePayers, setUpdatePayers] = useState(false);
+  const isMounted = useRef(false);
 
   if (!editedBill) {
     router.back();
     return null;
   }
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const dbPayers = await fetchPayers();
-        const synced = syncPayersWithDraft(dbPayers, editedBill.payers);
-        setPayers(synced);
-      } catch (error) {
-        console.error("Error loading payers:", error);
-      }
-    };
-    loadData();
-  }, [editedBill.id]);
-
   useFocusEffect(
     useCallback(() => {
-      if (!updatePayers) return;
-
       const refreshAndScroll = async () => {
-        const dbPayers = await fetchPayers();
-        const synced = syncPayersWithDraft(dbPayers, editedBill.payers);
+        try {
+          const dbPayers = await fetchPayers();
+          const synced = syncPayersWithDraft(dbPayers, editedBill.payers);
+          setPayers(synced);
 
-        setPayers(synced);
-        setUpdatePayers(false);
-
-        // Ensure the list has rendered the new person before scrolling
-        requestAnimationFrame(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        });
+          // Only scroll to end when returning to the screen (not on first mount)
+          if (isMounted.current) {
+            requestAnimationFrame(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            });
+          } else {
+            isMounted.current = true;
+          }
+        } catch (error) {
+          console.error("Error loading payers:", error);
+        }
       };
 
       refreshAndScroll();
-    }, [updatePayers, editedBill.payers]),
+    }, [editedBill.payers]),
   );
 
   const handleBack = () => {
@@ -113,7 +104,12 @@ const EditBillPayersModal = () => {
   };
 
   const handleNewPayer = () => {
-    setUpdatePayers(true);
+    // Create a new bill object (Immutability) for Zustand
+    const updatedBill = {
+      ...editedBill,
+      payers: payers.filter((p) => (p.partySize ?? 0) > 0),
+    };
+    setEditedBill(updatedBill);
     router.push({ pathname: "/newPayer" });
   };
 
@@ -123,7 +119,7 @@ const EditBillPayersModal = () => {
         <View style={styles.title}>
           <ThemedText type="subtitle">{editedBill.name}</ThemedText>
           <ThemedText type="subtitle">
-            {editedBill.payers.length}
+            {payers.filter((p) => (p.partySize ?? 0) > 0).length}
             {" • "}
             {payers.reduce((acc, payer) => acc + (payer.partySize ?? 0), 0)}
           </ThemedText>
@@ -131,7 +127,7 @@ const EditBillPayersModal = () => {
 
         <FlatList
           ref={flatListRef}
-          fadingEdgeLength={{ start: 0, end: 100 }}
+          fadingEdgeLength={50}
           contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
           numColumns={1}
           data={payers}

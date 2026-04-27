@@ -53,6 +53,14 @@ const EditItemModal = () => {
       return;
     }
 
+    // Guard against running before the bill has been populated from the store.
+    // bill.items is empty on first render (default state) — wait until it has
+    // content before trying to find the item, otherwise the find always returns
+    // undefined even when the itemId is perfectly valid.
+    if (bill.items.length === 0) {
+      return;
+    }
+
     const fetchItem = async () => {
       const oldItem = bill.items.find((item) => item.id == parseInt(itemId));
       if (oldItem === undefined) {

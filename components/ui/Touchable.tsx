@@ -55,6 +55,5 @@ const styles = StyleSheet.create({
   base: {
     // Pressable defaults to no flex; match the layout-neutral behaviour
     // of TouchableNativeFeedback so it doesn't disturb existing layouts.
-    flexShrink: 1,
   },
 });

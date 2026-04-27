@@ -65,7 +65,7 @@ const AssignItemsDisplay = () => {
                 <ThemedText>Go back to the bill and add some!</ThemedText>
               </View>
             }
-            fadingEdgeLength={{ start: 0, end: 200 }}
+            fadingEdgeLength={50}
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
             data={bill.items}

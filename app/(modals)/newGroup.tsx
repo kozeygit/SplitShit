@@ -5,10 +5,10 @@ import {
   StyleSheet,
   Text,
   Platform,
-  TouchableNativeFeedback,
   KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
+import Touchable from "@/components/ui/Touchable";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,7 +23,6 @@ import { NewGroup } from "@/models/bill";
 const groupSchema = z.object({
   name: z.string().min(1, "Group name is required"),
 });
-
 
 export default function NewGroupPage() {
   const router = useRouter();
@@ -108,22 +107,22 @@ export default function NewGroupPage() {
           {/* Submit Buttons */}
           <View style={styles.buttonContainer}>
             <View style={styles.cancelButtonOuter}>
-              <TouchableNativeFeedback onPress={() => router.back()}>
+              <Touchable onPress={() => router.back()}>
                 <View style={styles.cancelButtonInner}>
                   <ThemedText type="defaultSemiBold" style={styles.cancelText}>
                     Cancel
                   </ThemedText>
                 </View>
-              </TouchableNativeFeedback>
+              </Touchable>
             </View>
             <View style={styles.submitButtonOuter}>
-              <TouchableNativeFeedback onPress={handleSubmit(onSubmit)}>
+              <Touchable onPress={handleSubmit(onSubmit)}>
                 <View style={styles.submitButtonInner}>
                   <ThemedText type="defaultSemiBold" style={styles.submitText}>
                     Submit
                   </ThemedText>
                 </View>
-              </TouchableNativeFeedback>
+              </Touchable>
             </View>
           </View>
         </ScrollView>

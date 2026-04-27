@@ -1,9 +1,5 @@
-import {
-  Pressable,
-  View,
-  StyleSheet,
-  TouchableNativeFeedback,
-} from "react-native";
+import { Pressable, View, StyleSheet } from "react-native";
+import Touchable from "@/components/ui/Touchable";
 import React, { useEffect, useState, useCallback } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
@@ -49,7 +45,7 @@ const EditItemModal = () => {
       if (editedBill) {
         setBill(editedBill);
       }
-    }, [editedBill])
+    }, [editedBill]),
   );
 
   useEffect(() => {
@@ -70,7 +66,7 @@ const EditItemModal = () => {
 
   useEffect(() => {
     const currentIndex = bill.items.findIndex(
-      (billItem) => billItem.id === item?.id
+      (billItem) => billItem.id === item?.id,
     );
     if (currentIndex === undefined) {
       console.log("Item index not found in bill");
@@ -85,7 +81,7 @@ const EditItemModal = () => {
     }
     if (item.assignedTo.some((ass) => ass.payerId === payerId)) {
       item.assignedTo = item.assignedTo.filter(
-        (ass) => ass.payerId !== payerId
+        (ass) => ass.payerId !== payerId,
       );
       setItem({ ...item });
     } else {
@@ -98,15 +94,15 @@ const EditItemModal = () => {
     if (item === undefined) {
       return;
     }
-    
+
     const assignedTo = item.assignedTo.find((ass) => ass.payerId === payerId);
-    
+
     if (assignedTo === undefined) {
       return;
     }
 
     if (assignedTo.quantity == item.quantity) {
-      return
+      return;
     }
 
     // now check if the total quanity for assigned people has enough remoaining for an increase :)
@@ -232,7 +228,7 @@ const EditItemModal = () => {
                     payer={payer}
                     size={50}
                     checked={item.assignedTo.some(
-                      (obj) => obj.payerId === payer.id
+                      (obj) => obj.payerId === payer.id,
                     )}
                   />
                 </Pressable>
@@ -243,18 +239,18 @@ const EditItemModal = () => {
       </View>
       <View style={styles.buttonContainer}>
         <View style={styles.cancelButtonOuter}>
-          <TouchableNativeFeedback onPress={handleBack}>
+          <Touchable onPress={handleBack}>
             <View style={styles.cancelButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.cancelText}>
                 Back
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
 
         <View style={{ flex: 1, flexDirection: "row", gap: 10 }}>
           <View style={styles.submitButtonOuter}>
-            <TouchableNativeFeedback onPress={handlePrevious}>
+            <Touchable onPress={handlePrevious}>
               <View style={styles.submitButtonInner}>
                 <MaterialIcons
                   name="arrow-back"
@@ -262,11 +258,11 @@ const EditItemModal = () => {
                   color={itemIndex === 0 ? Colors.pastel.red : "black"}
                 />
               </View>
-            </TouchableNativeFeedback>
+            </Touchable>
           </View>
 
           <View style={styles.submitButtonOuter}>
-            <TouchableNativeFeedback onPress={handleNext}>
+            <Touchable onPress={handleNext}>
               <View style={styles.submitButtonInner}>
                 <MaterialIcons
                   name="arrow-forward"
@@ -278,7 +274,7 @@ const EditItemModal = () => {
                   }
                 />
               </View>
-            </TouchableNativeFeedback>
+            </Touchable>
           </View>
         </View>
       </View>

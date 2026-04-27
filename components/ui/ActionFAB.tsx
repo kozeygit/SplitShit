@@ -57,25 +57,31 @@ const ActionFAB = ({
       style={[
         styles.outerContainer,
         // When selecting, we want the background to be white
-        { backgroundColor: isSelecting ? "white" : activeColor,
-         top: isSelecting ? 600 : undefined }
+        { backgroundColor: "white", top: isSelecting ? 600 : undefined },
       ]}
     >
       {/* CENTER HUB: THE MASTER CIRCLE */}
       <TouchableOpacity
         onPress={isSelecting ? undefined : onAdd}
-        // Remove borderRadius here, it's handled by outerContainer
         style={styles.masterHub}
       >
-        <Animated.View style={[styles.centerContent, hubIconStyle]}>
-          <MaterialIcons name="add" size={40} color="black" />
-        </Animated.View>
+        <View style={[styles.innerCircle, { backgroundColor: activeColor }]}>
+          <Animated.View style={[styles.centerContent, hubIconStyle]}>
+            <MaterialIcons name="add" size={40} color="black" />
+          </Animated.View>
 
-        <Animated.View style={[StyleSheet.absoluteFill, styles.centerContent, hubNumberStyle]}>
-          <ThemedText type="subtitle" style={styles.countNumber}>
-            {count}
-          </ThemedText>
-        </Animated.View>
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              styles.centerContent,
+              hubNumberStyle,
+            ]}
+          >
+            <ThemedText type="subtitle" style={styles.countNumber}>
+              {count}
+            </ThemedText>
+          </Animated.View>
+        </View>
       </TouchableOpacity>
 
       {/* ACCORDION BLOCK */}
@@ -84,11 +90,13 @@ const ActionFAB = ({
           entering={SlideInDown}
           exiting={SlideOutDown}
           style={styles.accordionContainer}
-          
         >
           {/* Cancel Button */}
           <Pressable
-            style={[styles.actionButton, { backgroundColor: Colors.pastel.cyan }]}
+            style={[
+              styles.actionButton,
+              { backgroundColor: Colors.pastel.cyan },
+            ]}
             onPress={onCancel}
           >
             <MaterialIcons name="close" size={24} color="black" />
@@ -115,7 +123,7 @@ const ActionFAB = ({
 };
 
 export default ActionFAB;
- 
+
 const styles = StyleSheet.create({
   outerContainer: {
     position: "absolute",
@@ -127,10 +135,10 @@ const styles = StyleSheet.create({
     borderColor: "black",
     overflow: "hidden",
     elevation: 5,
-    backgroundColor: "black"
+    backgroundColor: "black",
   },
   accordionContainer: {
-    flex: 1, 
+    flex: 1,
     flexDirection: "column-reverse",
   },
   masterHub: {
@@ -140,9 +148,14 @@ const styles = StyleSheet.create({
     zIndex: 10,
     justifyContent: "center",
     alignItems: "center",
-    borderColor: "black",
-    outlineColor: "red",
-    outline: "solid"
+    padding: 6,
+  },
+  innerCircle: {
+    flex: 1,
+    width: "100%",
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
   },
   centerContent: {
     justifyContent: "center",

@@ -5,12 +5,12 @@ import {
   StyleSheet,
   Text,
   Platform,
-  TouchableNativeFeedback,
   KeyboardAvoidingView,
   ScrollView,
   Pressable,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
+import Touchable from "@/components/ui/Touchable";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -69,11 +69,15 @@ export default function NewBillPage() {
 
   const onSubmit = async (data: NewBill) => {
     const totalPrice = Price.fromDecimal((data.userEnteredTotal as any) || 0);
-    let serviceChargePrice = Price.fromDecimal((data.serviceCharge as any) || 0);
+    let serviceChargePrice = Price.fromDecimal(
+      (data.serviceCharge as any) || 0,
+    );
 
     if (serviceType == "percentage") {
       // Calculate service charge as percentage of subtotal
-      const subTotal = totalPrice.divide(1 + (((data.serviceCharge as any) || 0) / 100));
+      const subTotal = totalPrice.divide(
+        1 + ((data.serviceCharge as any) || 0) / 100,
+      );
       serviceChargePrice = totalPrice.subtract(subTotal);
     }
 
@@ -99,12 +103,12 @@ export default function NewBillPage() {
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
   const [serviceType, setServiceType] = useState<"percentage" | "amount">(
-    "amount"
+    "amount",
   );
 
   const onChangeDate = (
     event: DateTimePickerEvent,
-    selectedDate: Date | undefined
+    selectedDate: Date | undefined,
   ) => {
     if (selectedDate) {
       setShow(Platform.OS === "ios");
@@ -128,18 +132,16 @@ export default function NewBillPage() {
   };
 
   const openBill = async (newBillId: number) => {
-      const bill = await fetchBill(newBillId);
-      setOriginalBill(bill);
-      resetEditedBill();
-      router.replace("/bill");
-  }
+    const bill = await fetchBill(newBillId);
+    setOriginalBill(bill);
+    resetEditedBill();
+    router.replace("/bill");
+  };
 
   const handleOpenCamera = async () => {
     setLoading(true);
 
-    await openCamera(
-      openBill
-    ).then(() => setLoading(false))
+    await openCamera(openBill).then(() => setLoading(false));
   };
 
   return (
@@ -160,7 +162,6 @@ export default function NewBillPage() {
       )}
       {/* ... rest of the code */}
 
-
       <KeyboardAvoidingView
         behavior={Platform.OS == "ios" ? "padding" : "height"}
         style={{
@@ -171,12 +172,16 @@ export default function NewBillPage() {
           <View style={styles.container}>
             <View style={styles.title}>
               <ThemedText type="title">Add New Bill</ThemedText>
-              <Pressable onLongPress={() => { alert("Camera enabled");  enableCamera() }} delayLongPress={2000} onPress={handleOpenCamera} style={styles.photoButton}>
-                <MaterialIcons
-                  name="photo-camera"
-                  size={20}
-                  color={"black"}
-                />
+              <Pressable
+                onLongPress={() => {
+                  alert("Camera enabled");
+                  enableCamera();
+                }}
+                delayLongPress={2000}
+                onPress={handleOpenCamera}
+                style={styles.photoButton}
+              >
+                <MaterialIcons name="photo-camera" size={20} color={"black"} />
               </Pressable>
             </View>
             {/* Bill Name Input */}
@@ -202,7 +207,6 @@ export default function NewBillPage() {
               <Text style={styles.errorText}>{errors.name.message}</Text>
             )}
 
-
             {/* Date Picker */}
             {show && (
               <DateTimePicker
@@ -216,7 +220,7 @@ export default function NewBillPage() {
 
             {/* Display Selected Date */}
             <Text style={styles.label}>Date</Text>
-            <TouchableNativeFeedback onPress={showDatepicker}>
+            <Touchable onPress={showDatepicker}>
               <View
                 style={[
                   styles.input,
@@ -243,7 +247,7 @@ export default function NewBillPage() {
                   )}
                 />
               </View>
-            </TouchableNativeFeedback>
+            </Touchable>
             {errors.date && (
               <Text style={styles.errorText}>{errors.date.message}</Text>
             )}
@@ -275,7 +279,7 @@ export default function NewBillPage() {
                       onChangeText={(text) => onChange(text)} // Convert text to number
                       value={value.toString()} // Convert number to string for display
                     />
-                    <TouchableNativeFeedback onPress={swapServiceType}>
+                    <Touchable onPress={swapServiceType}>
                       {serviceType == "percentage" ? (
                         <MaterialIcons
                           name="percent"
@@ -295,7 +299,7 @@ export default function NewBillPage() {
                           }}
                         />
                       )}
-                    </TouchableNativeFeedback>
+                    </Touchable>
                   </View>
                 )}
               />
@@ -357,22 +361,22 @@ export default function NewBillPage() {
       {/* Submit Button */}
       <View style={styles.buttonContainer}>
         <View style={styles.cancelButtonOuter}>
-          <TouchableNativeFeedback onPress={() => router.back()}>
+          <Touchable onPress={() => router.back()}>
             <View style={styles.cancelButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.cancelText}>
                 Cancel
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
         <View style={styles.submitButtonOuter}>
-          <TouchableNativeFeedback onPress={handleSubmit(onSubmit)}>
+          <Touchable onPress={handleSubmit(onSubmit)}>
             <View style={styles.submitButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.submitText}>
                 Submit
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
       </View>
     </View>
@@ -386,7 +390,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     padding: 10,
     backgroundColor: "white",
-    elevation: 3
+    elevation: 3,
   },
   loadingView: {
     backgroundColor: "rgba(0,0,0,0.6)", // Darkened slightly more for contrast
@@ -397,7 +401,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 100,
     justifyContent: "center", // Centers spinner vertically
-    alignItems: "center",     // Centers spinner horizontally
+    alignItems: "center", // Centers spinner horizontally
   },
   container: {
     marginTop: 80,

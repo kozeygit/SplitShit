@@ -52,7 +52,7 @@ Add group functionality to Splitshit where groups serve as templates for common 
   - Return new group
 
 - [~] **`createGroup(groupName, payerIds)`**
-  - [X] `insertGroup(newGroup)` exists in `insertData.ts` — inserts group row only
+  - [x] `insertGroup(newGroup)` exists in `insertData.ts` — inserts group row only
   - [ ] Does NOT insert payer entries into `groupPayers` — needs completing
   - [ ] Does NOT accept `payerIds` parameter
 

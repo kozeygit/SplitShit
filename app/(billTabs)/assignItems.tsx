@@ -8,12 +8,8 @@ import { useBillStore } from "@/utils/billStore";
 import { getPayerById } from "@/utils/billUtils";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  StyleSheet,
-  TouchableNativeFeedback,
-  View,
-  FlatList,
-} from "react-native";
+import { StyleSheet, View, FlatList } from "react-native";
+import Touchable from "@/components/ui/Touchable";
 import { Price } from "@/utils/priceUtils";
 
 const AssignItemsDisplay = () => {
@@ -36,7 +32,7 @@ const AssignItemsDisplay = () => {
       if (editedBill) {
         setBill(editedBill);
       }
-    }, [editedBill])
+    }, [editedBill]),
   );
 
   const openAssignModal = (item: BillItem | undefined) => {
@@ -69,14 +65,20 @@ const AssignItemsDisplay = () => {
                 <ThemedText>Go back to the bill and add some!</ThemedText>
               </View>
             }
-            fadingEdgeLength={{ start: 0, end: 200}}
+            fadingEdgeLength={{ start: 0, end: 200 }}
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
             data={bill.items}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <TouchableNativeFeedback onPress={() => openAssignModal(item)}>
-                <View style={{ borderBottomWidth: 1, borderBottomColor: "lightgrey", paddingVertical: 5 }}>
+              <Touchable onPress={() => openAssignModal(item)}>
+                <View
+                  style={{
+                    borderBottomWidth: 1,
+                    borderBottomColor: "lightgrey",
+                    paddingVertical: 5,
+                  }}
+                >
                   <InfoRow
                     label={
                       item.assignedTo.length < 2 ? (
@@ -87,15 +89,21 @@ const AssignItemsDisplay = () => {
                         <ThemedText>
                           {item.quantity} {item.name}{" "}
                           <ThemedText type="darkGrital">
-                            ({item.totalPrice.divide(item.assignedTo.length).toDisplay()})
+                            (
+                            {item.totalPrice
+                              .divide(item.assignedTo.length)
+                              .toDisplay()}
+                            )
                           </ThemedText>
                         </ThemedText>
                       )
                     }
-                    value={<ThemedText>£{item.totalPrice.toDisplay()}</ThemedText>}
+                    value={
+                      <ThemedText>£{item.totalPrice.toDisplay()}</ThemedText>
+                    }
                     showSeparator={false}
                   />
-                  {item.assignedTo.length >= 1 ?
+                  {item.assignedTo.length >= 1 ? (
                     <View
                       style={{
                         paddingBottom: 5,
@@ -112,9 +120,12 @@ const AssignItemsDisplay = () => {
                         }
                         return <PayerIcon key={index} payer={payer} />;
                       })}
-                    </View> : ""}
+                    </View>
+                  ) : (
+                    ""
+                  )}
                 </View>
-              </TouchableNativeFeedback>
+              </Touchable>
             )}
           />
         </View>
@@ -152,5 +163,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
     gap: 5,
   },
-
 });

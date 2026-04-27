@@ -5,9 +5,9 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableNativeFeedback,
   View,
 } from "react-native";
+import Touchable from "@/components/ui/Touchable";
 import React, { useEffect, useState, useRef } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
@@ -56,7 +56,7 @@ const EditBillDetailsModal = () => {
     } else {
       setServiceType("percentage");
     }
-    setServiceCharge("0")
+    setServiceCharge("0");
   };
 
   const showDatepicker = () => {
@@ -92,13 +92,12 @@ const EditBillDetailsModal = () => {
       userEnteredTotal: totalPriceObj,
     };
 
-    const isUnchanged = (
+    const isUnchanged =
       updatedBill.name === editedBill.name &&
       updatedBill.date.getTime() === editedBill.date.getTime() &&
       updatedBill.serviceCharge.equals(editedBill.serviceCharge) &&
-      updatedBill.userEnteredTotal.equals(editedBill.userEnteredTotal)
-    )
-    
+      updatedBill.userEnteredTotal.equals(editedBill.userEnteredTotal);
+
     if (isUnchanged) {
       router.back();
       return;
@@ -122,7 +121,11 @@ const EditBillDetailsModal = () => {
         "You have unsaved changes to this bill's details.",
         [
           { text: "Keep Editing", style: "cancel" },
-          { text: "Discard", style: "destructive", onPress: () => router.back()}
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => router.back(),
+          },
         ],
       );
     } else {
@@ -178,7 +181,7 @@ const EditBillDetailsModal = () => {
           )}
 
           <Text style={styles.label}>Date</Text>
-          <TouchableNativeFeedback onPress={showDatepicker}>
+          <Touchable onPress={showDatepicker}>
             <View style={[styles.input, { borderColor: Colors.pastel.orange }]}>
               <TextInput
                 placeholder="Date (YYYY-MM-DD)"
@@ -188,7 +191,7 @@ const EditBillDetailsModal = () => {
               />
               <MaterialIcons name="edit-calendar" size={20} />
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
 
           <Text style={styles.label}>Service Charge</Text>
           <View style={[styles.input, { borderColor: Colors.pastel.green }]}>
@@ -205,7 +208,7 @@ const EditBillDetailsModal = () => {
                 totalPriceInputRef.current?.focus();
               }}
             />
-            <TouchableNativeFeedback onPress={swapServiceType}>
+            <Touchable onPress={swapServiceType}>
               {serviceType == "percentage" ? (
                 <MaterialIcons
                   name="percent"
@@ -225,7 +228,7 @@ const EditBillDetailsModal = () => {
                   }}
                 />
               )}
-            </TouchableNativeFeedback>
+            </Touchable>
           </View>
 
           <Text style={styles.label}>Total Price</Text>
@@ -246,22 +249,22 @@ const EditBillDetailsModal = () => {
       </KeyboardAvoidingView>
       <View style={styles.buttonContainer}>
         <View style={styles.cancelButtonOuter}>
-          <TouchableNativeFeedback onPress={handleCancel}>
+          <Touchable onPress={handleCancel}>
             <View style={styles.submitButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.cancelText}>
                 Cancel
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
         <View style={styles.submitButtonOuter}>
-          <TouchableNativeFeedback onPress={handleSave}>
+          <Touchable onPress={handleSave}>
             <View style={styles.submitButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.submitText}>
                 Save
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
       </View>
     </View>

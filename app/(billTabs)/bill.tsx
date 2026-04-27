@@ -15,20 +15,16 @@ import {
   ScrollView,
   StyleSheet,
   TouchableHighlight,
-  TouchableNativeFeedback,
   View,
   Text,
   Pressable,
 } from "react-native";
+import Touchable from "@/components/ui/Touchable";
 
 const BillDisplay = () => {
   const router = useRouter();
-  const {
-    originalBill,
-    editedBill,
-    setOriginalBill,
-    resetEditedBill,
-  } = useBillStore();
+  const { originalBill, editedBill, setOriginalBill, resetEditedBill } =
+    useBillStore();
 
   const [bill, setBill] = useState<Bill>({
     id: 0,
@@ -41,7 +37,6 @@ const BillDisplay = () => {
     userEnteredTotal: Price.fromCents(42069),
   });
 
-
   useFocusEffect(
     useCallback(() => {
       if (editedBill) {
@@ -49,7 +44,6 @@ const BillDisplay = () => {
       }
     }, [editedBill]),
   );
-
 
   const onSave = () => {
     if (isEqual(originalBill, editedBill)) {
@@ -81,16 +75,15 @@ const BillDisplay = () => {
   const openBillDetailsModal = () => {
     router.push("/(billModals)/editBillDetailsModal");
   };
-  
+
   const openPayerModal = () => {
     router.push("/(billModals)/editBillPayersModal");
   };
 
   const itemsTotal = bill.items.reduce(
     (acc: Price, item: BillItem) => acc.add(item.totalPrice),
-    Price.fromCents(0)
+    Price.fromCents(0),
   );
-
 
   return (
     <View
@@ -101,7 +94,7 @@ const BillDisplay = () => {
       }}
     >
       <ContainerView>
-        <TouchableNativeFeedback onPress={openBillDetailsModal}>
+        <Touchable onPress={openBillDetailsModal}>
           <View style={styles.header}>
             <ThemedText type="title">{bill.name}</ThemedText>
             <View>
@@ -110,20 +103,20 @@ const BillDisplay = () => {
                 {"  -  "}
                 {bill.payers.reduce(
                   (acc: number, val) => acc + (val.partySize ?? 1),
-                  0
+                  0,
                 )}{" "}
                 People
               </ThemedText>
             </View>
           </View>
-        </TouchableNativeFeedback>
+        </Touchable>
 
-        <TouchableNativeFeedback onPress={openPayerModal}>
+        <Touchable onPress={openPayerModal}>
           <View style={styles.payersContainer}>
             {bill.payers.length > 0 ? (
               <ScrollView
                 horizontal={true}
-                fadingEdgeLength={{ start: 0, end: 100}}
+                fadingEdgeLength={{ start: 0, end: 100 }}
                 contentContainerStyle={styles.payersScrollView}
               >
                 {bill.payers.slice(0, 7).map((payer, index) => (
@@ -137,7 +130,7 @@ const BillDisplay = () => {
               </View>
             )}
           </View>
-        </TouchableNativeFeedback>
+        </Touchable>
 
         {/* Example for items: */}
         <View style={{ flex: 1 }}>
@@ -147,10 +140,7 @@ const BillDisplay = () => {
             contentContainerStyle={{ paddingHorizontal: 10 }}
           >
             {bill.items.map((item) => (
-              <TouchableNativeFeedback
-                onPress={() => openItemModal(item)}
-                key={item.id}
-              >
+              <Touchable onPress={() => openItemModal(item)} key={item.id}>
                 <View key={item.id}>
                   <InfoRow
                     label={
@@ -160,91 +150,105 @@ const BillDisplay = () => {
                         </ThemedText>
                       ) : (
                         <ThemedText>
-                          {item.quantity} {item.name} <ThemedText type="darkGrital">({item.price.toDisplay()})</ThemedText>
+                          {item.quantity} {item.name}{" "}
+                          <ThemedText type="darkGrital">
+                            ({item.price.toDisplay()})
+                          </ThemedText>
                         </ThemedText>
                       )
                     }
-                    value={<ThemedText>{item.totalPrice.toDisplay()}</ThemedText>}
+                    value={
+                      <ThemedText>{item.totalPrice.toDisplay()}</ThemedText>
+                    }
                   />
                 </View>
-              </TouchableNativeFeedback>
+              </Touchable>
             ))}
           </ScrollView>
           <View style={styles.newItemOuter}>
-            <TouchableNativeFeedback onPress={() => openItemModal(undefined)}>
+            <Touchable onPress={() => openItemModal(undefined)}>
               <View style={styles.newItemInner}>
                 <ThemedText type="defaultSemiBold">Add Item</ThemedText>
               </View>
-            </TouchableNativeFeedback>
+            </Touchable>
           </View>
         </View>
 
-        <TouchableNativeFeedback onPress={openBillDetailsModal}>
-        <View style={styles.billDataContainer}>
-          <InfoRow
-            label={
-              <ThemedText>
-                Service Charge: (
-                {(
-                  (bill.serviceCharge.getCents() /
-                    (bill.userEnteredTotal.getCents() - bill.serviceCharge.getCents())) *
-                  100
-                ).toPrecision(3)}
-                %)
-              </ThemedText>
-            }
-            value={<ThemedText>{"£ " + bill.serviceCharge.toDisplay()}</ThemedText>}
-          />
-          <InfoRow
-            label=<ThemedText type="subtitle">Total:</ThemedText>
-            value={
-              bill.userEnteredTotal.equals(itemsTotal.add(bill.serviceCharge)) ? (
-                <ThemedText type="subtitle">
-                  {"£ " + bill.userEnteredTotal.toDisplay()}
+        <Touchable onPress={openBillDetailsModal}>
+          <View style={styles.billDataContainer}>
+            <InfoRow
+              label={
+                <ThemedText>
+                  Service Charge: (
+                  {(
+                    (bill.serviceCharge.getCents() /
+                      (bill.userEnteredTotal.getCents() -
+                        bill.serviceCharge.getCents())) *
+                    100
+                  ).toPrecision(3)}
+                  %)
                 </ThemedText>
-              ) : (
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <ThemedText
-                    type="default"
-                    style={{ color: "red", fontSize: 18 }}
-                  >
-                    (
-                    {itemsTotal.add(bill.serviceCharge).isGreaterThan(bill.userEnteredTotal)
-                      ? "+"
-                      : ""}
-                    {itemsTotal.add(bill.serviceCharge).subtract(bill.userEnteredTotal).toDisplay()}
-                    )
-                  </ThemedText>
-                  <Text> </Text>
+              }
+              value={
+                <ThemedText>{"£ " + bill.serviceCharge.toDisplay()}</ThemedText>
+              }
+            />
+            <InfoRow
+              label=<ThemedText type="subtitle">Total:</ThemedText>
+              value={
+                bill.userEnteredTotal.equals(
+                  itemsTotal.add(bill.serviceCharge),
+                ) ? (
                   <ThemedText type="subtitle">
                     {"£ " + bill.userEnteredTotal.toDisplay()}
                   </ThemedText>
-                </View>
-              )
-            }
-          
-          />
+                ) : (
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <ThemedText
+                      type="default"
+                      style={{ color: "red", fontSize: 18 }}
+                    >
+                      (
+                      {itemsTotal
+                        .add(bill.serviceCharge)
+                        .isGreaterThan(bill.userEnteredTotal)
+                        ? "+"
+                        : ""}
+                      {itemsTotal
+                        .add(bill.serviceCharge)
+                        .subtract(bill.userEnteredTotal)
+                        .toDisplay()}
+                      )
+                    </ThemedText>
+                    <Text> </Text>
+                    <ThemedText type="subtitle">
+                      {"£ " + bill.userEnteredTotal.toDisplay()}
+                    </ThemedText>
+                  </View>
+                )
+              }
+            />
           </View>
-        </TouchableNativeFeedback>
+        </Touchable>
       </ContainerView>
       <View style={styles.buttonContainer}>
         <View style={styles.cancelButtonOuter}>
-          <TouchableNativeFeedback onPress={onCancel}>
+          <Touchable onPress={onCancel}>
             <View style={styles.cancelButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.cancelText}>
                 Cancel
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
         <View style={styles.submitButtonOuter}>
-          <TouchableNativeFeedback onPress={onSave}>
+          <Touchable onPress={onSave}>
             <View style={styles.submitButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.submitText}>
                 Save
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
       </View>
     </View>

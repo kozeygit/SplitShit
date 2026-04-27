@@ -7,24 +7,20 @@ import { useBillStore } from "@/utils/billStore";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Price } from "@/utils/priceUtils";
-import {
-  StyleSheet,
-  TouchableNativeFeedback,
-  View,
-  FlatList,
-  Pressable,
-} from "react-native";
+import { StyleSheet, View, FlatList, Pressable } from "react-native";
 
 const BillBreakdownDisplay = () => {
   const { editedBill } = useBillStore();
 
-  const [servicePerPerson, setServicePerPerson] = useState<Price>(Price.fromCents(0));
+  const [servicePerPerson, setServicePerPerson] = useState<Price>(
+    Price.fromCents(0),
+  );
   const [showPriceBreakdown, setShowPriceBreakdown] = useState<boolean>(false);
   const [totalOwed, setTotalOwed] = useState<Price>(Price.fromCents(0));
 
   const [payers, setPayers] = useState<Payer[]>([]);
   const [payerItems, setPayerItems] = useState<Map<Payer, BillItem[]>>(
-    new Map<Payer, BillItem[]>()
+    new Map<Payer, BillItem[]>(),
   );
 
   const [bill, setBill] = useState<Bill>({
@@ -41,40 +37,39 @@ const BillBreakdownDisplay = () => {
   useFocusEffect(
     useCallback(() => {
       if (editedBill) {
-
         setBill(editedBill);
         setPayers(editedBill.payers);
 
         for (const payer of editedBill.payers) {
-          let itemList: BillItem[] = []
+          let itemList: BillItem[] = [];
 
           for (const item of editedBill.items) {
             for (const assTo of item.assignedTo) {
               if (assTo.payerId == payer.id) {
-                const oldItems = itemList
-                itemList = [...oldItems, item]
+                const oldItems = itemList;
+                itemList = [...oldItems, item];
               }
             }
           }
-            payerItems.set(payer, itemList);
+          payerItems.set(payer, itemList);
         }
 
         setPayerItems(payerItems);
       }
-    }, [editedBill])
+    }, [editedBill]),
   );
 
   useEffect(() => {
     if (bill.serviceCharge.getCents() === 0) {
-      setServicePerPerson(Price.fromCents(0))
-      return
+      setServicePerPerson(Price.fromCents(0));
+      return;
     }
 
     const numberOfPeople = bill.payers.reduce(
       (acc, val) => acc + (val.partySize ?? 1),
-      0
+      0,
     );
-    
+
     const service = bill.serviceCharge.divide(numberOfPeople);
     setServicePerPerson(service);
   }, [bill]);
@@ -84,15 +79,17 @@ const BillBreakdownDisplay = () => {
     for (const payer of payers) {
       payer.amountToPay = servicePerPerson.multiply(payer.partySize ?? 1);
 
-      const items = payerItems.get(payer)
+      const items = payerItems.get(payer);
       if (items === undefined) {
-        break
+        break;
       }
 
       for (const item of items) {
-        const currItem = item.assignedTo.find((i) => i.payerId == payer.id)
-        const payerQuantity = currItem?.quantity ?? 1
-        const itemShare = item.totalPrice.divide(item.assignedTo.length).multiply(payerQuantity);
+        const currItem = item.assignedTo.find((i) => i.payerId == payer.id);
+        const payerQuantity = currItem?.quantity ?? 1;
+        const itemShare = item.totalPrice
+          .divide(item.assignedTo.length)
+          .multiply(payerQuantity);
         payer.amountToPay = payer.amountToPay.add(itemShare);
       }
 
@@ -123,7 +120,7 @@ const BillBreakdownDisplay = () => {
                 <ThemedText type="grital">dine and dash huh?</ThemedText>
               </View>
             }
-            fadingEdgeLength={{ start: 0, end: 100}}
+            fadingEdgeLength={{ start: 0, end: 100 }}
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
             data={payers}
@@ -171,12 +168,14 @@ const BillBreakdownDisplay = () => {
                         value={
                           <ThemedText>
                             £{" "}
-                            {billItem.totalPrice.divide(billItem.assignedTo.length).toDisplay()}
+                            {billItem.totalPrice
+                              .divide(billItem.assignedTo.length)
+                              .toDisplay()}
                           </ThemedText>
                         }
                       />
                     ))}
-                    {bill.serviceCharge.getCents() !== 0 ?
+                    {bill.serviceCharge.getCents() !== 0 ? (
                       <InfoRow
                         label={
                           <ThemedText type="default">
@@ -186,11 +185,13 @@ const BillBreakdownDisplay = () => {
                         value={
                           <ThemedText>
                             £{" "}
-                            {servicePerPerson.multiply(item.partySize ?? 1).toDisplay()}
+                            {servicePerPerson
+                              .multiply(item.partySize ?? 1)
+                              .toDisplay()}
                           </ThemedText>
                         }
                       />
-                    : undefined}
+                    ) : undefined}
                   </View>
                 )}
               </View>
@@ -254,5 +255,4 @@ const styles = StyleSheet.create({
   itemsContainer: {
     gap: 5,
   },
-
 });

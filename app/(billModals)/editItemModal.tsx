@@ -6,9 +6,9 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableNativeFeedback,
   View,
 } from "react-native";
+import Touchable from "@/components/ui/Touchable";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
@@ -39,7 +39,7 @@ const EditItemModal = () => {
   const quantityInt = Math.max(1, parseInt(quantity) || 1);
   const currentPrice = parseFloat(priceInput) || 0;
 
-  const derivedOtherPrice = isTotalPriceEditing 
+  const derivedOtherPrice = isTotalPriceEditing
     ? (currentPrice / quantityInt).toFixed(2) // Calculating Unit Price
     : (currentPrice * quantityInt).toFixed(2); // Calculating Total Price
 
@@ -75,7 +75,6 @@ const EditItemModal = () => {
 
   const handleSave = () => {
     if (!editedBill) return;
-
 
     let finalUnitPrice: Price;
     let finalTotalPrice: Price;
@@ -118,8 +117,8 @@ const EditItemModal = () => {
   };
 
   const handleCancel = () => {
-  // Compare the raw input string against the displayed version of the saved price
-    const savedDisplayPrice = isTotalPriceEditing 
+    // Compare the raw input string against the displayed version of the saved price
+    const savedDisplayPrice = isTotalPriceEditing
       ? (item?.totalPrice.toDisplay() ?? "")
       : (item?.price.toDisplay() ?? "");
 
@@ -235,15 +234,15 @@ const EditItemModal = () => {
               paddingTop: 30,
             }}
           >
-          <Toggle 
-            state={isTotalPriceEditing} 
-            onToggle={(newState) => {
-              setPriceInput(derivedOtherPrice); 
-              setIsTotalPriceEditing(newState);
-            }} 
-            leftLabel="Unit Price" 
-            rightLabel="Total Price" 
-          />
+            <Toggle
+              state={isTotalPriceEditing}
+              onToggle={(newState) => {
+                setPriceInput(derivedOtherPrice);
+                setIsTotalPriceEditing(newState);
+              }}
+              leftLabel="Unit Price"
+              rightLabel="Total Price"
+            />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -251,33 +250,33 @@ const EditItemModal = () => {
       <View style={styles.buttonContainer}>
         {item === undefined ? (
           <View style={styles.cancelButtonOuter}>
-            <TouchableNativeFeedback onPress={handleCancel}>
+            <Touchable onPress={handleCancel}>
               <View style={styles.submitButtonInner}>
                 <ThemedText type="defaultSemiBold" style={styles.cancelText}>
                   Cancel
                 </ThemedText>
               </View>
-            </TouchableNativeFeedback>
+            </Touchable>
           </View>
         ) : (
           <View style={styles.cancelButtonOuter}>
-            <TouchableNativeFeedback onPress={handleDelete}>
+            <Touchable onPress={handleDelete}>
               <View style={styles.submitButtonInner}>
                 <ThemedText type="defaultSemiBold" style={styles.cancelText}>
                   Delete
                 </ThemedText>
               </View>
-            </TouchableNativeFeedback>
+            </Touchable>
           </View>
         )}
         <View style={styles.submitButtonOuter}>
-          <TouchableNativeFeedback onPress={handleSave}>
+          <Touchable onPress={handleSave}>
             <View style={styles.submitButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.submitText}>
                 Save
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
       </View>
     </View>

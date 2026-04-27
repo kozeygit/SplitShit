@@ -1,11 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import React from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableNativeFeedback,
-  FlatList,
-} from "react-native";
+import { View, StyleSheet, FlatList } from "react-native";
+import Touchable from "@/components/ui/Touchable";
 import { Colors } from "@/constants/Colors";
 import { Bill } from "@/models/bill"; // Import your Bill type
 import Animated, {
@@ -69,17 +65,20 @@ const BillCard: React.FC<BillCardProps> = ({
 
   return (
     <View style={styles.billCardOuter}>
-      <TouchableNativeFeedback
+      <Touchable
         onLongPress={handleToggleSelect}
         onPress={handleToggleDropdown}
       >
         <View style={styles.billCardInner}>
-          {isSelected ? <View style={[styles.billIcon, { backgroundColor: "white" }]}>
-            <MaterialIcons size={20} name="check" />
-          </View> :
-          <View style={[styles.billIcon, { backgroundColor: iconColor }]}>
-            <MaterialIcons size={20} name={icon as any} />
-          </View>}
+          {isSelected ? (
+            <View style={[styles.billIcon, { backgroundColor: "white" }]}>
+              <MaterialIcons size={20} name="check" />
+            </View>
+          ) : (
+            <View style={[styles.billIcon, { backgroundColor: iconColor }]}>
+              <MaterialIcons size={20} name={icon as any} />
+            </View>
+          )}
           <View style={styles.billDetails}>
             <ThemedText type="defaultSemiBold" style={styles.billName}>
               {billData.name}
@@ -99,12 +98,9 @@ const BillCard: React.FC<BillCardProps> = ({
             color="lightgrey"
             style={styles.dropdownIcon}
           />
-          {isSelected && (
-            <View style={styles.selected}>
-            </View>
-          )}
+          {isSelected && <View style={styles.selected}></View>}
         </View>
-      </TouchableNativeFeedback>
+      </Touchable>
 
       <Animated.View
         style={[
@@ -119,16 +115,16 @@ const BillCard: React.FC<BillCardProps> = ({
       >
         {isExpanded && (
           <>
-            <TouchableNativeFeedback onPress={() => onEdit(billData.id)}>
+            <Touchable onPress={() => onEdit(billData.id)}>
               <View style={styles.dropdownOptionEdit}>
                 <ThemedText type="default">Edit</ThemedText>
               </View>
-            </TouchableNativeFeedback>
-            <TouchableNativeFeedback onPress={() => onComplete(billData.id)}>
+            </Touchable>
+            <Touchable onPress={() => onComplete(billData.id)}>
               <View style={styles.dropdownOptionComplete}>
                 <ThemedText type="default">Complete</ThemedText>
               </View>
-            </TouchableNativeFeedback>
+            </Touchable>
           </>
         )}
       </Animated.View>
@@ -137,7 +133,7 @@ const BillCard: React.FC<BillCardProps> = ({
 };
 
 const completeStyles = StyleSheet.create({
-selected: {
+  selected: {
     position: "absolute",
     backgroundColor: "rgba(0,0,0,0.3)",
     padding: 0,

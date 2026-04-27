@@ -1,10 +1,5 @@
-import {
-  Alert,
-  FlatList,
-  StyleSheet,
-  TouchableNativeFeedback,
-  View,
-} from "react-native";
+import { Alert, FlatList, StyleSheet, View } from "react-native";
+import Touchable from "@/components/ui/Touchable";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
@@ -57,7 +52,7 @@ const EditBillPayersModal = () => {
       const refreshAndScroll = async () => {
         const dbPayers = await fetchPayers();
         const synced = syncPayersWithDraft(dbPayers, editedBill.payers);
-        
+
         setPayers(synced);
         setUpdatePayers(false);
 
@@ -68,13 +63,15 @@ const EditBillPayersModal = () => {
       };
 
       refreshAndScroll();
-    }, [updatePayers, editedBill.payers])
+    }, [updatePayers, editedBill.payers]),
   );
 
   const handleBack = () => {
-    const savedMap = new Map(editedBill.payers.map(p => [p.id, p.partySize ?? 0]));
+    const savedMap = new Map(
+      editedBill.payers.map((p) => [p.id, p.partySize ?? 0]),
+    );
 
-    const hasChanges = payers.some(p => {
+    const hasChanges = payers.some((p) => {
       const savedSize = savedMap.get(p.id) ?? 0;
       const currentSize = p.partySize ?? 0;
       return currentSize !== savedSize;
@@ -86,12 +83,12 @@ const EditBillPayersModal = () => {
         "You have unsaved changes to your payers. Are you sure you want to go back?",
         [
           { text: "Keep Editing", style: "cancel" },
-          { 
-            text: "Discard", 
-            style: "destructive", 
-            onPress: () => router.back() 
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => router.back(),
           },
-        ]
+        ],
       );
     } else {
       router.back();
@@ -100,9 +97,7 @@ const EditBillPayersModal = () => {
 
   const handlePayerSizeChange = (id: number, newSize: number) => {
     setPayers((prevPayers) =>
-      prevPayers.map((p) =>
-        p.id === id ? { ...p, partySize: newSize } : p
-      )
+      prevPayers.map((p) => (p.id === id ? { ...p, partySize: newSize } : p)),
     );
   };
 
@@ -112,7 +107,7 @@ const EditBillPayersModal = () => {
       ...editedBill,
       payers: payers.filter((p) => (p.partySize ?? 0) > 0),
     };
-    
+
     setEditedBill(updatedBill);
     router.back();
   };
@@ -135,43 +130,49 @@ const EditBillPayersModal = () => {
         </View>
 
         <FlatList
-        ref={flatListRef}
-          fadingEdgeLength={{ start: 0, end: 100}}
+          ref={flatListRef}
+          fadingEdgeLength={{ start: 0, end: 100 }}
           contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
           numColumns={1}
           data={payers}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <AdjustPayerComponent onValueChange={(newSize) => {handlePayerSizeChange(item.id, newSize)}} payer={item} party={item.partySize ?? 0} />
+            <AdjustPayerComponent
+              onValueChange={(newSize) => {
+                handlePayerSizeChange(item.id, newSize);
+              }}
+              payer={item}
+              party={item.partySize ?? 0}
+            />
           )}
         />
-            <View style={styles.newPayerButtonOuter}>
-          <TouchableNativeFeedback onPress={handleNewPayer}>
+        <View style={styles.newPayerButtonOuter}>
+          <Touchable onPress={handleNewPayer}>
             <View style={styles.newPayerButtonInner}>
               <ThemedText>New Payer</ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
       </ContainerView>
       <View style={styles.buttonContainer}>
         <View style={styles.cancelButtonOuter}>
-          <TouchableNativeFeedback onPress={handleBack}>
+          <Touchable onPress={handleBack}>
             <View style={styles.cancelButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.cancelText}>
                 Back
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
 
         <View style={styles.submitButtonOuter}>
-          <TouchableNativeFeedback onPress={handleSave}>
+          <Touchable onPress={handleSave}>
             <View style={styles.submitButtonInner}>
               <ThemedText type="defaultSemiBold" style={styles.cancelText}>
                 Save
               </ThemedText>
             </View>
-          </TouchableNativeFeedback>
+          </Touchable>
         </View>
       </View>
     </View>

@@ -10,12 +10,14 @@ import PayerCard from "@/components/payer/PayerCard";
 import Logo from "@/components/ui/logo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { fetchPayers } from "@/utils/fetchData";
+import ActionFAB from "@/components/ui/ActionFAB";
 
 const PayerPage = () => {
   const router = useRouter();
 
   const [refreshing, setRefreshing] = useState(false);
   const [payers, setPayers] = useState<Payer[]>([]);
+  const [selectedPayerIds, setSelectedPayerIds] = useState<number[]>([]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -48,6 +50,21 @@ const PayerPage = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+      />
+
+      <ActionFAB
+        activeColor={Colors.pastel.blue}
+        count={selectedPayerIds.length}
+        onAdd={() => router.push("/(modals)/newPayer")}
+        onCancel={() => setSelectedPayerIds([])}
+        actions={[
+          {
+            icon: "delete",
+            color: "red",
+            iconColor: "white",
+            onPress: () => console.log("Delete payers:", selectedPayerIds),
+          },
+        ]}
       />
     </View>
   );

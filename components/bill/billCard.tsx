@@ -6,6 +6,7 @@ import { Colors } from "@/constants/Colors";
 import { Bill } from "@/models/bill";
 import Animated, {
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -43,13 +44,13 @@ const BillCard: React.FC<BillCardProps> = ({
   ];
   const icon = icons[Number(billData.id) % icons.length];
 
+  const dropdownHeight = useSharedValue(0);
+
   const animatedStyles = useAnimatedStyle(() => {
+    dropdownHeight.value = withTiming(isExpanded ? 45 : 0, { duration: 100 });
     return {
-      height: withTiming(isExpanded ? 45 : 0, { duration: 100 }),
-      opacity: withTiming(isExpanded ? 1 : 0, { duration: 100 }),
-      transform: [
-        { translateY: withTiming(isExpanded ? 0 : -45, { duration: 100 }) },
-      ],
+      height: dropdownHeight.value,
+      borderTopWidth: dropdownHeight.value > 0 ? 2 : 0,
     };
   });
 
@@ -101,13 +102,7 @@ const BillCard: React.FC<BillCardProps> = ({
       </Touchable>
 
       {/* Always rendered so the close animation can play fully */}
-      <Animated.View
-        style={[
-          styles.dropdown,
-          { borderTopWidth: isExpanded ? 2 : 0 },
-          animatedStyles,
-        ]}
-      >
+      <Animated.View style={[styles.dropdown, animatedStyles]}>
         <Touchable
           style={styles.dropdownOptionEdit}
           onPress={() => onEdit(billData.id)}
@@ -129,19 +124,19 @@ const BillCard: React.FC<BillCardProps> = ({
 
 const styles = StyleSheet.create({
   billCardOuter: {
-    backgroundColor: "white",
-    borderWidth: 2,
     margin: 10,
+    borderWidth: 2,
     borderRadius: 20,
     overflow: "hidden",
     elevation: 5,
+    backgroundColor: "white",
   },
   billCardInner: {
     flexDirection: "row",
     alignItems: "center",
     padding: 20,
-    zIndex: 10,
     backgroundColor: "white",
+    zIndex: 1,
   },
   selected: {
     position: "absolute",
@@ -191,7 +186,6 @@ const styles = StyleSheet.create({
   dropdown: {
     overflow: "hidden",
     flexDirection: "row",
-    zIndex: 0,
   },
   dropdownOptionEdit: {
     flex: 1,

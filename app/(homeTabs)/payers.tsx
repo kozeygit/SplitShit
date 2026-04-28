@@ -1,12 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  RefreshControl,
-} from "react-native";
+import { View, StyleSheet, FlatList, RefreshControl } from "react-native";
 
 import { Colors } from "@/constants/Colors";
 
@@ -21,7 +16,7 @@ const PayerPage = () => {
 
   const [refreshing, setRefreshing] = useState(false);
   const [payers, setPayers] = useState<Payer[]>([]);
-  
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -37,9 +32,9 @@ const PayerPage = () => {
   useFocusEffect(
     useCallback(() => {
       onRefresh();
-    }, [onRefresh])
+    }, [onRefresh]),
   );
-  
+
   return (
     <View style={styles.container}>
       <Logo />

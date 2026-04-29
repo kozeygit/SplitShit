@@ -48,7 +48,7 @@ const GroupPage = () => {
       <ActionFAB
         activeColor={Colors.pastel.green}
         count={selectedGroupIds.length}
-        onAdd={() => router.push("/(modals)/newGroup")}
+        onAdd={() => router.push("/(newModals)/newGroup")}
         onCancel={() => setSelectedGroupIds([])}
         actions={[
           {

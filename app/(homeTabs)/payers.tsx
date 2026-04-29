@@ -55,7 +55,7 @@ const PayerPage = () => {
       <ActionFAB
         activeColor={Colors.pastel.blue}
         count={selectedPayerIds.length}
-        onAdd={() => router.push("/(modals)/newPayer")}
+        onAdd={() => router.push("/(newModals)/newPayer")}
         onCancel={() => setSelectedPayerIds([])}
         actions={[
           {

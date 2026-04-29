@@ -1,0 +1,1 @@
+ALTER TABLE `bills` ADD `image_path` text;

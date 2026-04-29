@@ -128,7 +128,7 @@ const BillPage = () => {
       <ActionFAB
         activeColor={Colors.pastel.red}
         count={selectedBillsIds.length}
-        onAdd={() => router.push("/(modals)/newBill")}
+        onAdd={() => router.push("/(newModals)/newBill")}
         onCancel={() => setSelectedBillsIds([])}
         actions={[
           {

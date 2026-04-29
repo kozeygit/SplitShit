@@ -2,7 +2,7 @@ import { Bill, BillItem, NewBill, NewBillItem } from "@/models/bill";
 import { Price } from "@/utils/priceUtils";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { insertBill, insertBillItem } from "./insertData";
-import { File } from 'expo-file-system';
+import { File } from "expo-file-system";
 
 const systemPrompt = `
 
@@ -191,7 +191,7 @@ Example Output
   ]
 }
 
-`
+`;
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY as string;
 
 const genAI = new GoogleGenerativeAI(API_KEY);
@@ -207,7 +207,7 @@ const model = genAI.getGenerativeModel({
 
 const fileToGenerativePart = async (uri: string) => {
   const file = new File(uri);
-  
+
   const base64Data = await file.base64();
   return {
     inlineData: {
@@ -223,10 +223,15 @@ export const createBillFromImage = async (uri: string): Promise<number> => {
 
     const result = await model.generateContent([
       imagePart,
-      { text: "Extract the data from this receipt according to your instructions." }
+      {
+        text: "Extract the data from this receipt according to your instructions.",
+      },
     ]);
 
-    const cleanJson = result.response.text().replace(/```json|```/gi, '').trim();
+    const cleanJson = result.response
+      .text()
+      .replace(/```json|```/gi, "")
+      .trim();
     const data = JSON.parse(cleanJson);
 
     const bill = verifyExtractedBill(data);
@@ -240,22 +245,25 @@ export const createBillFromImage = async (uri: string): Promise<number> => {
 };
 
 export const extractBillData = async (ocrText: string): Promise<any> => {
-
   try {
     const result = await model.generateContent(ocrText);
-    const responseText = result.response.text().replace(/```json|```/gi, '').trim();
-    
+    const responseText = result.response
+      .text()
+      .replace(/```json|```/gi, "")
+      .trim();
+
     console.log(responseText);
 
     return responseText ? JSON.parse(responseText) : undefined;
-    
   } catch (error) {
     console.error("Error extracting receipt data:", error);
     return undefined;
   }
 };
 
-export const createBillFromJson = async (jsonString: string): Promise<number> => {
+export const createBillFromJson = async (
+  jsonString: string,
+): Promise<number> => {
   try {
     const data = JSON.parse(jsonString);
     const bill = verifyExtractedBill(data);
@@ -291,7 +299,7 @@ export const ingestBill = async (bill: Bill): Promise<number> => {
         price: item.price,
         totalPrice: item.totalPrice,
         assignedTo: item.assignedTo,
-      }
+      },
   );
 
   const newBillId = await insertBill(newBill);
@@ -329,6 +337,15 @@ export const verifyExtractedBill = (extractedBill: any): Bill | string => {
     }
   }
 
+  // Reject the Gemini failure-mode response — no items and zero total
+  // means the image wasn't recognisable as a receipt.
+  if (
+    extractedBill.userEnteredTotal === 0 &&
+    extractedBill.items.length === 0
+  ) {
+    return "Image does not appear to be a receipt";
+  }
+
   if (!Array.isArray(extractedBill.items)) {
     return "Items should be an array";
   }
@@ -361,7 +378,7 @@ export const verifyExtractedBill = (extractedBill: any): Bill | string => {
             quantity: item.quantity,
             totalPrice: Price.fromDecimal(item.totalPrice),
             assignedTo: [],
-          }
+          },
       ),
       payers: [],
     };

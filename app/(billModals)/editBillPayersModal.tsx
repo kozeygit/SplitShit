@@ -127,7 +127,7 @@ const EditBillPayersModal = () => {
 
         <FlatList
           ref={flatListRef}
-          fadingEdgeLength={50}
+          /* fadingEdgeLength={50} // TODO: temporarily commented out until fadingEdgeLength rendering issue is resolved */
           contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
           numColumns={1}
           data={payers}

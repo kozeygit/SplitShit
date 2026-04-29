@@ -109,7 +109,7 @@ const BillDisplay = () => {
             {bill.payers.length > 0 ? (
               <ScrollView
                 horizontal={true}
-                fadingEdgeLength={50}
+                /* fadingEdgeLength={50} */ /* TODO: temporarily commented out until fadingEdgeLength rendering issue is resolved */
                 contentContainerStyle={styles.payersScrollView}
               >
                 {bill.payers.slice(0, 7).map((payer, index) => (
@@ -128,7 +128,7 @@ const BillDisplay = () => {
         {/* Example for items: */}
         <View style={{ flex: 1 }}>
           <ScrollView
-            fadingEdgeLength={50}
+            /* fadingEdgeLength={50} */ /* TODO: temporarily commented out until fadingEdgeLength rendering issue is resolved */
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
           >

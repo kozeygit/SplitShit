@@ -30,7 +30,7 @@ const BillCard: React.FC<BillCardProps> = ({
   onToggleDropdown,
   onEdit,
   onComplete,
-  onSelect: onToggleSelect,
+  onSelect,
 }) => {
   const iconColor = colorKeys[billData.id % colorKeys.length];
   const isComplete = billData.complete;
@@ -55,7 +55,7 @@ const BillCard: React.FC<BillCardProps> = ({
   });
 
   const handleToggleDropdown = () => onToggleDropdown(billData.id);
-  const handleToggleSelect = () => onToggleSelect(billData.id);
+  const handleToggleSelect = () => onSelect(billData.id);
 
   return (
     <View style={styles.billCardOuter}>

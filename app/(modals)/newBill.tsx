@@ -138,10 +138,8 @@ export default function NewBillPage() {
     router.replace("/bill");
   };
 
-  const handleOpenCamera = async () => {
-    setLoading(true);
-
-    await openCamera(openBill).then(() => setLoading(false));
+  const handleOpenCamera = () => {
+    openCamera(openBill, undefined, setLoading);
   };
 
   return (

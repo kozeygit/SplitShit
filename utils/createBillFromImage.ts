@@ -1,7 +1,6 @@
-import { Bill, BillItem, NewBill, NewBillItem } from "@/models/bill";
+import { Bill, BillItem } from "@/models/bill";
 import { Price } from "@/utils/priceUtils";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { insertBill, insertBillItem } from "./insertData";
 import { File } from "expo-file-system";
 
 const systemPrompt = `
@@ -197,193 +196,115 @@ const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY as string;
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-3.1-flash-lite-preview",
-  systemInstruction: systemPrompt,
-  generationConfig: {
-    temperature: 0.1,
-    responseMimeType: "application/json",
-  },
+    model: "gemini-3.1-flash-lite-preview",
+    systemInstruction: systemPrompt,
+    generationConfig: {
+        temperature: 0.1,
+        responseMimeType: "application/json",
+    },
 });
 
 const fileToGenerativePart = async (uri: string) => {
-  const file = new File(uri);
+    const file = new File(uri);
 
-  const base64Data = await file.base64();
-  return {
-    inlineData: {
-      data: base64Data,
-      mimeType: "image/jpeg",
-    },
-  };
+    const base64Data = await file.base64();
+    return {
+        inlineData: {
+            data: base64Data,
+            mimeType: "image/jpeg",
+        },
+    };
 };
 
-export const createBillFromImage = async (uri: string): Promise<number> => {
-  try {
-    const imagePart = await fileToGenerativePart(uri);
-
-    const result = await model.generateContent([
-      imagePart,
-      {
-        text: "Extract the data from this receipt according to your instructions.",
-      },
-    ]);
-
-    const cleanJson = result.response
-      .text()
-      .replace(/```json|```/gi, "")
-      .trim();
-    const data = JSON.parse(cleanJson);
-
-    const bill = verifyExtractedBill(data);
-    if (typeof bill === "string") return -1;
-
-    return await ingestBill(bill);
-  } catch (error) {
-    console.error("Error in Gemini Image Processing:", error);
-    return -1;
-  }
-};
-
-export const extractBillData = async (ocrText: string): Promise<any> => {
-  try {
-    const result = await model.generateContent(ocrText);
-    const responseText = result.response
-      .text()
-      .replace(/```json|```/gi, "")
-      .trim();
-
-    console.log(responseText);
-
-    return responseText ? JSON.parse(responseText) : undefined;
-  } catch (error) {
-    console.error("Error extracting receipt data:", error);
-    return undefined;
-  }
-};
-
-export const createBillFromJson = async (
-  jsonString: string,
-): Promise<number> => {
-  try {
-    const data = JSON.parse(jsonString);
-    const bill = verifyExtractedBill(data);
-
-    if (typeof bill === "string") {
-      console.error("JSON Verification Error:", bill);
-      return -1;
+export const extractBillFromImage = async (
+    uri: string,
+): Promise<Bill | null> => {
+    try {
+        const imagePart = await fileToGenerativePart(uri);
+        const result = await model.generateContent([
+            imagePart,
+            {
+                text: "Extract the data from this receipt according to your instructions.",
+            },
+        ]);
+        const cleanJson = result.response
+            .text()
+            .replace(/```json|```/gi, "")
+            .trim();
+        const data = JSON.parse(cleanJson);
+        const bill = verifyExtractedBill(data);
+        if (typeof bill === "string") return null;
+        return bill;
+    } catch (error) {
+        console.error("Error in Gemini Image Processing:", error);
+        return null;
     }
-
-    const newBillId = await ingestBill(bill);
-    console.log("Successfully created bill from JSON. ID:", newBillId);
-    return newBillId;
-  } catch (error) {
-    console.error("JSON Parse Error:", error);
-    return -1;
-  }
-};
-
-export const ingestBill = async (bill: Bill): Promise<number> => {
-  // insert bill
-  const newBill: NewBill = {
-    name: bill.name,
-    date: bill.date,
-    serviceCharge: bill.serviceCharge,
-    userEnteredTotal: bill.userEnteredTotal,
-  };
-
-  const newItems: NewBillItem[] = bill.items.map(
-    (item, index) =>
-      <NewBillItem>{
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        totalPrice: item.totalPrice,
-        assignedTo: item.assignedTo,
-      },
-  );
-
-  const newBillId = await insertBill(newBill);
-
-  if (newBillId == -1) {
-    console.log("Error in ingesting bill data:\n", newBill);
-    return -1;
-  }
-
-  for (const newItem of newItems) {
-    const newItemId = await insertBillItem(newItem, newBillId);
-    if (newItemId == -1) {
-      console.log("Error in ingesting item data:\n", newItem);
-      return -1;
-    }
-  }
-
-  return newBillId;
 };
 
 export const verifyExtractedBill = (extractedBill: any): Bill | string => {
-  const requiredFields = [
-    "name",
-    "date",
-    "userEnteredTotal",
-    "serviceCharge",
-    "complete",
-    "items",
-  ];
-  const itemFields = ["id", "name", "price", "quantity", "totalPrice"];
+    const requiredFields = [
+        "name",
+        "date",
+        "userEnteredTotal",
+        "serviceCharge",
+        "complete",
+        "items",
+    ];
+    const itemFields = ["id", "name", "price", "quantity", "totalPrice"];
 
-  for (const field of requiredFields) {
-    if (!(field in extractedBill)) {
-      return `Missing required field: ${field}`;
+    for (const field of requiredFields) {
+        if (!(field in extractedBill)) {
+            return `Missing required field: ${field}`;
+        }
     }
-  }
 
-  // Reject the Gemini failure-mode response — no items and zero total
-  // means the image wasn't recognisable as a receipt.
-  if (
-    extractedBill.userEnteredTotal === 0 &&
-    extractedBill.items.length === 0
-  ) {
-    return "Image does not appear to be a receipt";
-  }
-
-  if (!Array.isArray(extractedBill.items)) {
-    return "Items should be an array";
-  }
-
-  for (const item of extractedBill.items) {
-    for (const field of itemFields) {
-      if (!(field in item)) {
-        return `Missing required field in items: ${field}`;
-      }
+    // Reject the Gemini failure-mode response — no items and zero total
+    // means the image wasn't recognisable as a receipt.
+    if (
+        extractedBill.userEnteredTotal === 0 &&
+        extractedBill.items.length === 0
+    ) {
+        return "Image does not appear to be a receipt";
     }
-  }
 
-  const parsedDate = new Date(extractedBill.date);
-  const finalDate = isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+    if (!Array.isArray(extractedBill.items)) {
+        return "Items should be an array";
+    }
 
-  try {
-    const bill: Bill = {
-      id: 0,
-      name: extractedBill.name,
-      date: finalDate,
-      userEnteredTotal: Price.fromDecimal(extractedBill.userEnteredTotal),
-      serviceCharge: Price.fromDecimal(extractedBill.serviceCharge ?? 0),
-      complete: false,
-      items: extractedBill.items.map(
-        (item: any, index: number) =>
-          <BillItem>{
-            id: item.id,
-            name: item.name,
-            price: Price.fromDecimal(item.price),
-            quantity: item.quantity,
-            totalPrice: Price.fromDecimal(item.totalPrice),
-            assignedTo: [],
-          },
-      ),
-      payers: [],
-    };
-    return bill;
-  } catch (error) {
-    return `Error mapping to Bill model: ${error}`;
-  }
+    for (const item of extractedBill.items) {
+        for (const field of itemFields) {
+            if (!(field in item)) {
+                return `Missing required field in items: ${field}`;
+            }
+        }
+    }
+
+    const parsedDate = new Date(extractedBill.date);
+    const finalDate = isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+
+    try {
+        const bill: Bill = {
+            id: 0,
+            name: extractedBill.name,
+            date: finalDate,
+            userEnteredTotal: Price.fromDecimal(extractedBill.userEnteredTotal),
+            serviceCharge: Price.fromDecimal(extractedBill.serviceCharge ?? 0),
+            complete: false,
+            items: extractedBill.items.map(
+                (item: any, index: number) =>
+                    <BillItem>{
+                        id: item.id,
+                        name: item.name,
+                        price: Price.fromDecimal(item.price),
+                        quantity: item.quantity,
+                        totalPrice: Price.fromDecimal(item.totalPrice),
+                        assignedTo: [],
+                    },
+            ),
+            payers: [],
+        };
+        return bill;
+    } catch (error) {
+        return `Error mapping to Bill model: ${error}`;
+    }
 };

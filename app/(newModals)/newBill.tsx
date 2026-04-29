@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Alert,
   View,
   TextInput,
   StyleSheet,
@@ -24,7 +25,9 @@ import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertBill } from "@/utils/insertData";
 import { useBillStore } from "@/utils/billStore";
-import { useCamera } from "@/hooks/useCamera";
+import { useImagePicker } from "@/hooks/useCamera";
+import { extractBillFromImage } from "@/utils/createBillFromImage";
+import { ingestBill } from "@/utils/insertData";
 import { Price } from "@/utils/priceUtils";
 import { fetchBill } from "@/utils/fetchData";
 
@@ -50,7 +53,7 @@ const billSchema = z.object({
 export default function NewBillPage() {
   const router = useRouter();
   const { setOriginalBill, resetEditedBill } = useBillStore();
-  const { openCamera, enableCamera } = useCamera();
+  const { pickImage, enableCamera } = useImagePicker();
 
   const {
     control,
@@ -131,15 +134,27 @@ export default function NewBillPage() {
     setShow(true);
   };
 
-  const openBill = async (newBillId: number) => {
-    const bill = await fetchBill(newBillId);
+  const handleOpenCamera = async () => {
+    const uri = await pickImage();
+    if (!uri) return;
+
+    setLoading(true);
+    const extractedBill = await extractBillFromImage(uri);
+    setLoading(false);
+
+    if (!extractedBill) {
+      Alert.alert(
+        "Could not read receipt",
+        "We couldn't extract a bill from that image. Please enter the details manually.",
+      );
+      return;
+    }
+
+    const billId = await ingestBill(extractedBill);
+    const bill = await fetchBill(billId);
     setOriginalBill(bill);
     resetEditedBill();
     router.replace("/bill");
-  };
-
-  const handleOpenCamera = () => {
-    openCamera(openBill, undefined, setLoading);
   };
 
   return (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   TextInput,
@@ -15,7 +15,7 @@ import { z } from "zod";
 import { NewPayer } from "@/models/bill";
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertPayer } from "@/utils/insertData";
 
@@ -26,6 +26,10 @@ const payerSchema = z.object({
 });
 
 export default function NewPayerPage() {
+  const nameRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const numberRef = useRef<TextInput>(null);
+
   const router = useRouter();
   const {
     control,
@@ -90,13 +94,18 @@ export default function NewPayerPage() {
                     }}
                   >
                     <TextInput
+                      autoFocus={true}
+                      ref={nameRef}
                       style={{ flex: 1 }}
                       placeholder="John Smith"
                       placeholderTextColor={Colors.light.placeholderText}
                       keyboardType="default"
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)}
-                      value={value} // Convert number to string for display
+                      value={value}
+                      returnKeyType="next"
+                      submitBehavior="submit"
+                      onSubmitEditing={() => emailRef.current?.focus()}
                     />
                     <MaterialIcons
                       name="person"
@@ -133,6 +142,7 @@ export default function NewPayerPage() {
                     }}
                   >
                     <TextInput
+                      ref={emailRef}
                       style={{ flex: 1 }}
                       placeholder="email@domain.com"
                       placeholderTextColor={Colors.light.placeholderText}
@@ -140,6 +150,9 @@ export default function NewPayerPage() {
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)}
                       value={value}
+                      returnKeyType="next"
+                      submitBehavior="submit"
+                      onSubmitEditing={() => numberRef.current?.focus()}
                     />
                     <MaterialIcons
                       name="email"
@@ -176,6 +189,7 @@ export default function NewPayerPage() {
                     }}
                   >
                     <TextInput
+                      ref={numberRef}
                       style={{ flex: 1 }}
                       placeholder="Number"
                       placeholderTextColor={Colors.light.placeholderText}

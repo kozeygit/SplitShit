@@ -5,19 +5,37 @@ import InfoRow from "@/components/ui/InfoRow";
 import { Colors } from "@/constants/Colors";
 import { Bill, BillItem, NewBillItem } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
-import { setBillComplete, updateBill } from "@/utils/updateData";
+import {
+  setBillComplete,
+  updateBill,
+  updateBillImagePath,
+} from "@/utils/updateData";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { isEqual, set } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
 import { Price } from "@/utils/priceUtils";
-import { ScrollView, StyleSheet, View, Text, Pressable } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+  Alert,
+} from "react-native";
 import Touchable from "@/components/ui/Touchable";
+import { useImagePicker } from "@/hooks/useCamera";
+import { deleteReceiptImage, saveReceiptImage } from "@/utils/fileSystem";
 
 const BillDisplay = () => {
   const router = useRouter();
-  const { originalBill, editedBill, setOriginalBill, resetEditedBill } =
-    useBillStore();
+  const {
+    originalBill,
+    editedBill,
+    setOriginalBill,
+    resetEditedBill,
+    setEditedBill,
+  } = useBillStore();
 
   const [bill, setBill] = useState<Bill>({
     id: 0,
@@ -73,6 +91,58 @@ const BillDisplay = () => {
     router.push("/(billModals)/editBillPayersModal");
   };
 
+  const { pickImage } = useImagePicker();
+
+  const handlePhotoButton = async () => {
+    if (bill.imagePath == undefined) {
+      const uri = await pickImage();
+      if (!uri) return;
+
+      const imagePath = await saveReceiptImage(uri, bill.id);
+      if (editedBill) {
+        setEditedBill({ ...editedBill, imagePath });
+      }
+      return;
+    }
+
+    Alert.alert(
+      "Edit Receipt Image",
+      "Are you sure you want to edit this receipt?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {
+            return;
+          },
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            deleteReceiptImage(bill.imagePath!);
+            if (editedBill) {
+              setEditedBill({ ...editedBill, imagePath: undefined });
+            }
+            return;
+          },
+        },
+        {
+          text: "Edit",
+          onPress: async () => {
+            const uri = await pickImage();
+            if (!uri) return;
+            const imagePath = await saveReceiptImage(uri, bill.id);
+            if (editedBill) {
+              setEditedBill({ ...editedBill, imagePath });
+            }
+            return;
+          },
+        },
+      ],
+    );
+  };
+
   const itemsTotal = bill.items.reduce(
     (acc: Price, item: BillItem) => acc.add(item.totalPrice),
     Price.fromCents(0),
@@ -89,8 +159,8 @@ const BillDisplay = () => {
       <ContainerView>
         <Touchable onPress={openBillDetailsModal}>
           <View style={styles.header}>
-            <ThemedText type="title">{bill.name}</ThemedText>
-            <View>
+            <View style={{ flex: 1 }}>
+              <ThemedText type="title">{bill.name}</ThemedText>
               <ThemedText type="default">
                 {bill.date.toLocaleDateString()}
                 {"  -  "}
@@ -101,6 +171,13 @@ const BillDisplay = () => {
                 People
               </ThemedText>
             </View>
+            <Touchable onPress={handlePhotoButton} style={styles.photoButton}>
+              <MaterialIcons
+                name={bill.imagePath ? "image" : "add-a-photo"}
+                size={24}
+                color="black"
+              />
+            </Touchable>
           </View>
         </Touchable>
 
@@ -275,6 +352,15 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     gap: 10,
     borderBottomWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  photoButton: {
+    borderWidth: 1,
+    borderRadius: 50,
+    padding: 12,
+    backgroundColor: "white",
+    elevation: 2,
   },
 
   itemsContainer: {

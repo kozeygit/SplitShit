@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Alert,
   View,
@@ -8,7 +8,6 @@ import {
   Platform,
   KeyboardAvoidingView,
   ScrollView,
-  Pressable,
   ActivityIndicator,
 } from "react-native";
 import Touchable from "@/components/ui/Touchable";
@@ -28,32 +27,53 @@ import { useBillStore } from "@/utils/billStore";
 import { useImagePicker } from "@/hooks/useCamera";
 import { extractBillFromImage } from "@/utils/createBillFromImage";
 import { ingestBill } from "@/utils/insertData";
+import { saveReceiptImage } from "@/utils/fileSystem";
+import { updateBillImagePath } from "@/utils/updateData";
 import { Price } from "@/utils/priceUtils";
 import { fetchBill } from "@/utils/fetchData";
+import Animated, {
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
   userEnteredTotal: z.coerce
-    .number({
-      invalid_type_error: "Total price must be a number",
-    })
+    .number({ invalid_type_error: "Total price must be a number" })
     .multipleOf(0.01, "More than two decimals.... really? :/")
     .positive("Total price must be positive"),
-  date: z.date({
-    invalid_type_error: "Date is required",
-  }),
+  date: z.date({ invalid_type_error: "Date is required" }),
   serviceCharge: z.coerce
-    .number({
-      invalid_type_error: "Service charge must be a number",
-    })
+    .number({ invalid_type_error: "Service charge must be a number" })
     .nonnegative("Service charge cannot be negative")
     .optional(),
 });
 
 export default function NewBillPage() {
+  const nameRef = useRef<TextInput>(null);
+  const totalRef = useRef<TextInput>(null);
+  const dateRef = useRef<TextInput>(null);
+  const serviceChargeRef = useRef<TextInput>(null);
+
   const router = useRouter();
   const { setOriginalBill, resetEditedBill } = useBillStore();
   const { pickImage, enableCamera } = useImagePicker();
+
+  const [loading, setLoading] = useState(false);
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [serviceType, setServiceType] = useState<"percentage" | "amount">(
+    "amount",
+  );
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      // We animate from 0% to 50% left position
+      left: withSpring(serviceType === "percentage" ? "50%" : "-0.5%", {
+        duration: 200,
+      }),
+    };
+  });
 
   const {
     control,
@@ -92,6 +112,7 @@ export default function NewBillPage() {
     };
 
     const newBillId = await insertBill(billToInsert);
+
     if (newBillId < 0) {
       console.log("insert bill failed for some reason????");
     } else {
@@ -102,23 +123,16 @@ export default function NewBillPage() {
     }
   };
 
-  const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState(new Date());
-  const [show, setShow] = useState(false);
-  const [serviceType, setServiceType] = useState<"percentage" | "amount">(
-    "amount",
-  );
-
   const onChangeDate = (
     event: DateTimePickerEvent,
     selectedDate: Date | undefined,
   ) => {
     if (selectedDate) {
-      setShow(Platform.OS === "ios");
+      setShowDatePicker(Platform.OS === "ios");
       setDate(selectedDate);
       setValue("date", selectedDate);
     } else if (Platform.OS === "ios") {
-      setShow(false);
+      setShowDatePicker(false);
     }
   };
 
@@ -128,10 +142,6 @@ export default function NewBillPage() {
     } else {
       setServiceType("percentage");
     }
-  };
-
-  const showDatepicker = () => {
-    setShow(true);
   };
 
   const handleOpenCamera = async () => {
@@ -151,6 +161,9 @@ export default function NewBillPage() {
     }
 
     const billId = await ingestBill(extractedBill);
+    const imagePath = await saveReceiptImage(uri, billId);
+    await updateBillImagePath(billId, imagePath);
+
     const bill = await fetchBill(billId);
     setOriginalBill(bill);
     resetEditedBill();
@@ -173,7 +186,6 @@ export default function NewBillPage() {
           </ThemedText>
         </View>
       )}
-      {/* ... rest of the code */}
 
       <KeyboardAvoidingView
         behavior={Platform.OS == "ios" ? "padding" : "height"}
@@ -185,7 +197,7 @@ export default function NewBillPage() {
           <View style={styles.container}>
             <View style={styles.title}>
               <ThemedText type="title">Add New Bill</ThemedText>
-              <Pressable
+              <Touchable
                 onLongPress={() => {
                   alert("Camera enabled");
                   enableCamera();
@@ -194,8 +206,8 @@ export default function NewBillPage() {
                 onPress={handleOpenCamera}
                 style={styles.photoButton}
               >
-                <MaterialIcons name="photo-camera" size={20} color={"black"} />
-              </Pressable>
+                <MaterialIcons name="add-a-photo" size={24} color={"black"} />
+              </Touchable>
             </View>
             {/* Bill Name Input */}
             <Text style={styles.label}>Bill Name</Text>
@@ -211,8 +223,8 @@ export default function NewBillPage() {
                   placeholder="Bill Name"
                   placeholderTextColor={Colors.light.placeholderText}
                   onBlur={onBlur}
-                  onChangeText={onChange} // Update form state on text change
-                  value={value} // Bind the value to the form state
+                  onChangeText={onChange}
+                  value={value}
                 />
               )}
             />
@@ -221,7 +233,7 @@ export default function NewBillPage() {
             )}
 
             {/* Date Picker */}
-            {show && (
+            {showDatePicker && (
               <DateTimePicker
                 id="dateTimePicker"
                 value={date}
@@ -233,7 +245,7 @@ export default function NewBillPage() {
 
             {/* Display Selected Date */}
             <Text style={styles.label}>Date</Text>
-            <Touchable onPress={showDatepicker}>
+            <Touchable onPress={() => setShowDatePicker(true)}>
               <View
                 style={[
                   styles.input,
@@ -247,15 +259,21 @@ export default function NewBillPage() {
                     <View
                       style={{
                         flexDirection: "row",
-                        justifyContent: "space-between",
+                        height: "100%",
                       }}
                     >
                       <TextInput
+                        style={{ flex: 1 }}
                         placeholder="Date (YYYY-MM-DD)"
-                        value={value.toLocaleDateString()} // Format date for display
-                        editable={false}
+                        value={value.toLocaleDateString()}
                       />
-                      <MaterialIcons name="edit-calendar" size={20} />
+                      <MaterialIcons
+                        name="edit-calendar"
+                        size={20}
+                        style={{
+                          alignSelf: "center",
+                        }}
+                      />
                     </View>
                   )}
                 />
@@ -280,38 +298,38 @@ export default function NewBillPage() {
                   <View
                     style={{
                       flexDirection: "row",
-                      height: "100%",
                     }}
                   >
                     <TextInput
-                      style={{ flex: 1 }}
+                      style={{ flex: 2 }}
                       placeholder="Service Charge"
                       placeholderTextColor={Colors.light.placeholderText}
                       keyboardType="numeric"
                       onBlur={onBlur}
-                      onChangeText={(text) => onChange(text)} // Convert text to number
-                      value={value.toString()} // Convert number to string for display
+                      onChangeText={(text) => onChange(text)}
+                      value={value.toString()}
                     />
-                    <Touchable onPress={swapServiceType}>
-                      {serviceType == "percentage" ? (
+                    <Touchable
+                      onPress={swapServiceType}
+                      style={styles.iconSelector}
+                    >
+                      <MaterialIcons name="percent" size={16} color={"black"} />
+                      <MaterialIcons
+                        name="currency-pound"
+                        size={16}
+                        color={"black"}
+                      />
+                      <Animated.View style={[styles.selector, animatedStyle]}>
                         <MaterialIcons
-                          name="percent"
+                          name={
+                            serviceType == "amount"
+                              ? "percent"
+                              : "currency-pound"
+                          }
                           size={20}
-                          color={errors.serviceCharge ? "red" : "black"}
-                          style={{
-                            alignSelf: "center",
-                          }}
+                          color={"white"}
                         />
-                      ) : (
-                        <MaterialIcons
-                          name="currency-pound"
-                          size={20}
-                          color={errors.serviceCharge ? "red" : "black"}
-                          style={{
-                            alignSelf: "center",
-                          }}
-                        />
-                      )}
+                      </Animated.View>
                     </Touchable>
                   </View>
                 )}
@@ -346,8 +364,8 @@ export default function NewBillPage() {
                       placeholderTextColor={Colors.light.placeholderText}
                       keyboardType="numeric"
                       onBlur={onBlur}
-                      onChangeText={(text) => onChange(text)} // Convert text to number
-                      value={value.toString()} // Convert number to string for display
+                      onChangeText={(text) => onChange(text)}
+                      value={value.toString()}
                     />
                     <MaterialIcons
                       name="price-change"
@@ -405,16 +423,37 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     elevation: 3,
   },
+  iconSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 70,
+    height: 30,
+    justifyContent: "space-around",
+    borderRadius: 40,
+    borderWidth: 1,
+  },
+  selector: {
+    position: "absolute",
+    width: 38,
+    top: -5,
+    bottom: -5,
+    borderRadius: 40,
+    zIndex: 10,
+    backgroundColor: "black",
+    elevation: 3,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   loadingView: {
-    backgroundColor: "rgba(0,0,0,0.6)", // Darkened slightly more for contrast
+    backgroundColor: "rgba(0,0,0,0.6)",
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     zIndex: 100,
-    justifyContent: "center", // Centers spinner vertically
-    alignItems: "center", // Centers spinner horizontally
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
     marginTop: 80,

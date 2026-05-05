@@ -19,6 +19,10 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { useBillStore } from "@/utils/billStore";
 import { Price } from "@/utils/priceUtils";
+import Animated, {
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 
 const EditBillDetailsModal = () => {
   const router = useRouter();
@@ -37,6 +41,15 @@ const EditBillDetailsModal = () => {
   const [serviceType, setServiceType] = useState<"percentage" | "amount">(
     "amount",
   );
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      // We animate from 0% to 50% left position
+      left: withSpring(serviceType === "percentage" ? "50%" : "-0.5%", {
+        duration: 200,
+      }),
+    };
+  });
 
   const onChangeDate = (
     event: DateTimePickerEvent,
@@ -208,26 +221,16 @@ const EditBillDetailsModal = () => {
                 totalPriceInputRef.current?.focus();
               }}
             />
-            <Touchable onPress={swapServiceType}>
-              {serviceType == "percentage" ? (
+            <Touchable onPress={swapServiceType} style={styles.iconSelector}>
+              <MaterialIcons name="percent" size={16} color={"black"} />
+              <MaterialIcons name="currency-pound" size={16} color={"black"} />
+              <Animated.View style={[styles.selector, animatedStyle]}>
                 <MaterialIcons
-                  name="percent"
+                  name={serviceType == "amount" ? "percent" : "currency-pound"}
                   size={20}
-                  color={"black"}
-                  style={{
-                    alignSelf: "center",
-                  }}
+                  color={"white"}
                 />
-              ) : (
-                <MaterialIcons
-                  name="currency-pound"
-                  size={20}
-                  color={"black"}
-                  style={{
-                    alignSelf: "center",
-                  }}
-                />
-              )}
+              </Animated.View>
             </Touchable>
           </View>
 
@@ -274,6 +277,27 @@ const EditBillDetailsModal = () => {
 export default EditBillDetailsModal;
 
 const styles = StyleSheet.create({
+  iconSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 70,
+    height: 30,
+    justifyContent: "space-around",
+    borderRadius: 40,
+    borderWidth: 1,
+  },
+  selector: {
+    position: "absolute",
+    width: 38,
+    top: -5,
+    bottom: -5,
+    borderRadius: 40,
+    zIndex: 10,
+    backgroundColor: "black",
+    elevation: 3,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   buttonContainer: {
     marginVertical: 30,
     flexDirection: "row",

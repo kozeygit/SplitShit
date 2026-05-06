@@ -11,7 +11,7 @@ import { Colors } from "@/constants/Colors";
 
 import { Bill } from "@/models/bill";
 import BillCard from "@/components/bill/BillCard";
-import Logo from "@/components/ui/logo";
+import Logo from "@/components/ui/Logo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { setBillComplete } from "@/utils/updateData";
 import { useBillStore } from "@/utils/billStore";

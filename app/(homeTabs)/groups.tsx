@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { StyleSheet, FlatList, View, RefreshControl } from "react-native";
 import { Colors } from "@/constants/Colors";
-import Logo from "@/components/ui/logo";
+import Logo from "@/components/ui/Logo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { fetchAllGroups } from "@/utils/fetchData";
 import { Group } from "@/models/bill";

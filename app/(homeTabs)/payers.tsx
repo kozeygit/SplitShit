@@ -7,7 +7,7 @@ import { Colors } from "@/constants/Colors";
 
 import { Bill, BillItem, Payer } from "../../models/bill";
 import PayerCard from "@/components/payer/PayerCard";
-import Logo from "@/components/ui/logo";
+import Logo from "@/components/ui/Logo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { fetchPayers } from "@/utils/fetchData";
 import ActionFAB from "@/components/ui/ActionFAB";

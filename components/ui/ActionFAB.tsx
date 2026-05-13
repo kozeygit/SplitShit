@@ -11,6 +11,7 @@ import Animated, {
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import Touchable from "@/components/ui/Touchable";
+import { ImpactFeedbackStyle } from "expo-haptics";
 
 export type FABAction = {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -65,6 +66,7 @@ const ActionFAB = ({
       <Touchable
         onPress={isSelecting ? undefined : onAdd}
         style={styles.masterHub}
+        hapticFunction={ImpactFeedbackStyle.Heavy}
       >
         <View style={[styles.innerCircle, { backgroundColor: activeColor }]}>
           <Animated.View style={[styles.centerContent, hubIconStyle]}>

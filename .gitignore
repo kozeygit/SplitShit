@@ -58,6 +58,7 @@ ios/Pods/
 ios/DerivedData/
 *.moved-aside
 *.xcuserstate
+ios/
 
 # Coverage reports
 coverage/

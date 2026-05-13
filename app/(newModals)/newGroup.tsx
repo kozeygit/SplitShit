@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   TextInput,
@@ -7,17 +7,21 @@ import {
   Platform,
   KeyboardAvoidingView,
   ScrollView,
+  FlatList,
+  RefreshControl,
 } from "react-native";
 import Touchable from "@/components/ui/Touchable";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { set, z } from "zod";
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertGroup } from "@/utils/insertData"; // Ensure you have this utility
-import { NewGroup } from "@/models/bill";
+import { NewGroup, Payer } from "@/models/bill";
+import { fetchPayers } from "@/utils/fetchData";
+import AdjustPayerComponent from "../../components/payer/AdjustPayer";
 
 // Validation Schema
 const groupSchema = z.object({
@@ -36,6 +40,29 @@ export default function NewGroupPage() {
     },
     resolver: zodResolver(groupSchema),
   });
+
+  const flatListRef = useRef<FlatList>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [payers, setPayers] = useState<Payer[]>([]);
+  const [selectedPayerIds, setSelectedPayerIds] = useState<number[]>([]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const fetchedPayers = await fetchPayers();
+      setPayers(fetchedPayers);
+    } catch (error) {
+      console.error("Error fetching payers:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      onRefresh();
+    }, [onRefresh]),
+  );
 
   const onSubmit = async (data: NewGroup) => {
     try {
@@ -99,6 +126,31 @@ export default function NewGroupPage() {
                 )}
               />
             </View>
+            <FlatList
+              ref={flatListRef}
+              /* fadingEdgeLength={50} // TODO: temporarily commented out until fadingEdgeLength rendering issue is resolved */
+              contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
+              numColumns={1}
+              data={payers}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <AdjustPayerComponent
+                  onRemovePayer={() => {
+                    setSelectedPayerIds((prev) =>
+                      prev.filter((id) => id !== item.id),
+                    );
+                  }}
+                  onAddPayer={() => {
+                    setSelectedPayerIds((prev) => [...prev, item.id]);
+                  }}
+                  payer={item}
+                  selected={item.partySize !== 0}
+                />
+              )}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+            />
             {errors.name && (
               <Text style={styles.errorText}>{errors.name.message}</Text>
             )}

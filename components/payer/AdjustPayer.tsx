@@ -1,57 +1,47 @@
 import { Pressable, StyleSheet, View } from "react-native";
-import Touchable from "@/components/ui/Touchable";
 import PayerIcon from "@/components/payer/PayerIcon";
 import { ThemedText } from "@/components/ThemedText";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Payer } from "@/models/bill";
+import Animated, { LinearTransition } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import Touchable from "../ui/Touchable";
 
 type Props = {
   payer: Payer;
-  party: number;
-  onValueChange: (newSize: number) => void;
+  selected: boolean;
+  onAddPayer: () => void;
+  onRemovePayer: () => void;
 };
 
-const AdjustPayer = ({ payer, party, onValueChange }: Props) => {
-  const isInBill = party > 0;
-
-  const handleTogglePayer = () => {
-    onValueChange(isInBill ? 0 : 1);
-  };
-
-  const partyIncrease = () => {
-    console.log("Party Increase");
-    onValueChange(party + 1);
-  };
-
-  const partyDecrease = () => {
-    console.log("Party Decrease");
-    if (party === 0) return;
-    onValueChange(party - 1);
-  };
-
+const AdjustPayer = ({
+  payer,
+  selected,
+  onAddPayer: addPayer,
+  onRemovePayer: removePayer,
+}: Props) => {
   return (
     <View style={styles.payerRow}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <Pressable onPress={handleTogglePayer}>
-          <PayerIcon payer={payer} checked={isInBill} />
-        </Pressable>
+        <Touchable
+          hapticFunction={Haptics.ImpactFeedbackStyle.Rigid}
+          onPress={selected ? removePayer : addPayer}
+        >
+          <PayerIcon payer={payer} checked={selected} />
+        </Touchable>
         <ThemedText>{payer.name}</ThemedText>
       </View>
-      {isInBill ? (
-        <View style={styles.adjustParty}>
-          <Touchable onPress={partyDecrease} style={{ padding: 5 }}>
-            <Ionicons name="remove" size={20} />
-          </Touchable>
-          <ThemedText>{party.toString()}</ThemedText>
-          <Touchable onPress={partyIncrease} style={{ padding: 5 }}>
-            <Ionicons name="add" size={20} />
-          </Touchable>
-        </View>
-      ) : (
-        <Pressable onPress={handleTogglePayer} style={styles.addButton}>
-          <ThemedText>Add</ThemedText>
-        </Pressable>
-      )}
+      <Animated.View
+        style={styles.addButtonContainer}
+        layout={LinearTransition.springify(2)}
+      >
+        <Touchable
+          hapticFunction={Haptics.ImpactFeedbackStyle.Soft}
+          style={styles.addButton}
+          onPress={selected ? removePayer : addPayer}
+        >
+          <ThemedText>{selected ? "Remove" : "Add"}</ThemedText>
+        </Touchable>
+      </Animated.View>
     </View>
   );
 };
@@ -66,20 +56,17 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingRight: 10,
   },
-  addButton: {
+  addButtonContainer: {
     borderWidth: 1,
     borderRadius: 50,
-    backgroundColor: "white",
-    width: 100,
+    overflow: "hidden",
     alignItems: "center",
-    padding: 5,
   },
-  adjustParty: {
-    width: 100,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 50,
+  addButton: {
+    backgroundColor: "white",
+    padding: 5,
+    paddingHorizontal: 20,
+    alignItems: "flex-start",
+    overflow: "hidden",
   },
 });

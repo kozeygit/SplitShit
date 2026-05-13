@@ -134,11 +134,14 @@ const EditBillPayersModal = () => {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <AdjustPayerComponent
-              onValueChange={(newSize) => {
-                handlePayerSizeChange(item.id, newSize);
+              onRemovePayer={() => {
+                handlePayerSizeChange(item.id, 0);
+              }}
+              onAddPayer={() => {
+                handlePayerSizeChange(item.id, 1);
               }}
               payer={item}
-              party={item.partySize ?? 0}
+              selected={item.partySize !== 0}
             />
           )}
         />

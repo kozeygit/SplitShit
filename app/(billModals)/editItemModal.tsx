@@ -55,22 +55,18 @@ const EditItemModal = () => {
       return;
     }
 
-    const fetchItem = async () => {
-      if (editedBill) {
-        const oldItem = editedBill.items.find(
-          (item) => item.id == parseInt(itemId),
-        );
-        if (oldItem === undefined) {
-          throw Error("Uh Oh Stinky");
-        }
-        setItem(oldItem);
-        setName(oldItem.name);
-        setQuantity(oldItem.quantity.toString());
-        setPriceInput(oldItem.price.toDisplay());
+    if (editedBill) {
+      const oldItem = editedBill.items.find(
+        (item) => item.id == parseInt(itemId),
+      );
+      if (oldItem === undefined) {
+        throw Error("Uh Oh Stinky");
       }
-    };
-
-    fetchItem();
+      setItem(oldItem);
+      setName(oldItem.name);
+      setQuantity(oldItem.quantity.toString());
+      setPriceInput(oldItem.price.toDisplay());
+    }
   }, []);
 
   const handleSave = () => {

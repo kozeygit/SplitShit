@@ -2,9 +2,14 @@ import { Pressable, StyleSheet, View } from "react-native";
 import PayerIcon from "@/components/payer/PayerIcon";
 import { ThemedText } from "@/components/ThemedText";
 import { Payer } from "@/models/bill";
-import Animated, { LinearTransition } from "react-native-reanimated";
+import Animated, {
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import Touchable from "../ui/Touchable";
+import { useRef } from "react";
 
 type Props = {
   payer: Payer;
@@ -19,30 +24,41 @@ const AdjustPayer = ({
   onAddPayer: addPayer,
   onRemovePayer: removePayer,
 }: Props) => {
+  const animatedScale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: animatedScale.value }],
+    };
+  });
+
   return (
-    <View style={styles.payerRow}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <Touchable
-          hapticFunction={Haptics.ImpactFeedbackStyle.Rigid}
-          onPress={selected ? removePayer : addPayer}
-        >
+    <Touchable
+      hapticFunction={Haptics.ImpactFeedbackStyle.Rigid}
+      onPress={selected ? removePayer : addPayer}
+      onPressIn={() => {
+        animatedScale.value = 0.98;
+      }}
+      onPressOut={() => {
+        animatedScale.value = 1;
+      }}
+    >
+      <Animated.View style={[styles.payerRow, animatedStyle]}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <PayerIcon payer={payer} checked={selected} />
-        </Touchable>
-        <ThemedText>{payer.name}</ThemedText>
-      </View>
-      <Animated.View
-        style={styles.addButtonContainer}
-        layout={LinearTransition.springify(2)}
-      >
-        <Touchable
-          hapticFunction={Haptics.ImpactFeedbackStyle.Soft}
-          style={styles.addButton}
-          onPress={selected ? removePayer : addPayer}
+          <ThemedText>{payer.name}</ThemedText>
+        </View>
+        <Animated.View
+          style={styles.addButtonContainer}
+          layout={LinearTransition.springify(2)}
         >
-          <ThemedText>{selected ? "Remove" : "Add"}</ThemedText>
-        </Touchable>
+          <View style={styles.addButton}>
+            <ThemedText style={{ textAlign: "right" }}>
+              {selected ? "Remove" : "Add"}
+            </ThemedText>
+          </View>
+        </Animated.View>
       </Animated.View>
-    </View>
+    </Touchable>
   );
 };
 
@@ -66,7 +82,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     padding: 5,
     paddingHorizontal: 20,
-    alignItems: "flex-start",
     overflow: "hidden",
   },
 });

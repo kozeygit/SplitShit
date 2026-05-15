@@ -7,7 +7,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { Payer } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
 import { fetchPayers } from "@/utils/fetchData"; // Direct fetch
-import AdjustPayerComponent from "../../components/payer/AdjustPayer";
+import AdjustPayer from "../../components/payer/AdjustPayer";
 import ContainerView from "@/components/ui/ContainerView";
 
 const syncPayersWithDraft = (dbPayers: Payer[], draftPayers: Payer[]) => {
@@ -133,7 +133,7 @@ const EditBillPayersModal = () => {
           data={payers}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <AdjustPayerComponent
+            <AdjustPayer
               onRemovePayer={() => {
                 handlePayerSizeChange(item.id, 0);
               }}
@@ -148,7 +148,7 @@ const EditBillPayersModal = () => {
         <View style={styles.newPayerButtonOuter}>
           <Touchable onPress={handleNewPayer}>
             <View style={styles.newPayerButtonInner}>
-              <ThemedText>New Payer</ThemedText>
+              <ThemedText type="defaultSemiBold">New Payer</ThemedText>
             </View>
           </Touchable>
         </View>
@@ -182,18 +182,17 @@ export default EditBillPayersModal;
 
 const styles = StyleSheet.create({
   newPayerButtonInner: {
-    padding: 10,
+    padding: 7,
     justifyContent: "center",
     alignItems: "center",
   },
   newPayerButtonOuter: {
-    marginHorizontal: 20,
-    marginTop: 10,
+    borderColor: "grey",
     overflow: "hidden",
-    borderWidth: 2,
-    borderRadius: 15,
+    borderWidth: 1,
+    borderRadius: 50,
     backgroundColor: "white",
-    elevation: 5,
+    elevation: 2,
   },
 
   buttonContainer: {

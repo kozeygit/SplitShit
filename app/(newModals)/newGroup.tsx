@@ -22,6 +22,7 @@ import { insertGroup } from "@/utils/insertData"; // Ensure you have this utilit
 import { NewGroup, Payer } from "@/models/bill";
 import { fetchPayers } from "@/utils/fetchData";
 import AdjustPayerComponent from "../../components/payer/AdjustPayer";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Validation Schema
 const groupSchema = z.object({
@@ -78,7 +79,7 @@ export default function NewGroupPage() {
   };
 
   return (
-    <View
+    <SafeAreaView
       style={{
         flex: 1,
         backgroundColor: Colors.pastel.green, // Theme color for Groups
@@ -87,105 +88,116 @@ export default function NewGroupPage() {
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ justifyContent: "flex-end" }}
+        style={{ flex: 1 }}
       >
-        <ScrollView>
-          <View style={styles.container}>
-            <ThemedText type="title" style={styles.title}>
-              Add New Group
-            </ThemedText>
+        <View style={styles.container}>
+          <ThemedText type="title" style={styles.title}>
+            Add New Group
+          </ThemedText>
 
-            <Text style={styles.label}>Group Name</Text>
-            <View
-              style={[
-                styles.input,
-                errors.name ? styles.inputError : undefined,
-              ]}
-            >
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={{ flexDirection: "row", height: "100%" }}>
-                    <TextInput
-                      style={{ flex: 1 }}
-                      placeholder="e.g. Spain Trip"
-                      placeholderTextColor={Colors.light.placeholderText}
-                      keyboardType="default"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                    />
-                    <MaterialIcons
-                      name="group"
-                      size={20}
-                      color={errors.name ? "red" : "black"}
-                      style={{ alignSelf: "center" }}
-                    />
-                  </View>
-                )}
-              />
-            </View>
-            <FlatList
-              ref={flatListRef}
-              /* fadingEdgeLength={50} // TODO: temporarily commented out until fadingEdgeLength rendering issue is resolved */
-              contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
-              numColumns={1}
-              data={payers}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <AdjustPayerComponent
-                  onRemovePayer={() => {
-                    setSelectedPayerIds((prev) =>
-                      prev.filter((id) => id !== item.id),
-                    );
-                  }}
-                  onAddPayer={() => {
-                    setSelectedPayerIds((prev) => [...prev, item.id]);
-                  }}
-                  payer={item}
-                  selected={item.partySize !== 0}
-                />
+          <Text style={styles.label}>Group Name</Text>
+          <View
+            style={[styles.input, errors.name ? styles.inputError : undefined]}
+          >
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={{ flexDirection: "row", height: "100%" }}>
+                  <TextInput
+                    style={{ flex: 1 }}
+                    placeholder="e.g. Spain Trip"
+                    placeholderTextColor={Colors.light.placeholderText}
+                    keyboardType="default"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                  <MaterialIcons
+                    name="group"
+                    size={20}
+                    color={errors.name ? "red" : "black"}
+                    style={{ alignSelf: "center" }}
+                  />
+                </View>
               )}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
             />
-            {errors.name && (
-              <Text style={styles.errorText}>{errors.name.message}</Text>
-            )}
           </View>
+          {errors.name && (
+            <Text style={styles.errorText}>{errors.name.message}</Text>
+          )}
+        </View>
 
-          {/* Submit Buttons */}
-          <View style={styles.buttonContainer}>
-            <View style={styles.cancelButtonOuter}>
-              <Touchable onPress={() => router.back()}>
-                <View style={styles.cancelButtonInner}>
-                  <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                    Cancel
-                  </ThemedText>
-                </View>
-              </Touchable>
-            </View>
-            <View style={styles.submitButtonOuter}>
-              <Touchable onPress={handleSubmit(onSubmit)}>
-                <View style={styles.submitButtonInner}>
-                  <ThemedText type="defaultSemiBold" style={styles.submitText}>
-                    Submit
-                  </ThemedText>
-                </View>
-              </Touchable>
-            </View>
+        <View style={styles.listContainer}>
+          <ThemedText type="subtitle" style={styles.title}>
+            Add Members
+          </ThemedText>
+          <FlatList
+            ref={flatListRef}
+            /* fadingEdgeLength={50} // TODO: temporarily commented out until fadingEdgeLength rendering issue is resolved */
+            style={{ flex: 1 }}
+            contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
+            numColumns={1}
+            data={payers}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <AdjustPayerComponent
+                onRemovePayer={() => {
+                  setSelectedPayerIds((prev) =>
+                    prev.filter((id) => id !== item.id),
+                  );
+                }}
+                onAddPayer={() => {
+                  setSelectedPayerIds((prev) => [...prev, item.id]);
+                }}
+                payer={item}
+                selected={selectedPayerIds.includes(item.id)}
+              />
+            )}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          />
+        </View>
+        {/* Submit Buttons */}
+        <View style={styles.buttonContainer}>
+          <View style={styles.cancelButtonOuter}>
+            <Touchable onPress={() => router.back()}>
+              <View style={styles.cancelButtonInner}>
+                <ThemedText type="defaultSemiBold" style={styles.cancelText}>
+                  Cancel
+                </ThemedText>
+              </View>
+            </Touchable>
           </View>
-        </ScrollView>
+          <View style={styles.submitButtonOuter}>
+            <Touchable onPress={handleSubmit(onSubmit)}>
+              <View style={styles.submitButtonInner}>
+                <ThemedText type="defaultSemiBold" style={styles.submitText}>
+                  Submit
+                </ThemedText>
+              </View>
+            </Touchable>
+          </View>
+        </View>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  listContainer: {
+    flex: 1,
+    backgroundColor: "white",
+    borderWidth: 2,
+    borderRadius: 20,
+    elevation: 5,
+    marginTop: 10,
+    paddingHorizontal: 30,
+    paddingVertical: 30,
+  },
+
   container: {
-    marginTop: 100,
     padding: 30,
     paddingVertical: 40,
     backgroundColor: "white",

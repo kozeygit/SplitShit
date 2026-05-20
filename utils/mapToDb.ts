@@ -14,7 +14,7 @@ export const mapBillToDB = (bill: NewBill): bill_db => {
         name: bill.name,
         date: bill.date.toISOString(),
         userEnteredTotal: bill.userEnteredTotal.getCents(),
-        serviceCharge: bill.serviceCharge.getCents(),
+        serviceCharge: bill.serviceCharge.getBasisPoints(),
         complete: 0,
         imagePath: bill.imagePath,
     };

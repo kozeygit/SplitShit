@@ -15,6 +15,7 @@ import m0010 from './0010_small_vermin.sql';
 import m0011 from './0011_lonely_sebastian_shaw.sql';
 import m0012 from './0012_yielding_electro.sql';
 import m0013 from './0013_thick_texas_twister.sql';
+import m0014 from './0014_tense_loki.sql';
 
   export default {
     journal,
@@ -32,7 +33,8 @@ m0009,
 m0010,
 m0011,
 m0012,
-m0013
+m0013,
+m0014
     }
   }
   

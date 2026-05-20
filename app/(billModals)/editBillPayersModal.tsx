@@ -1,31 +1,25 @@
 import { Alert, FlatList, StyleSheet, View } from "react-native";
 import Touchable from "@/components/ui/Touchable";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Payer } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
-import { fetchPayers } from "@/utils/fetchData"; // Direct fetch
+import { fetchPayers } from "@/utils/fetchData";
 import AdjustPayer from "../../components/payer/AdjustPayer";
 import ContainerView from "@/components/ui/ContainerView";
 
-const syncPayersWithDraft = (dbPayers: Payer[], draftPayers: Payer[]) => {
-  const draftMap = new Map(draftPayers.map((p) => [p.id, p.partySize]));
-  return dbPayers.map((payer) => ({
-    ...payer,
-    partySize: draftMap.get(payer.id) ?? 0,
-  }));
-};
-
 const EditBillPayersModal = () => {
   const router = useRouter();
-
   const { editedBill, setEditedBill } = useBillStore();
   const flatListRef = useRef<FlatList>(null);
+  const isMounted = useRef(false);
 
   const [payers, setPayers] = useState<Payer[]>([]);
-  const isMounted = useRef(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(
+    new Set(editedBill?.payers.map((p) => p.id) ?? []),
+  );
 
   if (!editedBill) {
     router.back();
@@ -37,10 +31,8 @@ const EditBillPayersModal = () => {
       const refreshAndScroll = async () => {
         try {
           const dbPayers = await fetchPayers();
-          const synced = syncPayersWithDraft(dbPayers, editedBill.payers);
-          setPayers(synced);
+          setPayers(dbPayers);
 
-          // Only scroll to end when returning to the screen (not on first mount)
           if (isMounted.current) {
             requestAnimationFrame(() => {
               flatListRef.current?.scrollToEnd({ animated: true });
@@ -58,15 +50,10 @@ const EditBillPayersModal = () => {
   );
 
   const handleBack = () => {
-    const savedMap = new Map(
-      editedBill.payers.map((p) => [p.id, p.partySize ?? 0]),
-    );
-
-    const hasChanges = payers.some((p) => {
-      const savedSize = savedMap.get(p.id) ?? 0;
-      const currentSize = p.partySize ?? 0;
-      return currentSize !== savedSize;
-    });
+    const originalIds = new Set(editedBill.payers.map((p) => p.id));
+    const hasChanges =
+      selectedIds.size !== originalIds.size ||
+      [...selectedIds].some((id) => !originalIds.has(id));
 
     if (hasChanges) {
       Alert.alert(
@@ -86,28 +73,27 @@ const EditBillPayersModal = () => {
     }
   };
 
-  const handlePayerSizeChange = (id: number, newSize: number) => {
-    setPayers((prevPayers) =>
-      prevPayers.map((p) => (p.id === id ? { ...p, partySize: newSize } : p)),
-    );
+  const togglePayer = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   };
 
   const handleSave = () => {
-    // Create a new bill object (Immutability) for Zustand
     const updatedBill = {
       ...editedBill,
-      payers: payers.filter((p) => (p.partySize ?? 0) > 0),
+      payers: payers.filter((p) => selectedIds.has(p.id)),
     };
-
     setEditedBill(updatedBill);
     router.back();
   };
 
   const handleNewPayer = () => {
-    // Create a new bill object (Immutability) for Zustand
     const updatedBill = {
       ...editedBill,
-      payers: payers.filter((p) => (p.partySize ?? 0) > 0),
+      payers: payers.filter((p) => selectedIds.has(p.id)),
     };
     setEditedBill(updatedBill);
     router.push({ pathname: "/newPayer" });
@@ -118,30 +104,20 @@ const EditBillPayersModal = () => {
       <ContainerView>
         <View style={styles.title}>
           <ThemedText type="subtitle">{editedBill.name}</ThemedText>
-          <ThemedText type="subtitle">
-            {payers.filter((p) => (p.partySize ?? 0) > 0).length}
-            {" • "}
-            {payers.reduce((acc, payer) => acc + (payer.partySize ?? 0), 0)}
-          </ThemedText>
+          <ThemedText type="subtitle">{selectedIds.size} selected</ThemedText>
         </View>
 
         <FlatList
           ref={flatListRef}
-          /* fadingEdgeLength={50} // TODO: temporarily commented out until fadingEdgeLength rendering issue is resolved */
           contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
           numColumns={1}
           data={payers}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <AdjustPayer
-              onRemovePayer={() => {
-                handlePayerSizeChange(item.id, 0);
-              }}
-              onAddPayer={() => {
-                handlePayerSizeChange(item.id, 1);
-              }}
+              onToggle={() => togglePayer(item.id)}
               payer={item}
-              selected={item.partySize !== 0}
+              selected={selectedIds.has(item.id)}
             />
           )}
         />
@@ -163,7 +139,6 @@ const EditBillPayersModal = () => {
             </View>
           </Touchable>
         </View>
-
         <View style={styles.submitButtonOuter}>
           <Touchable onPress={handleSave}>
             <View style={styles.submitButtonInner}>
@@ -194,7 +169,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     elevation: 2,
   },
-
   buttonContainer: {
     marginVertical: 30,
     flexDirection: "row",

@@ -5,13 +5,9 @@ import InfoRow from "@/components/ui/InfoRow";
 import { Colors } from "@/constants/Colors";
 import { Bill, BillItem, NewBillItem } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
-import {
-  setBillComplete,
-  updateBill,
-  updateBillImagePath,
-} from "@/utils/updateData";
+import { updateBill } from "@/utils/updateData";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { isEqual, set } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
 import { Price } from "@/utils/priceUtils";
@@ -26,6 +22,7 @@ import {
 import Touchable from "@/components/ui/Touchable";
 import { useImagePicker } from "@/hooks/useCamera";
 import { deleteReceiptImage, saveReceiptImage } from "@/utils/fileSystem";
+import { Rate } from "@/utils/rateUtils";
 
 const BillDisplay = () => {
   const router = useRouter();
@@ -44,7 +41,7 @@ const BillDisplay = () => {
     items: [],
     complete: false,
     payers: [],
-    serviceCharge: Price.fromCents(0),
+    serviceCharge: Rate.fromBasisPoints(0),
     userEnteredTotal: Price.fromCents(42069),
   });
 
@@ -148,6 +145,10 @@ const BillDisplay = () => {
     Price.fromCents(0),
   );
 
+  const calculatedTotal = itemsTotal.add(
+    bill.serviceCharge.applyTo(itemsTotal),
+  );
+
   return (
     <View
       style={{
@@ -164,11 +165,7 @@ const BillDisplay = () => {
               <ThemedText type="default">
                 {bill.date.toLocaleDateString()}
                 {"  -  "}
-                {bill.payers.reduce(
-                  (acc: number, val) => acc + (val.partySize ?? 1),
-                  0,
-                )}{" "}
-                People
+                {bill.payers.length} People
               </ThemedText>
             </View>
             <Touchable onPress={handlePhotoButton} style={styles.photoButton}>
@@ -202,7 +199,6 @@ const BillDisplay = () => {
           </View>
         </Touchable>
 
-        {/* Example for items: */}
         <View style={{ flex: 1 }}>
           <ScrollView
             /* fadingEdgeLength={50} */ /* TODO: temporarily commented out until fadingEdgeLength rendering issue is resolved */
@@ -249,26 +245,19 @@ const BillDisplay = () => {
             <InfoRow
               label={
                 <ThemedText>
-                  Service Charge: (
-                  {(
-                    (bill.serviceCharge.getCents() /
-                      (bill.userEnteredTotal.getCents() -
-                        bill.serviceCharge.getCents())) *
-                    100
-                  ).toPrecision(3)}
-                  %)
+                  Service Charge: ({bill.serviceCharge.toDisplay()})
                 </ThemedText>
               }
               value={
-                <ThemedText>{"£ " + bill.serviceCharge.toDisplay()}</ThemedText>
+                <ThemedText>
+                  {"£ " + bill.serviceCharge.applyTo(bill.userEnteredTotal)}
+                </ThemedText>
               }
             />
             <InfoRow
               label=<ThemedText type="subtitle">Total:</ThemedText>
               value={
-                bill.userEnteredTotal.equals(
-                  itemsTotal.add(bill.serviceCharge),
-                ) ? (
+                calculatedTotal.equals(bill.userEnteredTotal) ? (
                   <ThemedText type="subtitle">
                     {"£ " + bill.userEnteredTotal.toDisplay()}
                   </ThemedText>
@@ -279,13 +268,10 @@ const BillDisplay = () => {
                       style={{ color: "red", fontSize: 18 }}
                     >
                       (
-                      {itemsTotal
-                        .add(bill.serviceCharge)
-                        .isGreaterThan(bill.userEnteredTotal)
+                      {calculatedTotal.isGreaterThan(bill.userEnteredTotal)
                         ? "+"
                         : ""}
-                      {itemsTotal
-                        .add(bill.serviceCharge)
+                      {calculatedTotal
                         .subtract(bill.userEnteredTotal)
                         .toDisplay()}
                       )

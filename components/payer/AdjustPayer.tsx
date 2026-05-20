@@ -9,21 +9,14 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import Touchable from "../ui/Touchable";
-import { useRef } from "react";
 
 type Props = {
   payer: Payer;
   selected: boolean;
-  onAddPayer: () => void;
-  onRemovePayer: () => void;
+  onToggle: () => void;
 };
 
-const AdjustPayer = ({
-  payer,
-  selected,
-  onAddPayer: addPayer,
-  onRemovePayer: removePayer,
-}: Props) => {
+const AdjustPayer = ({ payer, selected, onToggle: onToggle }: Props) => {
   const animatedScale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -34,7 +27,7 @@ const AdjustPayer = ({
   return (
     <Touchable
       hapticFunction={Haptics.ImpactFeedbackStyle.Rigid}
-      onPress={selected ? removePayer : addPayer}
+      onPress={onToggle}
       onPressIn={() => {
         animatedScale.value = 0.98;
       }}

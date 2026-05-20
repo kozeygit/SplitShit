@@ -71,7 +71,6 @@ export const insertBillPayer = async (
         .values({
             billId: billId,
             payerId: payer.id,
-            partySize: payer.partySize ?? 1,
         })
         .returning({ id: schema.billPayers.id });
 

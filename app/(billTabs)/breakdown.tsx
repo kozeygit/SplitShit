@@ -8,13 +8,11 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Price } from "@/utils/priceUtils";
 import { StyleSheet, View, FlatList, Pressable } from "react-native";
+import { Rate } from "@/utils/rateUtils";
 
 const BillBreakdownDisplay = () => {
   const { editedBill } = useBillStore();
 
-  const [servicePerPerson, setServicePerPerson] = useState<Price>(
-    Price.fromCents(0),
-  );
   const [showPriceBreakdown, setShowPriceBreakdown] = useState<boolean>(false);
   const [totalOwed, setTotalOwed] = useState<Price>(Price.fromCents(0));
 
@@ -30,7 +28,7 @@ const BillBreakdownDisplay = () => {
     items: [],
     complete: false,
     payers: [],
-    serviceCharge: Price.fromCents(0),
+    serviceCharge: Rate.fromBasisPoints(0),
     userEnteredTotal: Price.fromCents(42069),
   });
 
@@ -60,29 +58,16 @@ const BillBreakdownDisplay = () => {
   );
 
   useEffect(() => {
-    if (bill.serviceCharge.getCents() === 0) {
-      setServicePerPerson(Price.fromCents(0));
-      return;
-    }
-
-    const numberOfPeople = bill.payers.reduce(
-      (acc, val) => acc + (val.partySize ?? 1),
-      0,
-    );
-
-    const service = bill.serviceCharge.divide(numberOfPeople);
-    setServicePerPerson(service);
-  }, [bill]);
-
-  useEffect(() => {
     let total = Price.fromCents(0);
     for (const payer of payers) {
-      payer.amountToPay = servicePerPerson.multiply(payer.partySize ?? 1);
+      payer.amountToPay = Price.fromDecimal(0);
 
       const items = payerItems.get(payer);
       if (items === undefined) {
         break;
       }
+
+      let itemTotal = Price.fromCents(0);
 
       for (const item of items) {
         const currItem = item.assignedTo.find((i) => i.payerId == payer.id);
@@ -90,14 +75,19 @@ const BillBreakdownDisplay = () => {
         const itemShare = item.totalPrice
           .divide(item.assignedTo.length)
           .multiply(payerQuantity);
-        payer.amountToPay = payer.amountToPay.add(itemShare);
+        itemTotal = itemTotal.add(itemShare);
       }
+
+      const serviceCharge = bill.serviceCharge.applyTo(itemTotal);
+
+      payer.amountToPay = itemTotal;
+      payer.amountToPay = payer.amountToPay.add(serviceCharge);
 
       total = total.add(payer.amountToPay);
     }
 
     setTotalOwed(total);
-  }, [payers, payerItems, servicePerPerson]);
+  }, [payers, payerItems]);
 
   return (
     <View
@@ -175,23 +165,23 @@ const BillBreakdownDisplay = () => {
                         }
                       />
                     ))}
-                    {bill.serviceCharge.getCents() !== 0 ? (
+                    {bill.serviceCharge.toDecimal() !== 0 && (
                       <InfoRow
                         label={
-                          <ThemedText type="default">
-                            {item.partySize} x Service Charge
+                          <ThemedText>
+                            Service Charge: ({bill.serviceCharge.toDisplay()})
                           </ThemedText>
                         }
                         value={
                           <ThemedText>
-                            £{" "}
-                            {servicePerPerson
-                              .multiply(item.partySize ?? 1)
-                              .toDisplay()}
+                            {"£ " +
+                              bill.serviceCharge
+                                .portionOf(item.amountToPay!)
+                                .toDisplay()}
                           </ThemedText>
                         }
                       />
-                    ) : undefined}
+                    )}
                   </View>
                 )}
               </View>

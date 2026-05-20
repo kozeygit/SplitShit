@@ -20,11 +20,15 @@ const Touchable = ({
   children,
   style,
   pressedOpacity = 0.8,
+  onPressIn,
   ...props
 }: TouchableProps) => {
   return (
     <Pressable
-      onPressIn={() => hapticFunction && Haptics.impactAsync(hapticFunction)}
+      onPressIn={(event) => {
+        onPressIn?.(event);
+        hapticFunction && Haptics.impactAsync(hapticFunction);
+      }}
       style={({ pressed }) => [style, pressed && { opacity: pressedOpacity }]}
       {...props}
     >

@@ -1,14 +1,6 @@
 import * as schema from "@/db/schema";
 import { mapBillItemToDB, mapBillToDB, mapPayerToDB } from "./mapToDb";
-import {
-    Bill,
-    BillItem,
-    Group,
-    NewBill,
-    NewBillItem,
-    NewPayer,
-    Payer,
-} from "../models/bill";
+import { Bill, BillItem, Group } from "../models/bill";
 import { getDrizzleDb } from "./database";
 import { eq, lt, gte, ne, and } from "drizzle-orm";
 import { fetchBillItems, fetchGroupPayers, fetchPayers } from "./fetchData";
@@ -178,16 +170,6 @@ const updateBillPayers = async (bill: Bill): Promise<void> => {
     for (const payer of toInsert) {
         await insertBillPayer(bill.id, payer);
     }
-
-    // 3. UPDATE: Payers in both, but partySize might have changed
-    const toUpdate = bill.payers.filter((p) => oldIds.includes(p.id));
-    for (const payer of toUpdate) {
-        const oldPayer = oldPayers.find((op) => op.id === payer.id);
-        // Only touch the DB if the data actually changed
-        if (oldPayer && oldPayer.partySize !== payer.partySize) {
-            await updateBillPayerPartySize(bill.id, payer);
-        }
-    }
 };
 
 const updateBillItems = async (bill: Bill): Promise<void> => {
@@ -246,19 +228,4 @@ export const updateBillItem = async (item: BillItem): Promise<number> => {
         console.error("Error in updateBillItem:", error);
         return -1;
     }
-};
-
-export const updateBillPayerPartySize = async (
-    billId: number,
-    payer: Payer,
-) => {
-    return await db
-        .update(schema.billPayers)
-        .set({ partySize: payer.partySize })
-        .where(
-            and(
-                eq(schema.billPayers.billId, billId),
-                eq(schema.billPayers.payerId, payer.id),
-            ),
-        );
 };

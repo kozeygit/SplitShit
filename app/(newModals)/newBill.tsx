@@ -73,7 +73,6 @@ export default function NewBillPage() {
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      // We animate from 0% to 50% left position
       left: withSpring(serviceType === "percentage" ? "50%" : "-0.5%", {
         duration: 200,
       }),

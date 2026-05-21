@@ -23,6 +23,7 @@ import Touchable from "@/components/ui/Touchable";
 import { useImagePicker } from "@/hooks/useCamera";
 import { deleteReceiptImage, saveReceiptImage } from "@/utils/fileSystem";
 import { Rate } from "@/utils/rateUtils";
+import { getBillTotals } from "@/utils/billUtils";
 
 const BillDisplay = () => {
   const router = useRouter();
@@ -140,14 +141,7 @@ const BillDisplay = () => {
     );
   };
 
-  const itemsTotal = bill.items.reduce(
-    (acc: Price, item: BillItem) => acc.add(item.totalPrice),
-    Price.fromCents(0),
-  );
-
-  const calculatedTotal = itemsTotal.add(
-    bill.serviceCharge.applyTo(itemsTotal),
-  );
+  const { itemsTotal, calculatedTotal } = getBillTotals(bill);
 
   return (
     <View
@@ -212,11 +206,17 @@ const BillDisplay = () => {
                     label={
                       item.quantity == 1 ? (
                         <ThemedText>
-                          {item.quantity} {item.name}
+                          {item.quantity} •{" "}
+                          {item.name.length > 25
+                            ? item.name.slice(0, 20) + "..."
+                            : item.name}
                         </ThemedText>
                       ) : (
                         <ThemedText>
-                          {item.quantity} {item.name}{" "}
+                          {item.quantity} •{" "}
+                          {item.name.length > 25
+                            ? item.name.slice(0, 20) + "..."
+                            : item.name}{" "}
                           <ThemedText type="darkGrital">
                             ({item.price.toDisplay()})
                           </ThemedText>
@@ -243,6 +243,20 @@ const BillDisplay = () => {
         <Touchable onPress={openBillDetailsModal}>
           <View style={styles.billDataContainer}>
             <InfoRow
+              label={<ThemedText>Subtotal:</ThemedText>}
+              value={
+                <ThemedText>
+                  {"£ " +
+                    bill.items
+                      .reduce(
+                        (acc, item) => acc.add(item.totalPrice),
+                        Price.fromDecimal(0),
+                      )
+                      .toDisplay()}
+                </ThemedText>
+              }
+            />
+            <InfoRow
               label={
                 <ThemedText>
                   Service Charge: ({bill.serviceCharge.toDisplay()})
@@ -250,7 +264,7 @@ const BillDisplay = () => {
               }
               value={
                 <ThemedText>
-                  {"£ " + bill.serviceCharge.applyTo(bill.userEnteredTotal)}
+                  {"£ " + bill.serviceCharge.applyTo(itemsTotal)}
                 </ThemedText>
               }
             />

@@ -14,7 +14,7 @@ import Touchable from "@/components/ui/Touchable";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { NewBill } from "@/models/bill"; // Replace with your actual path
+import { Bill, NewBill } from "@/models/bill";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -35,6 +35,9 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import { toServiceChargeRate } from "@/utils/serviceChargeUtils";
+import { ServiceChargeToggle } from "@/components/ui/ServiceChargeToggle";
+import { FormButtonRow } from "@/components/ui/FormButtonRow";
 
 const billSchema = z.object({
   name: z.string().min(1, "Bill name is required"),
@@ -48,6 +51,8 @@ const billSchema = z.object({
     .nonnegative("Service charge cannot be negative")
     .optional(),
 });
+
+type BillFormData = z.infer<typeof billSchema>;
 
 export default function NewBillPage() {
   const nameRef = useRef<TextInput>(null);
@@ -80,7 +85,7 @@ export default function NewBillPage() {
     handleSubmit,
     formState: { errors },
     setValue,
-  } = useForm<NewBill>({
+  } = useForm<BillFormData>({
     defaultValues: {
       name: "",
       userEnteredTotal: 0,
@@ -90,25 +95,18 @@ export default function NewBillPage() {
     resolver: zodResolver(billSchema),
   });
 
-  const onSubmit = async (data: NewBill) => {
-    const totalPrice = Price.fromDecimal((data.userEnteredTotal as any) || 0);
-    let serviceChargePrice = Price.fromDecimal(
-      (data.serviceCharge as any) || 0,
+  const onSubmit = async (data: BillFormData) => {
+    const serviceChargeObj = toServiceChargeRate(
+      data.serviceCharge || 0,
+      data.userEnteredTotal || 0,
+      serviceType,
     );
-
-    if (serviceType == "percentage") {
-      // Calculate service charge as percentage of subtotal
-      const subTotal = totalPrice.divide(
-        1 + ((data.serviceCharge as any) || 0) / 100,
-      );
-      serviceChargePrice = totalPrice.subtract(subTotal);
-    }
 
     const billToInsert: NewBill = {
       name: data.name,
       date: data.date,
-      userEnteredTotal: totalPrice,
-      serviceCharge: serviceChargePrice,
+      userEnteredTotal: Price.fromDecimal(data.userEnteredTotal || 0),
+      serviceCharge: serviceChargeObj,
     };
 
     const newBillId = await insertBill(billToInsert);
@@ -186,7 +184,6 @@ export default function NewBillPage() {
           </ThemedText>
         </View>
       )}
-
       <KeyboardAvoidingView
         behavior={Platform.OS == "ios" ? "padding" : "height"}
         style={{
@@ -307,30 +304,12 @@ export default function NewBillPage() {
                       keyboardType="numeric"
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)}
-                      value={value.toString()}
+                      value={value !== undefined ? value.toString() : ""}
                     />
-                    <Touchable
-                      onPress={swapServiceType}
-                      style={styles.iconSelector}
-                    >
-                      <MaterialIcons name="percent" size={16} color={"black"} />
-                      <MaterialIcons
-                        name="currency-pound"
-                        size={16}
-                        color={"black"}
-                      />
-                      <Animated.View style={[styles.selector, animatedStyle]}>
-                        <MaterialIcons
-                          name={
-                            serviceType == "amount"
-                              ? "percent"
-                              : "currency-pound"
-                          }
-                          size={20}
-                          color={"white"}
-                        />
-                      </Animated.View>
-                    </Touchable>
+                    <ServiceChargeToggle
+                      serviceType={serviceType}
+                      onSwap={swapServiceType}
+                    />
                   </View>
                 )}
               />
@@ -389,27 +368,11 @@ export default function NewBillPage() {
           <View style={{ flex: 1 }}></View>
         </ScrollView>
       </KeyboardAvoidingView>
-      {/* Submit Button */}
-      <View style={styles.buttonContainer}>
-        <View style={styles.cancelButtonOuter}>
-          <Touchable onPress={() => router.back()}>
-            <View style={styles.cancelButtonInner}>
-              <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                Cancel
-              </ThemedText>
-            </View>
-          </Touchable>
-        </View>
-        <View style={styles.submitButtonOuter}>
-          <Touchable onPress={handleSubmit(onSubmit)}>
-            <View style={styles.submitButtonInner}>
-              <ThemedText type="defaultSemiBold" style={styles.submitText}>
-                Submit
-              </ThemedText>
-            </View>
-          </Touchable>
-        </View>
-      </View>
+      <FormButtonRow
+        onCancel={() => router.back()}
+        onSubmit={handleSubmit(onSubmit)}
+        submitLabel="Submit"
+      />
     </View>
   );
 }
@@ -422,27 +385,6 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "white",
     elevation: 3,
-  },
-  iconSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: 70,
-    height: 30,
-    justifyContent: "space-around",
-    borderRadius: 40,
-    borderWidth: 1,
-  },
-  selector: {
-    position: "absolute",
-    width: 38,
-    top: -5,
-    bottom: -5,
-    borderRadius: 40,
-    zIndex: 10,
-    backgroundColor: "black",
-    elevation: 3,
-    alignItems: "center",
-    justifyContent: "center",
   },
   loadingView: {
     backgroundColor: "rgba(0,0,0,0.6)",
@@ -489,47 +431,7 @@ const styles = StyleSheet.create({
     borderColor: "red",
     marginBottom: 0,
   },
-  buttonContainer: {
-    marginVertical: 30,
-    flexDirection: "row",
-    gap: 10,
-  },
 
-  submitButtonOuter: {
-    flex: 3,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "white",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  submitButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  submitText: {
-    fontSize: 20,
-  },
-  cancelButtonOuter: {
-    flex: 1,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "red",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  cancelButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 20,
-    color: "white",
-  },
   errorText: {
     color: "red",
     fontSize: 12,

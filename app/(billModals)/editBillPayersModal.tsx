@@ -7,8 +7,10 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { Payer } from "@/models/bill";
 import { useBillStore } from "@/utils/billStore";
 import { fetchPayers } from "@/utils/fetchData";
-import AdjustPayer from "../../components/payer/AdjustPayer";
+import AdjustPayer from "../../components/payer/SelectPayer";
 import ContainerView from "@/components/ui/ContainerView";
+import { Form } from "react-hook-form";
+import { FormButtonRow } from "@/components/ui/FormButtonRow";
 
 const EditBillPayersModal = () => {
   const router = useRouter();
@@ -129,26 +131,11 @@ const EditBillPayersModal = () => {
           </Touchable>
         </View>
       </ContainerView>
-      <View style={styles.buttonContainer}>
-        <View style={styles.cancelButtonOuter}>
-          <Touchable onPress={handleBack}>
-            <View style={styles.cancelButtonInner}>
-              <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                Back
-              </ThemedText>
-            </View>
-          </Touchable>
-        </View>
-        <View style={styles.submitButtonOuter}>
-          <Touchable onPress={handleSave}>
-            <View style={styles.submitButtonInner}>
-              <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                Save
-              </ThemedText>
-            </View>
-          </Touchable>
-        </View>
-      </View>
+      <FormButtonRow
+        onCancel={handleBack}
+        onSubmit={handleSave}
+        submitLabel={"Save"}
+      />
     </View>
   );
 };
@@ -169,11 +156,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     elevation: 2,
   },
-  buttonContainer: {
-    marginVertical: 30,
-    flexDirection: "row",
-    gap: 10,
-  },
   outer: {
     flex: 1,
     backgroundColor: Colors.pastel.orange,
@@ -186,39 +168,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     marginBottom: 10,
     justifyContent: "space-between",
-  },
-  submitButtonOuter: {
-    flex: 1,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "white",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  submitButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  submitText: {
-    fontSize: 20,
-  },
-  cancelButtonOuter: {
-    flex: 1,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "white",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  cancelButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 20,
   },
 });

@@ -18,11 +18,12 @@ import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { useRouter, useFocusEffect } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { insertGroup } from "@/utils/insertData"; // Ensure you have this utility
+import { insertGroup } from "@/utils/insertData";
 import { NewGroup, Payer } from "@/models/bill";
 import { fetchPayers } from "@/utils/fetchData";
-import AdjustPayerComponent from "../../components/payer/AdjustPayer";
+import SelectPayer from "@/components/payer/SelectPayer";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FormButtonRow } from "@/components/ui/FormButtonRow";
 
 // Validation Schema
 const groupSchema = z.object({
@@ -76,6 +77,15 @@ export default function NewGroupPage() {
     } catch (error) {
       console.error("Database error:", error);
     }
+  };
+
+  const handleTogglePayer = (payerId: number) => {
+    if (!payers) return;
+    setSelectedPayerIds((prevIds) =>
+      prevIds.includes(payerId)
+        ? prevIds.filter((id) => id !== payerId)
+        : [...prevIds, payerId],
+    );
   };
 
   return (
@@ -141,14 +151,9 @@ export default function NewGroupPage() {
             data={payers}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <AdjustPayerComponent
-                onRemovePayer={() => {
-                  setSelectedPayerIds((prev) =>
-                    prev.filter((id) => id !== item.id),
-                  );
-                }}
-                onAddPayer={() => {
-                  setSelectedPayerIds((prev) => [...prev, item.id]);
+              <SelectPayer
+                onToggle={() => {
+                  handleTogglePayer(item.id);
                 }}
                 payer={item}
                 selected={selectedPayerIds.includes(item.id)}
@@ -159,27 +164,12 @@ export default function NewGroupPage() {
             }
           />
         </View>
-        {/* Submit Buttons */}
-        <View style={styles.buttonContainer}>
-          <View style={styles.cancelButtonOuter}>
-            <Touchable onPress={() => router.back()}>
-              <View style={styles.cancelButtonInner}>
-                <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                  Cancel
-                </ThemedText>
-              </View>
-            </Touchable>
-          </View>
-          <View style={styles.submitButtonOuter}>
-            <Touchable onPress={handleSubmit(onSubmit)}>
-              <View style={styles.submitButtonInner}>
-                <ThemedText type="defaultSemiBold" style={styles.submitText}>
-                  Submit
-                </ThemedText>
-              </View>
-            </Touchable>
-          </View>
-        </View>
+        <FormButtonRow
+          onSubmit={handleSubmit(onSubmit)}
+          onCancel={() => router.back()}
+          submitLabel="Submit"
+          cancelLabel="Cancel"
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -226,46 +216,6 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: "red",
-  },
-  buttonContainer: {
-    marginVertical: 30,
-    flexDirection: "row",
-    gap: 10,
-  },
-  submitButtonOuter: {
-    flex: 3,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "white",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  submitButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  submitText: {
-    fontSize: 20,
-  },
-  cancelButtonOuter: {
-    flex: 1,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "red",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  cancelButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 20,
-    color: "white",
   },
   errorText: {
     color: "red",

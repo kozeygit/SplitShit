@@ -38,6 +38,6 @@ const styles = StyleSheet.create({
     height: "50%",
     borderStyle: "dotted",
     marginHorizontal: 5,
-    borderColor: "grey",
+    borderColor: "darkgrey",
   },
 });

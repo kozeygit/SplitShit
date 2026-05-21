@@ -2,6 +2,7 @@ import { Bill, BillItem } from "@/models/bill";
 import { Price } from "@/utils/priceUtils";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { File } from "expo-file-system";
+import { Rate } from "./rateUtils";
 
 const systemPrompt = `
 
@@ -70,10 +71,15 @@ Extraction & Sanitization Rules
 
 5. Service Charge (serviceCharge)
 - Extract tips or service charges.
-- If shown as a percentage (e.g., "10%"):
-  - Calculate using subtotal
+- If not shown as a percentage (e.g., "10%"):
+  - Calculate percentage based on subtotal and service value and grand total
   - If subtotal is missing, use sum of item totalPrice
 - If not present, return 0
+- Return the percentage value, not the monetary value.
+  - Do not include symbols (e.g., "%")
+  - eg "10" not "10%"
+  - for example, if subtotal is 200 and service charge is £20, return "10"
+  - for example, if grand total is 450 and service charge is £50, return "12.5" as 450 - 50 = 400 and 50 is 12.5% of 400
 
 6. Items (items)
 
@@ -288,7 +294,9 @@ export const verifyExtractedBill = (extractedBill: any): Bill | string => {
             name: extractedBill.name,
             date: finalDate,
             userEnteredTotal: Price.fromDecimal(extractedBill.userEnteredTotal),
-            serviceCharge: Price.fromDecimal(extractedBill.serviceCharge ?? 0),
+            serviceCharge: Rate.fromPercentage(
+                extractedBill.serviceCharge ?? 0,
+            ),
             complete: false,
             items: extractedBill.items.map(
                 (item: any, index: number) =>

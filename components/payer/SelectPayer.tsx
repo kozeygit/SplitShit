@@ -16,7 +16,7 @@ type Props = {
   onToggle: () => void;
 };
 
-const AdjustPayer = ({ payer, selected, onToggle: onToggle }: Props) => {
+const SelectPayer = ({ payer, selected, onToggle: onToggle }: Props) => {
   const animatedScale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -55,7 +55,7 @@ const AdjustPayer = ({ payer, selected, onToggle: onToggle }: Props) => {
   );
 };
 
-export default AdjustPayer;
+export default SelectPayer;
 
 const styles = StyleSheet.create({
   payerRow: {

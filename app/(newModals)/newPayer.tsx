@@ -18,6 +18,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useFocusEffect, useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertPayer } from "@/utils/insertData";
+import { FormButtonRow } from "@/components/ui/FormButtonRow";
 
 const payerSchema = z.object({
   name: z.string().min(1, "Payer name is required"),
@@ -75,7 +76,6 @@ export default function NewPayerPage() {
             <ThemedText type="title" style={styles.title}>
               Add New Payer
             </ThemedText>
-            {/* Bill Name Input */}
             <Text style={styles.label}>Name</Text>
             <View
               style={[
@@ -123,7 +123,6 @@ export default function NewPayerPage() {
               <Text style={styles.errorText}>{errors.name.message}</Text>
             )}
 
-            {/* Email Input */}
             <Text style={styles.label}>Email</Text>
             <View
               style={[
@@ -170,7 +169,6 @@ export default function NewPayerPage() {
               <Text style={styles.errorText}>{errors.email.message}</Text>
             )}
 
-            {/* Phone Number Input */}
             <Text style={styles.label}>Phone Number</Text>
             <View
               style={[
@@ -215,27 +213,13 @@ export default function NewPayerPage() {
             )}
           </View>
 
-          {/* Submit Button */}
-          <View style={styles.buttonContainer}>
-            <View style={styles.cancelButtonOuter}>
-              <Touchable onPress={() => router.back()}>
-                <View style={styles.cancelButtonInner}>
-                  <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                    Cancel
-                  </ThemedText>
-                </View>
-              </Touchable>
-            </View>
-            <View style={styles.submitButtonOuter}>
-              <Touchable onPress={handleSubmit(onSubmit)}>
-                <View style={styles.submitButtonInner}>
-                  <ThemedText type="defaultSemiBold" style={styles.submitText}>
-                    Submit
-                  </ThemedText>
-                </View>
-              </Touchable>
-            </View>
-          </View>
+          <FormButtonRow
+            onSubmit={handleSubmit(onSubmit)}
+            onCancel={() => router.back()}
+            submitLabel="Submit"
+            cancelLabel="Cancel"
+          />
+
           <View style={{ flex: 1 }}></View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -275,47 +259,6 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: "red",
     marginBottom: 0,
-  },
-  buttonContainer: {
-    marginVertical: 30,
-    flexDirection: "row",
-    gap: 10,
-  },
-
-  submitButtonOuter: {
-    flex: 3,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "white",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  submitButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  submitText: {
-    fontSize: 20,
-  },
-  cancelButtonOuter: {
-    flex: 1,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "red",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  cancelButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 20,
-    color: "white",
   },
   errorText: {
     color: "red",

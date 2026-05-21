@@ -23,6 +23,12 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import { Rate } from "@/utils/rateUtils";
+import { getBillTotals } from "@/utils/billUtils";
+import { toServiceChargeRate } from "@/utils/serviceChargeUtils";
+import { parse } from "@babel/core";
+import { ServiceChargeToggle } from "@/components/ui/ServiceChargeToggle";
+import { FormButtonRow } from "@/components/ui/FormButtonRow";
 
 const EditBillDetailsModal = () => {
   const router = useRouter();
@@ -39,12 +45,11 @@ const EditBillDetailsModal = () => {
 
   const [show, setShow] = useState(false);
   const [serviceType, setServiceType] = useState<"percentage" | "amount">(
-    "amount",
+    "percentage",
   );
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      // We animate from 0% to 50% left position
       left: withSpring(serviceType === "percentage" ? "50%" : "-0.5%", {
         duration: 200,
       }),
@@ -58,6 +63,8 @@ const EditBillDetailsModal = () => {
     if (selectedDate) {
       setShow(Platform.OS === "ios");
       setDate(selectedDate);
+
+      serviceChargeInputRef.current?.focus();
     } else if (Platform.OS === "ios") {
       setShow(false);
     }
@@ -89,13 +96,11 @@ const EditBillDetailsModal = () => {
     if (!editedBill) return;
 
     const totalPriceObj = Price.fromDecimal(parseFloat(totalPrice) || 0);
-    let serviceChargeObj = Price.fromDecimal(parseFloat(serviceCharge) || 0);
-
-    if (serviceType === "percentage") {
-      const servicePercent = parseFloat(serviceCharge) || 0;
-      const subTotal = totalPriceObj.divide(1 + servicePercent / 100);
-      serviceChargeObj = totalPriceObj.subtract(subTotal);
-    }
+    const serviceChargeObj = toServiceChargeRate(
+      parseFloat(serviceCharge) || 0,
+      parseFloat(totalPrice),
+      serviceType,
+    );
 
     const updatedBill: Bill = {
       ...editedBill,
@@ -217,21 +222,15 @@ const EditBillDetailsModal = () => {
               value={serviceCharge}
               onChangeText={setServiceCharge}
               returnKeyType="next"
+              submitBehavior="submit"
               onSubmitEditing={() => {
                 totalPriceInputRef.current?.focus();
               }}
             />
-            <Touchable onPress={swapServiceType} style={styles.iconSelector}>
-              <MaterialIcons name="percent" size={16} color={"black"} />
-              <MaterialIcons name="currency-pound" size={16} color={"black"} />
-              <Animated.View style={[styles.selector, animatedStyle]}>
-                <MaterialIcons
-                  name={serviceType == "amount" ? "percent" : "currency-pound"}
-                  size={20}
-                  color={"white"}
-                />
-              </Animated.View>
-            </Touchable>
+            <ServiceChargeToggle
+              serviceType={serviceType}
+              onSwap={swapServiceType}
+            />
           </View>
 
           <Text style={styles.label}>Total Price</Text>
@@ -250,26 +249,11 @@ const EditBillDetailsModal = () => {
           </View>
         </View>
       </KeyboardAvoidingView>
-      <View style={styles.buttonContainer}>
-        <View style={styles.cancelButtonOuter}>
-          <Touchable onPress={handleCancel}>
-            <View style={styles.submitButtonInner}>
-              <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                Cancel
-              </ThemedText>
-            </View>
-          </Touchable>
-        </View>
-        <View style={styles.submitButtonOuter}>
-          <Touchable onPress={handleSave}>
-            <View style={styles.submitButtonInner}>
-              <ThemedText type="defaultSemiBold" style={styles.submitText}>
-                Save
-              </ThemedText>
-            </View>
-          </Touchable>
-        </View>
-      </View>
+      <FormButtonRow
+        onCancel={handleCancel}
+        onSubmit={handleSave}
+        submitLabel="Save"
+      />
     </View>
   );
 };
@@ -277,67 +261,6 @@ const EditBillDetailsModal = () => {
 export default EditBillDetailsModal;
 
 const styles = StyleSheet.create({
-  iconSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: 70,
-    height: 30,
-    justifyContent: "space-around",
-    borderRadius: 40,
-    borderWidth: 1,
-  },
-  selector: {
-    position: "absolute",
-    width: 38,
-    top: -5,
-    bottom: -5,
-    borderRadius: 40,
-    zIndex: 10,
-    backgroundColor: "black",
-    elevation: 3,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonContainer: {
-    marginVertical: 30,
-    flexDirection: "row",
-    gap: 10,
-  },
-  submitButtonOuter: {
-    flex: 3,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "white",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  submitButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  submitText: {
-    fontSize: 20,
-  },
-  cancelButtonOuter: {
-    flex: 1,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "red",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  cancelButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 20,
-    color: "white",
-  },
   modalContainer: {
     flex: 1,
     paddingHorizontal: 20,

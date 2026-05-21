@@ -20,6 +20,7 @@ import { set } from "lodash";
 import Toggle from "@/components/ui/Toggle";
 import { is } from "drizzle-orm";
 import { Price } from "@/utils/priceUtils";
+import { FormButtonRow } from "@/components/ui/FormButtonRow";
 
 const EditItemModal = () => {
   const router = useRouter();
@@ -183,6 +184,7 @@ const EditItemModal = () => {
               value={name}
               onChangeText={setName}
               returnKeyType="next"
+              submitBehavior="submit"
               onSubmitEditing={() => {
                 quantityInputRef.current?.focus();
               }}
@@ -200,6 +202,7 @@ const EditItemModal = () => {
               value={quantity}
               onChangeText={setQuantity}
               returnKeyType="next"
+              submitBehavior="submit"
               onSubmitEditing={() => {
                 priceInputRef.current?.focus();
               }}
@@ -243,38 +246,12 @@ const EditItemModal = () => {
         </View>
       </KeyboardAvoidingView>
 
-      <View style={styles.buttonContainer}>
-        {item === undefined ? (
-          <View style={styles.cancelButtonOuter}>
-            <Touchable onPress={handleCancel}>
-              <View style={styles.submitButtonInner}>
-                <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                  Cancel
-                </ThemedText>
-              </View>
-            </Touchable>
-          </View>
-        ) : (
-          <View style={styles.cancelButtonOuter}>
-            <Touchable onPress={handleDelete}>
-              <View style={styles.submitButtonInner}>
-                <ThemedText type="defaultSemiBold" style={styles.cancelText}>
-                  Delete
-                </ThemedText>
-              </View>
-            </Touchable>
-          </View>
-        )}
-        <View style={styles.submitButtonOuter}>
-          <Touchable onPress={handleSave}>
-            <View style={styles.submitButtonInner}>
-              <ThemedText type="defaultSemiBold" style={styles.submitText}>
-                Save
-              </ThemedText>
-            </View>
-          </Touchable>
-        </View>
-      </View>
+      <FormButtonRow
+        onSubmit={handleSave}
+        onCancel={item === undefined ? handleCancel : handleDelete}
+        submitLabel={item === undefined ? "Submit" : "Save"}
+        cancelLabel={item === undefined ? "Cancel" : "Delete"}
+      />
     </View>
   );
 };
@@ -282,46 +259,6 @@ const EditItemModal = () => {
 export default EditItemModal;
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    marginVertical: 30,
-    flexDirection: "row",
-    gap: 10,
-  },
-  submitButtonOuter: {
-    flex: 3,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "white",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  submitButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  submitText: {
-    fontSize: 20,
-  },
-  cancelButtonOuter: {
-    flex: 1,
-    height: 70,
-    borderWidth: 2,
-    backgroundColor: "red",
-    borderRadius: 20,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  cancelButtonInner: {
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 20,
-    color: "white",
-  },
   container: {
     marginTop: 80,
     padding: 30,

@@ -31,10 +31,6 @@ import { saveReceiptImage } from "@/utils/fileSystem";
 import { updateBillImagePath } from "@/utils/updateData";
 import { Price } from "@/utils/priceUtils";
 import { fetchBill } from "@/utils/fetchData";
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
 import { toServiceChargeRate } from "@/utils/serviceChargeUtils";
 import { ServiceChargeToggle } from "@/components/ui/ServiceChargeToggle";
 import { FormButtonRow } from "@/components/ui/FormButtonRow";
@@ -70,14 +66,6 @@ export default function NewBillPage() {
   const [serviceType, setServiceType] = useState<"percentage" | "amount">(
     "amount",
   );
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      left: withSpring(serviceType === "percentage" ? "50%" : "-0.5%", {
-        duration: 200,
-      }),
-    };
-  });
 
   const {
     control,
@@ -128,6 +116,7 @@ export default function NewBillPage() {
       setShowDatePicker(Platform.OS === "ios");
       setDate(selectedDate);
       setValue("date", selectedDate);
+      serviceChargeRef.current?.focus();
     } else if (Platform.OS === "ios") {
       setShowDatePicker(false);
     }
@@ -216,6 +205,7 @@ export default function NewBillPage() {
                     styles.input,
                     errors.name ? styles.inputError : undefined,
                   ]}
+                  ref={nameRef}
                   placeholder="Bill Name"
                   placeholderTextColor={Colors.light.placeholderText}
                   onBlur={onBlur}
@@ -228,7 +218,7 @@ export default function NewBillPage() {
               <Text style={styles.errorText}>{errors.name.message}</Text>
             )}
 
-            {/* Date Picker */}
+            {/* Date Picker Input */}
             {showDatePicker && (
               <DateTimePicker
                 id="dateTimePicker"
@@ -239,7 +229,6 @@ export default function NewBillPage() {
               />
             )}
 
-            {/* Display Selected Date */}
             <Text style={styles.label}>Date</Text>
             <Touchable onPress={() => setShowDatePicker(true)}>
               <View
@@ -304,6 +293,8 @@ export default function NewBillPage() {
                       onBlur={onBlur}
                       onChangeText={(text) => onChange(text)}
                       value={value !== undefined ? value.toString() : ""}
+                      submitBehavior="submit"
+                      onSubmitEditing={totalRef.current?.focus}
                     />
                     <ServiceChargeToggle
                       serviceType={serviceType}

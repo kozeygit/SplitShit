@@ -19,14 +19,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { useBillStore } from "@/utils/billStore";
 import { Price } from "@/utils/priceUtils";
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
-import { Rate } from "@/utils/rateUtils";
-import { getBillTotals } from "@/utils/billUtils";
 import { toServiceChargeRate } from "@/utils/serviceChargeUtils";
-import { parse } from "@babel/core";
 import { ServiceChargeToggle } from "@/components/ui/ServiceChargeToggle";
 import { FormButtonRow } from "@/components/ui/FormButtonRow";
 
@@ -43,30 +36,22 @@ const EditBillDetailsModal = () => {
   const totalPriceInputRef = useRef<TextInput>(null);
   const serviceChargeInputRef = useRef<TextInput>(null);
 
-  const [show, setShow] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [serviceType, setServiceType] = useState<"percentage" | "amount">(
     "percentage",
   );
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      left: withSpring(serviceType === "percentage" ? "50%" : "-0.5%", {
-        duration: 200,
-      }),
-    };
-  });
 
   const onChangeDate = (
     event: DateTimePickerEvent,
     selectedDate: Date | undefined,
   ) => {
     if (selectedDate) {
-      setShow(Platform.OS === "ios");
+      setShowDatePicker(Platform.OS === "ios");
       setDate(selectedDate);
 
       serviceChargeInputRef.current?.focus();
     } else if (Platform.OS === "ios") {
-      setShow(false);
+      setShowDatePicker(false);
     }
   };
 
@@ -77,10 +62,6 @@ const EditBillDetailsModal = () => {
       setServiceType("percentage");
     }
     setServiceCharge("0");
-  };
-
-  const showDatepicker = () => {
-    setShow(true);
   };
 
   useEffect(() => {
@@ -182,13 +163,13 @@ const EditBillDetailsModal = () => {
               onChangeText={setName}
               returnKeyType="next"
               onSubmitEditing={() => {
-                setShow(true);
+                setShowDatePicker(true);
               }}
             />
           </View>
 
           {/* Date Picker */}
-          {show && (
+          {showDatePicker && (
             <DateTimePicker
               id="dateTimePicker"
               value={date}
@@ -199,7 +180,7 @@ const EditBillDetailsModal = () => {
           )}
 
           <Text style={styles.label}>Date</Text>
-          <Touchable onPress={showDatepicker}>
+          <Touchable onPress={() => setShowDatePicker(true)}>
             <View style={[styles.input, { borderColor: Colors.pastel.orange }]}>
               <TextInput
                 placeholder="Date (YYYY-MM-DD)"

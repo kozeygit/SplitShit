@@ -8,7 +8,7 @@ import PayerIcon from "./PayerIcon";
 const PayerCard = ({ payerData }: { payerData: Payer }) => {
   return (
     <View style={styles.payerCard}>
-      <PayerIcon payer={payerData}/>
+      <PayerIcon payer={payerData} />
       <ThemedText type="defaultSemiBold" style={styles.payerName}>
         {payerData.name.length < 20
           ? payerData.name
@@ -20,12 +20,11 @@ const PayerCard = ({ payerData }: { payerData: Payer }) => {
 
 const styles = StyleSheet.create({
   payerCard: {
+    padding: 10,
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-evenly",
 
-    maxHeight: 100,
-    aspectRatio: 1,
     overflow: "hidden",
 
     backgroundColor: "white",
@@ -36,6 +35,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   payerName: {
+    textAlign: "center",
+    lineHeight: 18,
     paddingTop: 5,
     fontSize: 14,
   },

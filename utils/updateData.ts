@@ -111,7 +111,7 @@ const updateItemAssignments = async (bill: Bill): Promise<void> => {
     }
 };
 
-const updateGroupPayers = async (group: Group): Promise<void> => {
+export const updateGroupPayers = async (group: Group): Promise<void> => {
     // Change group payers
     const oldPayers = await fetchGroupPayers(group.id);
     // Delete old payers that are not in the new group

@@ -23,7 +23,7 @@ const PayerIcon = ({
         { width: size, height: size, backgroundColor: iconColor },
       ]}
     >
-      <ThemedText type="defaultSemiBold" style={{ fontSize: 15 }}>
+      <ThemedText type="defaultSemiBold" style={{ fontSize: size / 3 }}>
         {payer.name.substring(0, 3)}
       </ThemedText>
       {checked && (

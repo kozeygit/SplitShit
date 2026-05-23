@@ -180,3 +180,18 @@ Add group functionality to Splitshit where groups serve as templates for common 
 - [ ] Create group from bill → group created and assigned
 - [ ] Archive group → existing bills keep the group reference, archived groups no longer show for new bill creation
 - [ ] View Groups tab → see all groups and their details
+
+
+
+
+
+
+## some more (ignore for now)
+add filter to bills, payers, and groups pages
+add dropdown options to groups and payers,
+  - to see more / edit details
+    - numbers of bills part of
+    - detailed list of payers (groups only)
+    - number of groups part of (payers only)
+  - to archive payer/group
+  - to see all bills payer/group is part of, which will navigate to the bills page filtered by that payer/group

@@ -17,7 +17,7 @@ const GroupPage = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const fetchedGroups = await fetchAllGroups();
+      const fetchedGroups = await fetchAllGroups(true);
       setGroups(fetchedGroups);
     } catch (error) {
       console.error("Error fetching groups:", error);

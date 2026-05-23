@@ -6,11 +6,10 @@ import {
   Text,
   Platform,
   KeyboardAvoidingView,
-  ScrollView,
   FlatList,
   RefreshControl,
+  Alert,
 } from "react-native";
-import Touchable from "@/components/ui/Touchable";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { set, z } from "zod";
@@ -19,11 +18,12 @@ import { ThemedText } from "@/components/ThemedText";
 import { useRouter, useFocusEffect } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertGroup } from "@/utils/insertData";
-import { NewGroup, Payer } from "@/models/bill";
-import { fetchPayers } from "@/utils/fetchData";
+import { Group, NewGroup, Payer } from "@/models/bill";
+import { fetchGroup, fetchPayers } from "@/utils/fetchData";
 import SelectPayer from "@/components/payer/SelectPayer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FormButtonRow } from "@/components/ui/FormButtonRow";
+import { updateGroupPayers } from "@/utils/updateData";
 
 // Validation Schema
 const groupSchema = z.object({
@@ -68,12 +68,27 @@ export default function NewGroupPage() {
 
   const onSubmit = async (data: NewGroup) => {
     try {
+      if (selectedPayerIds.length === 0) {
+        Alert.alert(
+          "A group without anyone seems pretty lonely.",
+          "Add at least one payer to the group. More than one would be ideal, or there's no point really.",
+        );
+        return;
+      }
+
       const newGroupId = await insertGroup(data);
       if (newGroupId < 0) {
         console.error("Failed to insert group");
-      } else {
-        router.back();
+        return;
       }
+      const group = await fetchGroup(newGroupId);
+      if (!group) return;
+
+      group.payers = payers.filter((payer) =>
+        selectedPayerIds.includes(payer.id),
+      );
+      await updateGroupPayers(group);
+      router.back();
     } catch (error) {
       console.error("Database error:", error);
     }
@@ -224,3 +239,6 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
 });
+function updateGroupPayer(newGroupId: number, selectedPayerIds: number[]) {
+  throw new Error("Function not implemented.");
+}

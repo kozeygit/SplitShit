@@ -65,12 +65,14 @@ export const insertGroup = async (newGroup: NewGroup): Promise<number> => {
 export const insertBillPayer = async (
     billId: number,
     payer: Payer,
+    addedWithGroup: boolean = false,
 ): Promise<number> => {
     const inserted = await db
         .insert(schema.billPayers)
         .values({
             billId: billId,
             payerId: payer.id,
+            addedWithGroup: addedWithGroup,
         })
         .returning({ id: schema.billPayers.id });
 

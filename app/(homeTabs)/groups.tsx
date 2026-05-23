@@ -7,6 +7,7 @@ import { fetchAllGroups } from "@/utils/fetchData";
 import { Group } from "@/models/bill";
 import GroupCard from "@/components/group/GroupCard";
 import ActionFAB from "@/components/ui/ActionFAB";
+import { removeGroup } from "@/utils/removeData";
 
 const GroupPage = () => {
   const router = useRouter();
@@ -32,14 +33,48 @@ const GroupPage = () => {
     }, [onRefresh]),
   );
 
+  const handleSelect = (id: number) => {
+    if (selectedGroupIds.length === 0) {
+      return;
+    }
+    if (selectedGroupIds.includes(id)) {
+      setSelectedGroupIds(selectedGroupIds.filter((value) => value !== id));
+      return;
+    }
+    setSelectedGroupIds([...selectedGroupIds, id]);
+  };
+
+  const handleLongSelect = (id: number) => {
+    if (selectedGroupIds.includes(id)) {
+      setSelectedGroupIds(selectedGroupIds.filter((value) => value !== id));
+      return;
+    }
+    setSelectedGroupIds([...selectedGroupIds, id]);
+  };
+
+  const handleDelete = async (groupIds: number[]) => {
+    for (const groupId of groupIds) {
+      await removeGroup(groupId);
+      console.log("Deleting bill:", groupId);
+    }
+    onRefresh();
+    setSelectedGroupIds([]);
+  };
   return (
     <View style={styles.container}>
       <Logo />
       <FlatList
-        numColumns={2}
-        data={groups}
+        numColumns={1}
+        data={groups.filter((group) => !group.isArchived)}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <GroupCard groupData={item} />}
+        renderItem={({ item }) => (
+          <GroupCard
+            groupData={item}
+            onPress={handleSelect}
+            isSelected={selectedGroupIds.includes(item.id)}
+            onSelect={handleLongSelect}
+          />
+        )}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -55,7 +90,7 @@ const GroupPage = () => {
             icon: "delete",
             color: "red",
             iconColor: "white",
-            onPress: () => console.log("Delete groups:", selectedGroupIds),
+            onPress: () => handleDelete(selectedGroupIds),
           },
         ]}
       />

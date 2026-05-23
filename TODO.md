@@ -87,7 +87,7 @@ Add group functionality to Splitshit where groups serve as templates for common 
 
 ## 4. Edit Payer Modal (`editBillPayersModal.tsx`)
 
-> ⚠️ No group-related UI or logic has been started here. All items below are pending.
+> NOT STARTED — No group-related UI or logic implemented yet.
 
 - [ ] **Add group selector at top**
   - Dropdown/list of available groups
@@ -119,7 +119,7 @@ Add group functionality to Splitshit where groups serve as templates for common 
 
 ## 5. Create Group from Bill Modal
 
-> ⚠️ Not started. `newGroup.tsx` exists but only creates a bare group by name — no payer selection, no bill linkage.
+> NOT STARTED — `newGroup.tsx` exists but only creates a bare group by name — no payer selection, no bill linkage.
 
 - [ ] **Add "Create Group" button** to bill details
   - Only show if `bill.groupId === null`

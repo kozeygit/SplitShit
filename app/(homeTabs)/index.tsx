@@ -5,6 +5,7 @@ import {
   View,
   RefreshControl,
   Pressable,
+  Alert,
 } from "react-native";
 
 import { Colors } from "@/constants/Colors";
@@ -29,7 +30,7 @@ const BillPage = () => {
 
   const billsFlatList = useRef<FlatList>(null);
 
-  const loadBills = useCallback(async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       const fetchedBills = await fetchAllBills();
@@ -39,16 +40,13 @@ const BillPage = () => {
     } finally {
       setRefreshing(false);
     }
-  }, [fetchAllBills]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      loadBills();
-    }, [loadBills]),
+      onRefresh();
+    }, [onRefresh]),
   );
-
-  // onRefresh already points to loadBills
-  const onRefresh = loadBills;
 
   const [expandedBillId, setExpandedBillId] = useState<number | null>(null);
   const [selectedBillsIds, setSelectedBillsIds] = useState<number[]>([]);
@@ -83,9 +81,30 @@ const BillPage = () => {
   };
 
   const handleDelete = async (billIds: number[]) => {
+    if (billIds.length == 1) {
+      executeDelete(billIds);
+      return;
+    }
+
+    Alert.alert(
+      `Deleting ${billIds.length} bills`,
+      `Are you sure you want to delete these bills?\nYou cannot undo this action.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            executeDelete(billIds);
+          },
+        },
+      ],
+    );
+  };
+
+  const executeDelete = async (billIds: number[]) => {
     for (const billId of billIds) {
       await removeBill(billId);
-      console.log("Deleting bill:", billId);
     }
     onRefresh();
     setSelectedBillsIds([]);
@@ -109,6 +128,7 @@ const BillPage = () => {
         data={bills}
         ref={billsFlatList}
         keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: 90 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

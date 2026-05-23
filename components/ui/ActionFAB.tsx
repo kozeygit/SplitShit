@@ -37,31 +37,8 @@ const ActionFAB = ({
 }: ActionFABProps) => {
   const isSelecting = count > 0;
 
-  // Animation for the master hub content swap
-  const rotation = useSharedValue(0);
-
-  useEffect(() => {
-    rotation.value = withSpring(isSelecting ? 180 : 0, { damping: 12 });
-  }, [isSelecting]);
-
-  const hubIconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withSpring(isSelecting ? 0 : 1) }],
-    opacity: withSpring(isSelecting ? 0 : 1),
-  }));
-
-  const hubNumberStyle = useAnimatedStyle(() => ({
-    opacity: withSpring(isSelecting ? 1 : 0),
-    transform: [{ scale: withSpring(isSelecting ? 1 : 0) }],
-  }));
-
   return (
-    <View
-      style={[
-        styles.outerContainer,
-        // When selecting, we want the background to be white
-        { backgroundColor: "white", top: isSelecting ? 600 : undefined },
-      ]}
-    >
+    <View style={styles.outerContainer}>
       {/* CENTER HUB: THE MASTER CIRCLE */}
       <Touchable
         onPress={isSelecting ? undefined : onAdd}
@@ -69,31 +46,19 @@ const ActionFAB = ({
         hapticFunction={ImpactFeedbackStyle.Heavy}
       >
         <View style={[styles.innerCircle, { backgroundColor: activeColor }]}>
-          <Animated.View style={[styles.centerContent, hubIconStyle]}>
-            <MaterialIcons name="add" size={40} color="black" />
-          </Animated.View>
-
-          <Animated.View
-            style={[
-              StyleSheet.absoluteFill,
-              styles.centerContent,
-              hubNumberStyle,
-            ]}
-          >
-            <ThemedText type="subtitle" style={styles.countNumber}>
-              {count}
-            </ThemedText>
-          </Animated.View>
+          <View style={[StyleSheet.absoluteFill, styles.centerContent]}>
+            {isSelecting ? (
+              <ThemedText type="subtitle">{count}</ThemedText>
+            ) : (
+              <MaterialIcons name="add" size={30} color="black" />
+            )}
+          </View>
         </View>
       </Touchable>
 
       {/* ACCORDION BLOCK */}
       {isSelecting && (
-        <Animated.View
-          entering={SlideInDown}
-          exiting={SlideOutDown}
-          style={styles.accordionContainer}
-        >
+        <Animated.View style={styles.accordionContainer}>
           {/* Cancel Button */}
           <Pressable
             style={[
@@ -129,20 +94,20 @@ export default ActionFAB;
 
 const styles = StyleSheet.create({
   outerContainer: {
+    backgroundColor: "white",
     position: "absolute",
     bottom: 20,
     right: 20,
-    flexDirection: "column-reverse",
+    flexDirection: "row-reverse",
     borderWidth: 2,
     borderRadius: 40,
     borderColor: "black",
     overflow: "hidden",
     elevation: 5,
-    backgroundColor: "black",
   },
   accordionContainer: {
     flex: 1,
-    flexDirection: "column-reverse",
+    flexDirection: "row-reverse",
   },
   masterHub: {
     borderRadius: 40,
@@ -172,7 +137,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    borderBottomWidth: 2,
+    borderRightWidth: 2,
     borderColor: "black",
   },
 });

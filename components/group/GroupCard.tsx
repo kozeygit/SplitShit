@@ -1,42 +1,83 @@
 import { ThemedText } from "@/components/ThemedText";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View, StyleSheet } from "react-native";
 
 import { Bill, Group, Payer } from "@/models/bill";
 import PayerIcon from "../payer/PayerIcon";
+import Touchable from "../ui/Touchable";
 
-const GroupCard = ({ groupData: groupData }: { groupData: Group }) => {
-  let concatenate = false;
-  if (groupData.payers.length > 4) {
-    concatenate = true;
-  }
-  const shuffledPayers = groupData.payers.sort(() => 0.5 - Math.random());
+interface GroupCardProps {
+  groupData: Group;
+  isSelected: boolean;
+  onPress: (id: number) => void;
+  onSelect: (id: number) => void;
+}
+
+const GroupCard: React.FC<GroupCardProps> = ({
+  groupData,
+  isSelected,
+  onPress,
+  onSelect,
+}) => {
+  const concatenate = groupData.payers.length > 4 ? true : false;
+
+  const handlePress = () => onPress(groupData.id);
+  const handleToggleSelect = () => onSelect(groupData.id);
 
   return (
-    <View style={styles.groupCard}>
-      <ThemedText type="defaultSemiBold" style={styles.groupName}>
-        {groupData.name.length < 20
-          ? groupData.name
-          : groupData.name.substring(0, 18).trim() + "..."}
-      </ThemedText>
+    <Touchable
+      style={styles.groupCard}
+      onPress={handlePress}
+      onLongPress={handleToggleSelect}
+    >
+      <View style={styles.groupInfo}>
+        <ThemedText type="defaultSemiBold" style={styles.groupName}>
+          {groupData.name.length < 20
+            ? groupData.name
+            : groupData.name.substring(0, 18).trim() + "..."}
+        </ThemedText>
+      </View>
       <View style={styles.payerList}>
-        {shuffledPayers.slice(0, concatenate ? 3 : 4).map((payer) => (
-          <PayerIcon size={30} key={payer.id} payer={payer} />
+        {groupData.payers.slice(0, concatenate ? 3 : 4).map((payer) => (
+          <View key={payer.id} style={styles.payerIconWrapper}>
+            <PayerIcon size={30} payer={payer} />
+          </View>
         ))}
         {concatenate && (
-          <View style={styles.moreIconStyle}>
-            <ThemedText type="defaultSemiBold" style={{ fontSize: 10 }}>
-              {"+"}
-              {groupData.payers.length - 3}
-            </ThemedText>
+          <View style={styles.payerIconWrapper}>
+            <View style={styles.moreIconStyle}>
+              <ThemedText type="defaultSemiBold" style={{ fontSize: 10 }}>
+                {"+"}
+                {groupData.payers.length - 3}
+              </ThemedText>
+            </View>
           </View>
         )}
       </View>
-    </View>
+      {isSelected && <View style={styles.selected} />}
+    </Touchable>
   );
 };
 
 const styles = StyleSheet.create({
+  selected: {
+    position: "absolute",
+    backgroundColor: "rgba(0,0,0,0.3)",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    zIndex: 10,
+  },
+  groupInfo: {
+    flex: 1,
+  },
+  payerIconWrapper: {
+    alignItems: "center",
+    width: 25,
+  },
   moreIconStyle: {
     borderWidth: 1,
     borderRadius: "100%",
@@ -52,28 +93,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: 5,
   },
   groupCard: {
     flex: 1,
+    flexDirection: "row",
+    padding: 20,
     alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-
-    maxHeight: 100,
-    aspectRatio: 1,
-    overflow: "hidden",
+    justifyContent: "space-between",
 
     backgroundColor: "white",
     borderWidth: 2,
-    borderRadius: 20,
+    borderRadius: 200,
     margin: 10,
-
+    overflow: "hidden",
     elevation: 5,
   },
   groupName: {
-    paddingTop: 5,
-    fontSize: 14,
+    marginLeft: 15,
+    fontSize: 16,
   },
 });
 

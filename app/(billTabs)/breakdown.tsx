@@ -3,7 +3,7 @@ import { ThemedText } from "@/components/ThemedText";
 import InfoRow from "@/components/ui/InfoRow";
 import { Colors } from "@/constants/Colors";
 import { Bill, BillItem, NewBillItem, Payer } from "@/models/bill";
-import { useBillStore } from "@/utils/billStore";
+import { useBillStore } from "@/hooks/useBillStore";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Price } from "@/utils/priceUtils";

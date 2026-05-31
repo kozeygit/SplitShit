@@ -17,7 +17,7 @@ import { Bill } from "@/models/bill";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { useBillStore } from "@/utils/billStore";
+import { useBillStore } from "@/hooks/useBillStore";
 import { Price } from "@/utils/priceUtils";
 import { toServiceChargeRate } from "@/utils/serviceChargeUtils";
 import { ServiceChargeToggle } from "@/components/ui/ServiceChargeToggle";

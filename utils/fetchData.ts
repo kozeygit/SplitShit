@@ -45,8 +45,13 @@ export const fetchBill = async (billId: number): Promise<Bill | undefined> => {
 
         const mappedBill: Bill = mapBillToModel(result[0]);
 
-        mappedBill.items = await fetchBillItems(mappedBill.id);
-        mappedBill.payers = await fetchPayers(mappedBill.id);
+        const [items, payers] = await Promise.all([
+            fetchBillItems(mappedBill.id),
+            fetchPayersInBill(mappedBill.id),
+        ]);
+
+        mappedBill.items = items;
+        mappedBill.payers = payers;
 
         return mappedBill;
     } catch (error) {
@@ -97,62 +102,93 @@ export const fetchBillItems = async (billId: number): Promise<BillItem[]> => {
     }
 };
 
-// Old
+export const fetchAllPayers = async (): Promise<Payer[]> => {
+    console.log("fetchAllPayers called: ", new Date().toLocaleTimeString());
+    try {
+        const result = await db.select().from(schema.payers);
+        const mappedPayers: Payer[] = result.map((payer) =>
+            mapPayerToModel(payer),
+        );
 
-export const fetchPayers = async (billId?: number): Promise<Payer[]> => {
-    console.log("fetchPayers called: ", new Date().toLocaleTimeString());
-    if (billId === undefined) {
-        try {
-            const result = await db.select().from(schema.payers);
-            const mappedPayers: Payer[] = await Promise.all(
-                result.map(async (payer) => mapPayerToModel(payer)),
-            );
-
-            return mappedPayers;
-        } catch (error) {
-            console.error("Error in fetchPayers:", error);
-            return [];
-        }
-    } else {
-        try {
-            const result = await db
-                .select()
-                .from(schema.payers)
-                .innerJoin(
-                    schema.billPayers,
-                    eq(schema.billPayers.payerId, schema.payers.id),
-                )
-                .where(eq(schema.billPayers.billId, billId));
-
-            const mappedPayers: Payer[] = await Promise.all(
-                result.map(async (payer) =>
-                    mapPayerToModel(payer.payers, payer.bill_payers),
-                ),
-            );
-
-            return mappedPayers;
-        } catch (error) {
-            console.error("Error in fetchPayers:", error);
-            return [];
-        }
+        return mappedPayers;
+    } catch (error) {
+        console.error("Error in fetchAllPayers:", error);
+        return [];
     }
 };
 
-export const fetchAllGroups = async (
-    includePayers: boolean = false,
-): Promise<Group[]> => {
-    console.log("fetchAllGroups called: ", new Date().toLocaleTimeString()); // Log inside getBills
+export const fetchPayersInBill = async (billId: number): Promise<Payer[]> => {
+    console.log("fetchPayers called: ", new Date().toLocaleTimeString());
     try {
-        const result = await db.select().from(schema.groups);
-        const mappedGroups: Group[] = await Promise.all(
-            result.map(async (group) => mapGroupToModel(group)),
+        const result = await db
+            .select()
+            .from(schema.payers)
+            .innerJoin(
+                schema.billPayers,
+                eq(schema.billPayers.payerId, schema.payers.id),
+            )
+            .where(eq(schema.billPayers.billId, billId));
+
+        const mappedPayers: Payer[] = result.map((payer) =>
+            mapPayerToModel(payer.payers, payer.bill_payers),
         );
 
-        if (includePayers) {
-            for (const group of mappedGroups) {
-                group.payers = await fetchGroupPayers(group.id);
+        return mappedPayers;
+    } catch (error) {
+        console.error("Error in fetchPayers:", error);
+        return [];
+    }
+};
+
+// Old
+export const fetchAllGroupsWithPayers = async (): Promise<Group[]> => {
+    console.log(
+        "fetchAllGroupsWithPayers called: ",
+        new Date().toLocaleTimeString(),
+    );
+    try {
+        const result = await db
+            .select()
+            .from(schema.groups)
+            .leftJoin(
+                schema.groupPayers,
+                eq(schema.groups.id, schema.groupPayers.groupId),
+            )
+            .leftJoin(
+                schema.payers,
+                eq(schema.groupPayers.payerId, schema.payers.id),
+            );
+
+        const groupMap = new Map<number, Group>();
+
+        for (const row of result) {
+            const groupId = row.groups.id;
+
+            if (!groupMap.has(groupId)) {
+                groupMap.set(groupId, mapGroupToModel(row.groups));
+            }
+
+            const currentGroup = groupMap.get(groupId)!;
+
+            if (row.payers) {
+                currentGroup.payers.push(mapPayerToModel(row.payers));
             }
         }
+
+        return Array.from(groupMap.values());
+    } catch (error) {
+        console.error("Error in fetchAllGroupsWithPayers:", error);
+        return [];
+    }
+};
+
+export const fetchAllGroups = async (): Promise<Group[]> => {
+    console.log("fetchAllGroups called: ", new Date().toLocaleTimeString());
+    try {
+        const result = await db.select().from(schema.groups);
+        const mappedGroups: Group[] = result.map((group) =>
+            mapGroupToModel(group),
+        );
 
         return mappedGroups;
     } catch (error) {
@@ -174,7 +210,7 @@ export const fetchGroup = async (
 
         const mappedGroup: Group = mapGroupToModel(result[0]);
 
-        mappedGroup.payers = await fetchGroupPayers(mappedGroup.id);
+        mappedGroup.payers = await fetchPayersInGroup(mappedGroup.id);
 
         return mappedGroup;
     } catch (error) {
@@ -183,7 +219,7 @@ export const fetchGroup = async (
     }
 };
 
-export const fetchGroupPayers = async (groupId: number): Promise<Payer[]> => {
+export const fetchPayersInGroup = async (groupId: number): Promise<Payer[]> => {
     console.log("fetchPayersInGroup called: ", new Date().toLocaleTimeString());
     try {
         const result = await db
@@ -195,8 +231,8 @@ export const fetchGroupPayers = async (groupId: number): Promise<Payer[]> => {
             )
             .where(eq(schema.groupPayers.groupId, groupId));
 
-        const mappedPayers: Payer[] = await Promise.all(
-            result.map(async (payer) => mapPayerToModel(payer.payers)),
+        const mappedPayers: Payer[] = result.map((payer) =>
+            mapPayerToModel(payer.payers),
         );
 
         return mappedPayers;

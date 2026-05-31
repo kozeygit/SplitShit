@@ -15,7 +15,7 @@ import { Colors } from "@/constants/Colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BillItem, NewBillItem } from "@/models/bill";
-import { useBillStore } from "@/utils/billStore";
+import { useBillStore } from "@/hooks/useBillStore";
 import { set } from "lodash";
 import Toggle from "@/components/ui/Toggle";
 import { is } from "drizzle-orm";

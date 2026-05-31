@@ -4,7 +4,7 @@ import ContainerView from "@/components/ui/ContainerView";
 import InfoRow from "@/components/ui/InfoRow";
 import { Colors } from "@/constants/Colors";
 import { Bill, BillItem, NewBillItem } from "@/models/bill";
-import { useBillStore } from "@/utils/billStore";
+import { useBillStore } from "@/hooks/useBillStore";
 import { getPayerById } from "@/utils/billUtils";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -16,25 +16,6 @@ const AssignItemsDisplay = () => {
   const router = useRouter();
   const { editedBill, setEditedBill } = useBillStore();
 
-  const [bill, setBill] = useState<Bill>({
-    id: 0,
-    name: "TempBill",
-    date: new Date("2001-11-09"),
-    items: [],
-    complete: false,
-    payers: [],
-    serviceCharge: Price.fromCents(0),
-    userEnteredTotal: Price.fromCents(42069),
-  });
-
-  useFocusEffect(
-    useCallback(() => {
-      if (editedBill) {
-        setBill(editedBill);
-      }
-    }, [editedBill]),
-  );
-
   const openAssignModal = (item: BillItem | undefined) => {
     if (item)
       router.push({
@@ -43,18 +24,23 @@ const AssignItemsDisplay = () => {
       });
   };
 
+  if (!editedBill) {
+    return (
+      <View
+        style={[
+          styles.mainLayout,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ThemedText>Loading bill workspace context...</ThemedText>
+      </View>
+    );
+  }
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: Colors.pastel.orange,
-        paddingHorizontal: 20,
-        paddingBottom: 30,
-      }}
-    >
+    <View style={styles.mainLayout}>
       <ContainerView>
         <View style={styles.header}>
-          <ThemedText type="title">{bill.name}</ThemedText>
+          <ThemedText type="title">{editedBill.name}</ThemedText>
         </View>
         <View style={{ flex: 1 }}>
           <FlatList
@@ -68,7 +54,7 @@ const AssignItemsDisplay = () => {
             /* fadingEdgeLength={50} // TODO: temporarily commented out until fadingEdgeLength rendering issue is resolved */
             style={styles.itemsContainer}
             contentContainerStyle={{ paddingHorizontal: 10 }}
-            data={bill.items}
+            data={editedBill.items}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <Touchable onPress={() => openAssignModal(item)}>
@@ -114,7 +100,7 @@ const AssignItemsDisplay = () => {
                       }}
                     >
                       {item.assignedTo.map((obj, index) => {
-                        const payer = getPayerById(bill, obj.payerId);
+                        const payer = getPayerById(editedBill, obj.payerId);
                         if (payer === undefined) {
                           return;
                         }
@@ -137,6 +123,12 @@ const AssignItemsDisplay = () => {
 export default AssignItemsDisplay;
 
 const styles = StyleSheet.create({
+  mainLayout: {
+    flex: 1,
+    backgroundColor: Colors.pastel.orange,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
   noItems: {
     paddingTop: 50,
     flex: 1,

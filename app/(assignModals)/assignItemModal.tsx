@@ -1,16 +1,15 @@
 import { Pressable, View, StyleSheet } from "react-native";
 import Touchable from "@/components/ui/Touchable";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { Bill, BillItem, Payer } from "@/models/bill";
-import { useBillStore } from "@/utils/billStore";
+import { Bill, BillItem } from "@/models/bill";
+import { useBillStore } from "@/hooks/useBillStore";
 import { getPayerById } from "@/utils/billUtils";
 import PayerIcon from "@/components/payer/PayerIcon";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Price } from "@/utils/priceUtils";
-import { Rate } from "@/utils/rateUtils";
 
 const EditItemModal = () => {
   const router = useRouter();

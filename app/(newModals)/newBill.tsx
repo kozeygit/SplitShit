@@ -23,7 +23,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertBill } from "@/utils/insertData";
-import { useBillStore } from "@/utils/billStore";
+import { useBillStore } from "@/hooks/useBillStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { extractBillFromImage } from "@/utils/createBillFromImage";
 import { ingestBill } from "@/utils/insertData";

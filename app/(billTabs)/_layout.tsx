@@ -1,6 +1,6 @@
 import { Tabs, useNavigation } from "expo-router";
 import React, { useState } from "react";
-import { useBillStore } from "@/utils/billStore";
+import { useBillStore } from "@/hooks/useBillStore";
 
 import { Colors } from "@/constants/Colors";
 

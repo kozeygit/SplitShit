@@ -5,7 +5,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Payer } from "@/models/bill";
-import { useBillStore } from "@/utils/billStore";
+import { useBillStore } from "@/hooks/useBillStore";
 import { fetchPayers } from "@/utils/fetchData";
 import AdjustPayer from "../../components/payer/SelectPayer";
 import ContainerView from "@/components/ui/ContainerView";

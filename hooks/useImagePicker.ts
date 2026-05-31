@@ -2,7 +2,7 @@ import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 
-export const useImagePicker = () => {
+export const useImagePicker = ({ aspect }: { aspect?: [number, number] }) => {
     const [cameraEnabled, setCameraEnabled] = useState(true);
 
     const disableCamera = () => setCameraEnabled(false);
@@ -10,6 +10,7 @@ export const useImagePicker = () => {
 
     const launchGallery = async (): Promise<string | null> => {
         const result = await ImagePicker.launchImageLibraryAsync({
+            aspect: aspect,
             mediaTypes: ["images"],
             allowsEditing: true,
             quality: 1,
@@ -28,6 +29,7 @@ export const useImagePicker = () => {
         }
 
         const result = await ImagePicker.launchCameraAsync({
+            aspect: aspect,
             mediaTypes: ["images"],
             allowsEditing: true,
             quality: 1,
@@ -51,25 +53,21 @@ export const useImagePicker = () => {
 
         // Wrap Alert in a Promise so the caller can simply await it.
         return new Promise((resolve) => {
-            Alert.alert(
-                "Add Receipt",
-                "How would you like to add your receipt?",
-                [
-                    {
-                        text: "Take Photo",
-                        onPress: async () => resolve(await launchCamera()),
-                    },
-                    {
-                        text: "Choose from Library",
-                        onPress: async () => resolve(await launchGallery()),
-                    },
-                    {
-                        text: "Cancel",
-                        style: "cancel",
-                        onPress: () => resolve(null),
-                    },
-                ],
-            );
+            Alert.alert("Add Photo", "How would you like to add your photo?", [
+                {
+                    text: "Take Photo",
+                    onPress: async () => resolve(await launchCamera()),
+                },
+                {
+                    text: "Choose from Library",
+                    onPress: async () => resolve(await launchGallery()),
+                },
+                {
+                    text: "Cancel",
+                    style: "cancel",
+                    onPress: () => resolve(null),
+                },
+            ]);
         });
     };
 

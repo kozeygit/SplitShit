@@ -24,7 +24,7 @@ import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertBill } from "@/utils/insertData";
 import { useBillStore } from "@/utils/billStore";
-import { useImagePicker } from "@/hooks/useCamera";
+import { useImagePicker } from "@/hooks/useImagePicker";
 import { extractBillFromImage } from "@/utils/createBillFromImage";
 import { ingestBill } from "@/utils/insertData";
 import { saveReceiptImage } from "@/utils/fileSystem";
@@ -58,7 +58,7 @@ export default function NewBillPage() {
 
   const router = useRouter();
   const { setOriginalBill, resetEditedBill } = useBillStore();
-  const { pickImage, enableCamera } = useImagePicker();
+  const { pickImage, enableCamera } = useImagePicker({ aspect: undefined });
 
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date());

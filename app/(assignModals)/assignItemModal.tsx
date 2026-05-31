@@ -10,6 +10,7 @@ import { getPayerById } from "@/utils/billUtils";
 import PayerIcon from "@/components/payer/PayerIcon";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Price } from "@/utils/priceUtils";
+import { Rate } from "@/utils/rateUtils";
 
 const EditItemModal = () => {
   const router = useRouter();
@@ -29,142 +30,90 @@ const EditItemModal = () => {
     assignedTo: [],
   });
 
-  const [bill, setBill] = useState<Bill>({
-    id: 0,
-    name: "TempBill",
-    date: new Date("2001-09-11"),
-    items: [],
-    complete: false,
-    payers: [],
-    serviceCharge: Price.fromCents(0),
-    userEnteredTotal: Price.fromCents(42069),
-  });
-
   useFocusEffect(
     useCallback(() => {
-      if (editedBill) {
-        setBill(editedBill);
+      if (!editedBill || !itemId) return;
+
+      const currentItem = editedBill.items.find(
+        (i) => i.id === parseInt(itemId),
+      );
+      const currentIndex = editedBill.items.findIndex(
+        (i) => i.id === parseInt(itemId),
+      );
+
+      if (currentItem) {
+        setItem(currentItem);
       }
-    }, [editedBill]),
+      if (currentIndex !== -1) {
+        setItemIndex(currentIndex);
+      }
+    }, [editedBill, itemId]),
   );
 
-  useEffect(() => {
-    if (itemId === undefined) {
-      return;
-    }
-
-    // Guard against running before the bill has been populated from the store.
-    // bill.items is empty on first render (default state) — wait until it has
-    // content before trying to find the item, otherwise the find always returns
-    // undefined even when the itemId is perfectly valid.
-    if (bill.items.length === 0) {
-      return;
-    }
-
-    const fetchItem = async () => {
-      const oldItem = bill.items.find((item) => item.id == parseInt(itemId));
-      if (oldItem === undefined) {
-        throw Error("Uh Oh Stinky");
-      }
-      setItem(oldItem);
-    };
-
-    fetchItem();
-  }, [itemId, bill]);
-
-  useEffect(() => {
-    const currentIndex = bill.items.findIndex(
-      (billItem) => billItem.id === item?.id,
-    );
-    if (currentIndex === undefined) {
-      console.log("Item index not found in bill");
-      return;
-    }
-    setItemIndex(currentIndex);
-  }, [item, bill]);
-
   const toggleAssignPayer = (payerId: number) => {
-    if (item === undefined) {
-      return;
-    }
-    if (item.assignedTo.some((ass) => ass.payerId === payerId)) {
-      item.assignedTo = item.assignedTo.filter(
-        (ass) => ass.payerId !== payerId,
-      );
-      setItem({ ...item });
-    } else {
-      item.assignedTo.push({ payerId: payerId, quantity: 1 });
-      setItem({ ...item });
-    }
-  };
+    if (!item) return;
 
-  const increaseAssignQuantity = (payerId: number) => {
-    if (item === undefined) {
-      return;
-    }
+    const isAlreadyAssigned = item.assignedTo.some(
+      (ass) => ass.payerId === payerId,
+    );
 
-    const assignedTo = item.assignedTo.find((ass) => ass.payerId === payerId);
+    const newAssignedTo = isAlreadyAssigned
+      ? item.assignedTo.filter((ass) => ass.payerId !== payerId)
+      : [...item.assignedTo, { payerId: payerId, quantity: 1 }];
 
-    if (assignedTo === undefined) {
-      return;
-    }
-
-    if (assignedTo.quantity == item.quantity) {
-      return;
-    }
-
-    // now check if the total quanity for assigned people has enough remoaining for an increase :)
-
-    setItem({ ...item });
-  };
-
-  const decreaseAssignQuantity = (payerId: number) => {};
-
-  const save = () => {
-    bill.items.map((billItem) => {
-      if (billItem.id === item?.id) {
-        billItem.assignedTo = item?.assignedTo;
-      }
+    setItem({
+      ...item,
+      assignedTo: newAssignedTo,
     });
-    setEditedBill(bill);
+  };
+
+  const saveCurrentState = (targetBill: Bill) => {
+    if (!item) return targetBill;
+
+    const updatedItems = targetBill.items.map((billItem) =>
+      billItem.id === item.id
+        ? { ...billItem, assignedTo: item.assignedTo }
+        : billItem,
+    );
+
+    const updatedBill = { ...targetBill, items: updatedItems };
+    setEditedBill(updatedBill);
+    return updatedBill;
   };
 
   const handleNext = () => {
-    save();
-    if (itemIndex === undefined) {
+    if (
+      !editedBill ||
+      itemIndex === undefined ||
+      itemIndex + 1 >= editedBill.items.length
+    )
       return;
-    }
-    if (itemIndex + 1 >= bill.items.length) {
-      return;
-    }
 
+    const updatedBill = saveCurrentState(editedBill);
     router.replace({
       pathname: "/assignItemModal",
-      params: { itemId: bill.items[itemIndex + 1].id },
+      params: { itemId: updatedBill.items[itemIndex + 1].id },
     });
-    return;
   };
 
   const handlePrevious = () => {
-    save();
-    if (itemIndex === undefined) {
-      return;
-    }
-    if (itemIndex <= 0) {
-      return;
-    }
+    if (!editedBill || itemIndex === undefined || itemIndex <= 0) return;
 
+    const updatedBill = saveCurrentState(editedBill);
     router.replace({
       pathname: "/assignItemModal",
-      params: { itemId: bill.items[itemIndex - 1].id },
+      params: { itemId: updatedBill.items[itemIndex - 1].id },
     });
-    return;
   };
 
   const handleBack = () => {
-    save();
+    if (editedBill) {
+      saveCurrentState(editedBill);
+    }
     router.back();
   };
+
+  if (!editedBill || !item) return null;
 
   return (
     <View
@@ -194,7 +143,7 @@ const EditItemModal = () => {
             }}
           >
             {item.assignedTo.map((ass, index) => {
-              const payer = getPayerById(bill, ass.payerId);
+              const payer = getPayerById(editedBill, ass.payerId);
               if (payer === undefined) {
                 return;
               }
@@ -209,7 +158,7 @@ const EditItemModal = () => {
                   >
                     <PayerIcon payer={payer} />
                     <ThemedText style={{ fontSize: 18 }}>
-                      {payer.name} - {payer.partySize}
+                      {payer.name}
                     </ThemedText>
                   </View>
                   <Pressable
@@ -228,7 +177,7 @@ const EditItemModal = () => {
           </View>
         </View>
         <View style={styles.assignPayersContainer}>
-          {bill.payers.map((payer, index) => {
+          {editedBill.payers.map((payer, index) => {
             return (
               <View key={index}>
                 <Pressable onPress={() => toggleAssignPayer(payer.id)}>
@@ -276,7 +225,7 @@ const EditItemModal = () => {
                   name="arrow-forward"
                   size={30}
                   color={
-                    itemIndex === bill.items.length - 1
+                    itemIndex === editedBill.items.length - 1
                       ? Colors.pastel.red
                       : "black"
                   }

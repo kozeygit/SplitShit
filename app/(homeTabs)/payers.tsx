@@ -1,7 +1,13 @@
 import { ThemedText } from "@/components/ThemedText";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useCallback, useEffect, useState } from "react";
-import { View, StyleSheet, FlatList, RefreshControl } from "react-native";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  Alert,
+} from "react-native";
 
 import { Colors } from "@/constants/Colors";
 
@@ -11,6 +17,9 @@ import Logo from "@/components/ui/Logo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { fetchPayers } from "@/utils/fetchData";
 import ActionFAB from "@/components/ui/ActionFAB";
+import { useImagePicker } from "@/hooks/useImagePicker";
+import { updatePayerImagePath } from "@/utils/updateData";
+import { deletePayerImage, savePayerImage } from "@/utils/fileSystem";
 
 const PayerPage = () => {
   const router = useRouter();
@@ -18,6 +27,7 @@ const PayerPage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [payers, setPayers] = useState<Payer[]>([]);
   const [selectedPayerIds, setSelectedPayerIds] = useState<number[]>([]);
+  const { pickImage } = useImagePicker({ aspect: [1, 1] });
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -37,6 +47,42 @@ const PayerPage = () => {
     }, [onRefresh]),
   );
 
+  const handlePickAndSaveImage = async (payer: Payer) => {
+    const uri = await pickImage();
+    if (!uri) return;
+
+    const imagePath = await savePayerImage(uri, payer.id);
+    await updatePayerImagePath(payer.id, imagePath);
+    onRefresh();
+  };
+
+  const handleChangeImage = async (payer: Payer) => {
+    if (!payer.imagePath) {
+      await handlePickAndSaveImage(payer);
+      return;
+    }
+    Alert.alert("Change Image", "Are you sure you want to change the image?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          if (payer.imagePath) {
+            deletePayerImage(payer.imagePath);
+          }
+          await updatePayerImagePath(payer.id, undefined);
+          onRefresh();
+        },
+      },
+      {
+        text: "Change",
+        onPress: async () => {
+          await handlePickAndSaveImage(payer);
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <Logo />
@@ -46,7 +92,12 @@ const PayerPage = () => {
         numColumns={2}
         data={payers}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <PayerCard payerData={item} />}
+        renderItem={({ item }) => (
+          <PayerCard
+            onLongPress={() => handleChangeImage(item)}
+            payerData={item}
+          />
+        )}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

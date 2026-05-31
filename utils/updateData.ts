@@ -229,3 +229,23 @@ export const updateBillItem = async (item: BillItem): Promise<number> => {
         return -1;
     }
 };
+
+export const updatePayerImagePath = async (
+    payerId: number,
+    imagePath?: string,
+): Promise<void> => {
+    await db
+        .update(schema.payers)
+        .set({ imagePath: imagePath ?? null })
+        .where(eq(schema.payers.id, payerId));
+};
+
+export const updateGroupImagePath = async (
+    groupId: number,
+    imagePath?: string,
+): Promise<void> => {
+    await db
+        .update(schema.groups)
+        .set({ imagePath: imagePath ?? null })
+        .where(eq(schema.groups.id, groupId));
+};

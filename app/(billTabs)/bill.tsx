@@ -20,7 +20,7 @@ import {
   Alert,
 } from "react-native";
 import Touchable from "@/components/ui/Touchable";
-import { useImagePicker } from "@/hooks/useCamera";
+import { useImagePicker } from "@/hooks/useImagePicker";
 import { deleteReceiptImage, saveReceiptImage } from "@/utils/fileSystem";
 import { Rate } from "@/utils/rateUtils";
 import { getBillTotals } from "@/utils/billUtils";
@@ -45,6 +45,7 @@ const BillDisplay = () => {
     serviceCharge: Rate.fromBasisPoints(0),
     userEnteredTotal: Price.fromCents(42069),
   });
+  const { pickImage } = useImagePicker({ aspect: undefined });
 
   useFocusEffect(
     useCallback(() => {
@@ -88,8 +89,6 @@ const BillDisplay = () => {
   const openPayerModal = () => {
     router.push("/(billModals)/editBillPayersModal");
   };
-
-  const { pickImage } = useImagePicker();
 
   const handlePhotoButton = async () => {
     if (bill.imagePath == undefined) {

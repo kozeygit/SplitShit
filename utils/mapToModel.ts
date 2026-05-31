@@ -36,6 +36,7 @@ export const mapPayerToModel = (
         email: dbPayer.email || undefined,
         amountToPay: undefined,
         isArchived: dbPayer.isArchived,
+        imagePath: dbPayer.imagePath || undefined,
     };
 
     if (dbBillPayer !== undefined) {
@@ -54,6 +55,7 @@ export const mapGroupToModel = (
         description: dbGroup.description || undefined,
         payers: [],
         isArchived: dbGroup.isArchived,
+        imagePath: dbGroup.imagePath || undefined,
     };
 
     return mappedGroup;

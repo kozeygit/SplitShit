@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import { View, ScrollView, StyleSheet, Text } from "react-native";
+import { View, ScrollView, StyleSheet, Text, Image } from "react-native";
 import { ThemedText } from "../ThemedText";
 import { Payer } from "@/models/bill";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -16,6 +16,25 @@ const PayerIcon = ({
   checked?: boolean;
 }) => {
   const iconColor = colorKeys[Number(payer.id) % colorKeys.length];
+  if (payer.imagePath === undefined) {
+    return (
+      <View
+        style={[
+          styles.payerIconStyle,
+          { width: size, height: size, backgroundColor: iconColor },
+        ]}
+      >
+        <ThemedText type="defaultSemiBold" style={{ fontSize: size / 3 }}>
+          {payer.name.substring(0, 3)}
+        </ThemedText>
+        {checked && (
+          <View style={styles.checkedStyle}>
+            <MaterialIcons name="check" size={size / 1.5} color={iconColor} />
+          </View>
+        )}
+      </View>
+    );
+  }
   return (
     <View
       style={[
@@ -23,9 +42,10 @@ const PayerIcon = ({
         { width: size, height: size, backgroundColor: iconColor },
       ]}
     >
-      <ThemedText type="defaultSemiBold" style={{ fontSize: size / 3 }}>
-        {payer.name.substring(0, 3)}
-      </ThemedText>
+      <Image
+        source={{ uri: payer.imagePath }}
+        style={{ width: size, height: size }}
+      />
       {checked && (
         <View style={styles.checkedStyle}>
           <MaterialIcons name="check" size={size / 1.5} color={iconColor} />
@@ -54,5 +74,6 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
 });

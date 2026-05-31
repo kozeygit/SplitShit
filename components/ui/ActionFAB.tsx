@@ -1,12 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Pressable, View } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Animated, {
   useAnimatedStyle,
   withSpring,
   useSharedValue,
-  SlideInDown,
-  SlideOutDown,
 } from "react-native-reanimated";
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
@@ -28,6 +26,12 @@ type ActionFABProps = {
   actions: FABAction[];
 };
 
+const SPRING_CONFIG = {
+  damping: 20,
+  stiffness: 300,
+  mass: 0.5,
+};
+
 const ActionFAB = ({
   activeColor,
   count,
@@ -36,29 +40,46 @@ const ActionFAB = ({
   actions,
 }: ActionFABProps) => {
   const isSelecting = count > 0;
+  const width = useSharedValue(0);
+  const measured = useRef(false);
+  const [measuredWidth, setMeasuredWidth] = useState(0);
+
+  const handleLayout = (e: any) => {
+    if (measured.current) return;
+    const w = e.nativeEvent.layout.width;
+    if (w > 0) {
+      measured.current = true;
+      setMeasuredWidth(w);
+    }
+  };
+
+  useEffect(() => {
+    if (measuredWidth === 0) return;
+    width.value = withSpring(isSelecting ? measuredWidth : 0, SPRING_CONFIG);
+  }, [isSelecting, measuredWidth]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: width.value,
+  }));
+
+  const buttonCount = actions.length + 1; // +1 for cancel
 
   return (
     <View style={styles.outerContainer}>
-      {/* CENTER HUB: THE MASTER CIRCLE */}
-      <Touchable
-        onPress={isSelecting ? undefined : onAdd}
-        style={styles.masterHub}
-        hapticFunction={ImpactFeedbackStyle.Heavy}
+      {/* Hidden measure — rendered once, never changes */}
+      <View
+        style={styles.hiddenMeasure}
+        onLayout={handleLayout}
+        pointerEvents="none"
       >
-        <View style={[styles.innerCircle, { backgroundColor: activeColor }]}>
-          <View style={[StyleSheet.absoluteFill, styles.centerContent]}>
-            {isSelecting ? (
-              <ThemedText type="subtitle">{count}</ThemedText>
-            ) : (
-              <MaterialIcons name="add" size={30} color="black" />
-            )}
-          </View>
-        </View>
-      </Touchable>
+        {Array.from({ length: buttonCount }).map((_, i) => (
+          <View key={i} style={styles.actionButton} />
+        ))}
+      </View>
 
-      {/* ACCORDION BLOCK */}
-      {isSelecting && (
-        <Animated.View style={styles.accordionContainer}>
+      {/* Accordion grows leftward from behind the hub */}
+      <Animated.View style={[styles.accordionContainer, animatedStyle]}>
+        <View style={styles.accordionInner}>
           {/* Cancel Button */}
           <Pressable
             style={[
@@ -84,8 +105,25 @@ const ActionFAB = ({
               />
             </Pressable>
           ))}
-        </Animated.View>
-      )}
+        </View>
+      </Animated.View>
+
+      {/* Hub — always on the right, never moves */}
+      <Touchable
+        onPress={isSelecting ? undefined : onAdd}
+        style={styles.masterHub}
+        hapticFunction={ImpactFeedbackStyle.Heavy}
+      >
+        <View style={[styles.innerCircle, { backgroundColor: activeColor }]}>
+          <View style={[StyleSheet.absoluteFill, styles.centerContent]}>
+            {isSelecting ? (
+              <ThemedText type="subtitle">{count}</ThemedText>
+            ) : (
+              <MaterialIcons name="add" size={30} color="black" />
+            )}
+          </View>
+        </View>
+      </Touchable>
     </View>
   );
 };
@@ -98,25 +136,35 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     right: 20,
-    flexDirection: "row-reverse",
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 2,
     borderRadius: 40,
     borderColor: "black",
     overflow: "hidden",
     elevation: 5,
   },
+  hiddenMeasure: {
+    position: "absolute",
+    flexDirection: "row",
+    opacity: 0,
+  },
   accordionContainer: {
-    flex: 1,
-    flexDirection: "row-reverse",
+    overflow: "hidden",
+    height: 60,
+  },
+  accordionInner: {
+    flexDirection: "row",
+    height: 60,
   },
   masterHub: {
     borderRadius: 40,
     height: 60,
     width: 60,
-    zIndex: 10,
     justifyContent: "center",
     alignItems: "center",
     padding: 6,
+    zIndex: 10,
   },
   innerCircle: {
     flex: 1,
@@ -129,12 +177,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  countNumber: {
-    fontSize: 28,
-    fontWeight: "700",
-  },
   actionButton: {
-    flex: 1,
+    width: 60,
+    height: 60,
     justifyContent: "center",
     alignItems: "center",
     borderRightWidth: 2,

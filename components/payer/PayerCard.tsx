@@ -1,20 +1,26 @@
 import { ThemedText } from "@/components/ThemedText";
 import React, { useState } from "react";
 import { Text, View, StyleSheet } from "react-native";
-
+import Touchable from "@/components/ui/Touchable";
 import { Bill, Payer } from "@/models/bill";
 import PayerIcon from "./PayerIcon";
 
-const PayerCard = ({ payerData }: { payerData: Payer }) => {
+const PayerCard = ({
+  payerData,
+  onLongPress,
+}: {
+  payerData: Payer;
+  onLongPress: () => void;
+}) => {
   return (
-    <View style={styles.payerCard}>
+    <Touchable onLongPress={onLongPress} style={styles.payerCard}>
       <PayerIcon payer={payerData} />
       <ThemedText type="defaultSemiBold" style={styles.payerName}>
         {payerData.name.length < 20
           ? payerData.name
           : payerData.name.substring(0, 18).trim() + "..."}
       </ThemedText>
-    </View>
+    </Touchable>
   );
 };
 

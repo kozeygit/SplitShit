@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   TextInput,
@@ -19,6 +19,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertPayer } from "@/utils/insertData";
 import { FormButtonRow } from "@/components/ui/FormButtonRow";
+import { useImagePicker } from "@/hooks/useCamera";
 
 const payerSchema = z.object({
   name: z.string().min(1, "Payer name is required"),

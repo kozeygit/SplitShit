@@ -1,50 +1,66 @@
-# Welcome to your Expo app 👋
+# Splitshit (AI made the readme...)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A custom Expo-based bill splitting mobile application featuring receipt image processing, localized SQLite database management, and templates for recurring payer groups. Built for private development workflow.
 
-## Get started
+## Stack & Architecture
 
-1. Install dependencies
+- **Framework**: Expo (v55) with Expo Router (File-based routing)
+- **State Management**: Zustand
+- **Database**: SQLite (via `expo-sqlite`)
+- **ORM**: Drizzle ORM + Drizzle Kit (with custom raw `.sql` file migration configuration)
+- **Forms**: React Hook Form + Zod validation
+- **Animations**: React Native Reanimated (v4)
+- **UI & Theme**: Custom geometric, multi-colored layout utilizing a dedicated `Colors.ts` pastel system
 
-   ```bash
-   npm install
-   ```
+## Project Structure
 
-2. Start the app
+```text
+├── app/                      # Expo Router Navigation Layouts
+│   ├── (homeTabs)/           # Tab Bar: Bills, Payer Profiles, Group Templates
+│   ├── (billTabs)/           # Active Workspace: Items, Allocations, Breakdown, OCR View
+│   ├── (assignModals)/       # Quick-assign item assignment interfaces
+│   ├── (billModals)/         # Item editing & metadata detail modifiers
+│   └── (newModals)/          # Forms to append new data entities
+├── components/               # Atomic Design UI Components
+│   ├── bill/, group/, payer/ # Feature-specific visualization cards and selectors
+│   └── ui/                   # Global components (FAB elements, Row structures, Toggles)
+├── db/                       # Drizzle local SQLite relational schema logic
+├── drizzle/                  # Auto-generated incremental migration Snapshots and raw SQL
+├── hooks/                    # Context hooks (Global store subscriptions, camera access)
+├── models/                   # Type declarations mapped against logic variables
+└── utils/                    # Data manipulation algorithms, parser utils & math formatters
 
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Development Operations
 
-## Learn more
+### Prerequisites
 
-To learn more about developing your project with Expo, look at the following resources:
+Ensure you have your global Expo environment variables or active dev client tools ready.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. **Install dependencies:**
+```bash
+npm install
 
-## Join the community
+```
 
-Join our community of developers creating universal apps.
+2. **Database Management (Drizzle Kit):**
+* Generate new SQLite snapshots after schema alterations:
+```bash
+npx drizzle-kit generate
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```
+
+3. **Start the local Metro Bundler server:**
+```bash
+npx expo start
+
+```
+
+## Roadmap & Active Engineering (`TODO.md`)
+
+* [x] Migrated Drizzle Schema relations to isolate `billPayers` and `groupPayers` dynamically.
+* [x] Standardized local pricing calculations to handle integer cent values securely (`Price.ts`).
+* [ ] Implement group-assignment selectors inside `editBillPayersModal.tsx`.
+* [ ] Connect `createGroupFromBill` mechanism within active workspace contexts.
+* [ ] Optimize the OCR pipeline helper engine inside `createBillFromImage.ts`.

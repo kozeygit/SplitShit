@@ -15,7 +15,7 @@ import { Bill, BillItem, Payer } from "../../models/bill";
 import PayerCard from "@/components/payer/PayerCard";
 import Logo from "@/components/ui/Logo";
 import { useFocusEffect, useRouter } from "expo-router";
-import { fetchPayers } from "@/utils/fetchData";
+import { fetchAllPayers } from "@/utils/fetchData";
 import ActionFAB from "@/components/ui/ActionFAB";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { updatePayerImagePath } from "@/utils/updateData";
@@ -32,7 +32,7 @@ const PayerPage = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const fetchedPayers = await fetchPayers();
+      const fetchedPayers = await fetchAllPayers();
       setPayers(fetchedPayers);
     } catch (error) {
       console.error("Error fetching payers:", error);

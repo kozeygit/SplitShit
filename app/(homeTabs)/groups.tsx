@@ -3,7 +3,7 @@ import { StyleSheet, FlatList, View, RefreshControl } from "react-native";
 import { Colors } from "@/constants/Colors";
 import Logo from "@/components/ui/Logo";
 import { useFocusEffect, useRouter } from "expo-router";
-import { fetchAllGroups } from "@/utils/fetchData";
+import { fetchAllGroups, fetchAllGroupsWithPayers } from "@/utils/fetchData";
 import { Group } from "@/models/bill";
 import GroupCard from "@/components/group/GroupCard";
 import ActionFAB from "@/components/ui/ActionFAB";
@@ -18,7 +18,7 @@ const GroupPage = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const fetchedGroups = await fetchAllGroups(true);
+      const fetchedGroups = await fetchAllGroupsWithPayers();
       setGroups(fetchedGroups);
     } catch (error) {
       console.error("Error fetching groups:", error);

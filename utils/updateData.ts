@@ -3,7 +3,11 @@ import { mapBillItemToDB, mapBillToDB, mapPayerToDB } from "./mapToDb";
 import { Bill, BillItem, Group } from "../models/bill";
 import { getDrizzleDb } from "./database";
 import { eq, lt, gte, ne, and } from "drizzle-orm";
-import { fetchBillItems, fetchGroupPayers, fetchPayers } from "./fetchData";
+import {
+    fetchBillItems,
+    fetchPayersInBill,
+    fetchPayersInGroup,
+} from "./fetchData";
 import { insertBillItem, insertBillPayer } from "./insertData";
 import { isEqual } from "lodash";
 import { removeBillItem, removeBillPayer } from "./removeData";
@@ -113,7 +117,7 @@ const updateItemAssignments = async (bill: Bill): Promise<void> => {
 
 export const updateGroupPayers = async (group: Group): Promise<void> => {
     // Change group payers
-    const oldPayers = await fetchGroupPayers(group.id);
+    const oldPayers = await fetchPayersInGroup(group.id);
     // Delete old payers that are not in the new group
     for (const oldPayer of oldPayers) {
         let found = false;
@@ -154,7 +158,7 @@ export const updateGroupPayers = async (group: Group): Promise<void> => {
 };
 
 const updateBillPayers = async (bill: Bill): Promise<void> => {
-    const oldPayers = await fetchPayers(bill.id);
+    const oldPayers = await fetchPayersInBill(bill.id);
 
     const oldIds = oldPayers.map((p) => p.id);
     const newIds = bill.payers.map((p) => p.id);

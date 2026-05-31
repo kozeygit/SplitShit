@@ -6,7 +6,7 @@ import { Colors } from "@/constants/Colors";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Payer } from "@/models/bill";
 import { useBillStore } from "@/hooks/useBillStore";
-import { fetchPayers } from "@/utils/fetchData";
+import { fetchAllPayers } from "@/utils/fetchData";
 import AdjustPayer from "../../components/payer/SelectPayer";
 import ContainerView from "@/components/ui/ContainerView";
 import { Form } from "react-hook-form";
@@ -32,7 +32,7 @@ const EditBillPayersModal = () => {
     useCallback(() => {
       const refreshAndScroll = async () => {
         try {
-          const dbPayers = await fetchPayers();
+          const dbPayers = await fetchAllPayers();
           setPayers(dbPayers);
 
           if (isMounted.current) {

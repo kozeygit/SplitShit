@@ -19,7 +19,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { insertGroup } from "@/utils/insertData";
 import { Group, NewGroup, Payer } from "@/models/bill";
-import { fetchGroup, fetchPayers } from "@/utils/fetchData";
+import { fetchGroup, fetchAllPayers } from "@/utils/fetchData";
 import SelectPayer from "@/components/payer/SelectPayer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FormButtonRow } from "@/components/ui/FormButtonRow";
@@ -51,7 +51,7 @@ export default function NewGroupPage() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const fetchedPayers = await fetchPayers();
+      const fetchedPayers = await fetchAllPayers();
       setPayers(fetchedPayers);
     } catch (error) {
       console.error("Error fetching payers:", error);

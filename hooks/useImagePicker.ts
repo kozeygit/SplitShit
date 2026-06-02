@@ -1,16 +1,16 @@
-import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { Alert } from "react-native";
+import { useState } from "react";
 
 export const useImagePicker = ({ aspect }: { aspect?: [number, number] }) => {
-    const [cameraEnabled, setCameraEnabled] = useState(true);
+    const [aspectRatio, setAspectRatio] = useState(aspect);
 
-    const disableCamera = () => setCameraEnabled(false);
-    const enableCamera = () => setCameraEnabled(true);
+    const updateAspectRatio = (newAspect: [number, number] | undefined) => {
+        setAspectRatio(newAspect);
+    };
 
     const launchGallery = async (): Promise<string | null> => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            aspect: aspect,
+            aspect: aspectRatio,
             mediaTypes: ["images"],
             allowsEditing: true,
             quality: 1,
@@ -21,15 +21,11 @@ export const useImagePicker = ({ aspect }: { aspect?: [number, number] }) => {
     const launchCamera = async (): Promise<string | null> => {
         const permission = await ImagePicker.requestCameraPermissionsAsync();
         if (!permission.granted) {
-            Alert.alert(
-                "Permission Required",
-                "Camera access is needed to take a photo of your bill.",
-            );
-            return null;
+            throw new Error("Camera permission not granted");
         }
 
         const result = await ImagePicker.launchCameraAsync({
-            aspect: aspect,
+            aspect: aspectRatio,
             mediaTypes: ["images"],
             allowsEditing: true,
             quality: 1,
@@ -38,38 +34,5 @@ export const useImagePicker = ({ aspect }: { aspect?: [number, number] }) => {
         return result.canceled ? null : result.assets[0].uri;
     };
 
-    /**
-     * Shows a choice between camera and gallery, then returns the picked
-     * image URI, or null if the user cancelled.
-     */
-    const pickImage = (): Promise<string | null> => {
-        if (!cameraEnabled) {
-            Alert.alert(
-                "Error",
-                "Camera functionality is disabled, try again later",
-            );
-            return Promise.resolve(null);
-        }
-
-        // Wrap Alert in a Promise so the caller can simply await it.
-        return new Promise((resolve) => {
-            Alert.alert("Add Photo", "How would you like to add your photo?", [
-                {
-                    text: "Take Photo",
-                    onPress: async () => resolve(await launchCamera()),
-                },
-                {
-                    text: "Choose from Library",
-                    onPress: async () => resolve(await launchGallery()),
-                },
-                {
-                    text: "Cancel",
-                    style: "cancel",
-                    onPress: () => resolve(null),
-                },
-            ]);
-        });
-    };
-
-    return { pickImage, disableCamera, enableCamera };
+    return { launchGallery, launchCamera, updateAspectRatio };
 };

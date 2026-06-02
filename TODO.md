@@ -1,4 +1,4 @@
-# Groups Feature TODO
+# TODO
 
 ## Overview
 Add group functionality to Splitshit where groups serve as templates for common payer combinations. When a group is added to a bill, its payers are copied to the bill, but additional payers can still be added independently. Payers added from a group are marked with `addedWithGroup = true`.
@@ -7,30 +7,30 @@ Add group functionality to Splitshit where groups serve as templates for common 
 
 ## 1. Database & Schema
 
-- [X] **Update `bills` table**
+- [x] **Update `bills` table**
   - Add `groupId: integer("group_id").references(() => groups.id)` (nullable)
 
-- [X] **Fix `groupPayers` table bug**
+- [x] **Fix `groupPayers` table bug**
   - Change `groupId: integer("bill_id")` → `groupId: integer("group_id")`
 
-- [X] **Add unique constraints** (optional, but recommended)
+- [x] **Add unique constraints** (optional, but recommended)
   - Add to `billPayers`: unique on (billId, payerId)
   - Add to `groupPayers`: unique on (groupId, payerId)
 
-- [X] **Create migration file(s)**
+- [x] **Create migration file(s)**
   - File(s): `drizzle/0011_lonely_sebastian_shaw.sql`, `drizzle/0012_yielding_electro.sql`
 
 ---
 
 ## 2. Models & Types
 
-- [X] **Update `Bill` type** in `models/bill.ts`
+- [x] **Update `Bill` type** in `models/bill.ts`
   - Add `groupId?: number` field
 
-- [X] **Update `Payer` type** in `models/bill.ts`
+- [x] **Update `Payer` type** in `models/bill.ts`
   - Add `addedWithGroup?: boolean` field (stored in DB)
 
-- [X] **Verify `Group` type** in `models/bill.ts`
+- [x] **Verify `Group` type** in `models/bill.ts`
   - Has: `id`, `name`, `description?`, `payers`, `isArchived`
 
 ---
@@ -51,7 +51,7 @@ Add group functionality to Splitshit where groups serve as templates for common 
   - Set `bills.groupId = newGroupId`
   - Return new group
 
-- [~] **`createGroup(groupName, payerIds)`**
+- [ ] **`createGroup(groupName, payerIds)`**
   - [x] `insertGroup(newGroup)` exists in `insertData.ts` — inserts group row only
   - [ ] Does NOT insert payer entries into `groupPayers` — needs completing
   - [ ] Does NOT accept `payerIds` parameter
@@ -62,25 +62,25 @@ Add group functionality to Splitshit where groups serve as templates for common 
 
 ### Fetch Functions:
 
-- [X] **`fetchGroupPayers(groupId)`**
+- [x] **`fetchGroupPayers(groupId)`**
   - Fetch all payers in a group
 
-- [X] **`fetchAllGroups()`**
+- [x] **`fetchAllGroups()`**
   - Fetch all groups (for Groups tab)
   - Note: does not populate `payers` on each group (requires separate fetch)
 
 ### Remove/Delete Functions:
 
-- [X] **Add `removeGroup(groupId)` to `removeData.ts`**
+- [x] **Add `removeGroup(groupId)` to `removeData.ts`**
   - Archives group (soft delete), does not remove payers from it, nor unlink from bills
 
 ### Model Mapping:
 
-- [X] **Update `mapPayerToModel()`**
+- [x] **Update `mapPayerToModel()`**
   - Add `addedWithGroup` from DB
   - Return payer with `addedWithGroup` field
 
-- [X] **Update `mapBillToModel()`**
+- [x] **Update `mapBillToModel()`**
   - Include `groupId` in mapped bill
 
 ---
@@ -139,7 +139,7 @@ Add group functionality to Splitshit where groups serve as templates for common 
 
 ## 6. Groups Tab (New Screen)
 
-- [X] **Create `app/(homeTabs)/groups.tsx`**
+- [x] **Create `app/(homeTabs)/groups.tsx`**
   - Lists all groups via `fetchAllGroups()` with pull-to-refresh
   - Renders `GroupCard` in a 2-column FlatList
 
@@ -157,7 +157,7 @@ Add group functionality to Splitshit where groups serve as templates for common 
 
 ## 7. Home Tabs Layout Update
 
-- [X] **Add Groups to `app/(homeTabs)/_layout.tsx`**
+- [x] **Add Groups to `app/(homeTabs)/_layout.tsx`**
   - Groups tab added as 2nd tab (Bills, **Groups**, Payers)
   - Uses `MaterialIcons` group icon with pastel green active tint
 
@@ -181,17 +181,31 @@ Add group functionality to Splitshit where groups serve as templates for common 
 - [ ] Archive group → existing bills keep the group reference, archived groups no longer show for new bill creation
 - [ ] View Groups tab → see all groups and their details
 
+---
+<br>
 
+# Future Ideas
 
+### UI & Filtering Enhancements
+- [ ] Add search/filter inputs to the Bills, Payers, and Groups pages.
+- [ ] Add dropdown options to Groups and Payers to:
+  - View expanded details (e.g., number of bills a group is part of, detailed payer list for a group, or number of groups a payer belongs to).
+  - Archive the specific payer or group.
+  - See all bills associated with a payer/group (navigates to the Bills page with a pre-applied filter).
 
+### Web UI (Self-Claiming)
+- [ ] Implement web UI functionality allowing payers to claim their own items.
+  - Reference: Planned out logic in [webui-blueprint.md](./webui-blueprint.md)
 
+### Native Contact Integration (`expo-contacts`)
+- [ ] Add contact search functionality for adding payers.
+  - *Docs:* [Expo Contacts](https://docs.expo.dev/versions/latest/sdk/contacts/)
+  - Text input for search; show matching contacts on text change.
+  - UI layout: Show name large, phone/email underneath, add icon on the right.
+  - Add validation to prevent adding duplicate contacts as payers.
 
-## some more (ignore for now)
-add filter to bills, payers, and groups pages
-add dropdown options to groups and payers,
-  - to see more / edit details
-    - numbers of bills part of
-    - detailed list of payers (groups only)
-    - number of groups part of (payers only)
-  - to archive payer/group
-  - to see all bills payer/group is part of, which will navigate to the bills page filtered by that payer/group
+### PDF Export & Sharing (`expo-print` & `expo-sharing`)
+- [ ] Add ability to generate and share PDF summaries of bills.
+  - *Docs:* [Expo Print](https://docs.expo.dev/versions/latest/sdk/print/) | [Expo Sharing](https://docs.expo.dev/versions/latest/sdk/sharing/)
+  - Use `Print.printToFileAsync(options)` to render and save the PDF locally.
+  - Use `Share.shareAsync(options)` to open the native share sheet for the generated file.

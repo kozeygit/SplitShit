@@ -58,7 +58,9 @@ export default function NewBillPage() {
 
   const router = useRouter();
   const { setOriginalBill, resetEditedBill } = useBillStore();
-  const { pickImage, enableCamera } = useImagePicker({ aspect: undefined });
+  const { launchGallery, launchCamera } = useImagePicker({
+    aspect: undefined,
+  });
 
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date());
@@ -66,6 +68,7 @@ export default function NewBillPage() {
   const [serviceType, setServiceType] = useState<"percentage" | "amount">(
     "amount",
   );
+  const [cameraEnabled, setCameraEnabled] = useState(false);
 
   const {
     control,
@@ -130,8 +133,41 @@ export default function NewBillPage() {
     }
   };
 
-  const handleOpenCamera = async () => {
-    const uri = await pickImage();
+  const handleAddByCamera = async () => {
+    let uri: string | null = null;
+    try {
+      uri = await launchCamera();
+    } catch (error: any) {
+      if (error.message == "Camera permission not granted") {
+        Alert.alert(
+          "Camera Access Required",
+          "Please enable camera permissions in your device settings",
+        );
+      } else {
+        Alert.alert("Error", error.message);
+      }
+    }
+    return uri;
+  };
+
+  const handleUseImage = async () => {
+    let uri: string | null = null;
+    Alert.alert("Add Receipt", "Scan your bill", [
+      {
+        text: "Take Photo",
+        onPress: async () => {
+          uri = await handleAddByCamera();
+        },
+      },
+      {
+        text: "Gallery",
+        onPress: async () => {
+          uri = await launchGallery();
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+
     if (!uri) return;
 
     setLoading(true);
@@ -185,10 +221,10 @@ export default function NewBillPage() {
               <Touchable
                 onLongPress={() => {
                   alert("Camera enabled");
-                  enableCamera();
+                  setCameraEnabled(true);
                 }}
                 delayLongPress={2000}
-                onPress={handleOpenCamera}
+                onPress={handleUseImage}
                 style={styles.photoButton}
               >
                 <MaterialIcons name="add-a-photo" size={24} color={"black"} />

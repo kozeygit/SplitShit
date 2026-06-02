@@ -18,6 +18,7 @@ import {
   Text,
   Pressable,
   Alert,
+  AlertButton,
 } from "react-native";
 import Touchable from "@/components/ui/Touchable";
 import { useImagePicker } from "@/hooks/useImagePicker";
@@ -45,7 +46,7 @@ const BillDisplay = () => {
     serviceCharge: Rate.fromBasisPoints(0),
     userEnteredTotal: Price.fromCents(42069),
   });
-  const { pickImage } = useImagePicker({ aspect: undefined });
+  const { launchCamera, launchGallery } = useImagePicker({ aspect: undefined });
 
   useFocusEffect(
     useCallback(() => {
@@ -90,53 +91,62 @@ const BillDisplay = () => {
     router.push("/(billModals)/editBillPayersModal");
   };
 
-  const handlePhotoButton = async () => {
-    if (bill.imagePath == undefined) {
-      const uri = await pickImage();
+  const setReceiptImage = async (launchFn: () => Promise<string | null>) => {
+    try {
+      const uri = await launchFn();
       if (!uri) return;
 
       const imagePath = await saveReceiptImage(uri, bill.id);
-      if (editedBill) {
+      if (imagePath && editedBill) {
+        // Automatically clean up old image from system memory if replacing it
+        if (bill.imagePath) {
+          deleteReceiptImage(bill.imagePath);
+        }
         setEditedBill({ ...editedBill, imagePath });
       }
-      return;
+    } catch (error: any) {
+      if (error.message === "Camera permission not granted") {
+        Alert.alert(
+          "Camera Access Required",
+          "Please enable camera permissions in your device settings to scan bills.",
+        );
+      } else {
+        Alert.alert("Error", error.message || "Failed to capture image.");
+      }
+    }
+  };
+
+  const handlePhotoButton = () => {
+    const alertButtons: AlertButton[] = [
+      {
+        text: "Take Photo",
+        onPress: () => setReceiptImage(launchCamera),
+      },
+      {
+        text: "Choose from Gallery",
+        onPress: () => setReceiptImage(launchGallery),
+      },
+    ];
+
+    if (bill.imagePath) {
+      alertButtons.push({
+        text: "Delete Current Receipt",
+        style: "destructive",
+        onPress: () => {
+          deleteReceiptImage(bill.imagePath!);
+          if (editedBill) {
+            setEditedBill({ ...editedBill, imagePath: undefined });
+          }
+        },
+      });
     }
 
+    alertButtons.push({ text: "Cancel", style: "cancel" });
+
     Alert.alert(
-      "Edit Receipt Image",
-      "Are you sure you want to edit this receipt?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-          onPress: () => {
-            return;
-          },
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            deleteReceiptImage(bill.imagePath!);
-            if (editedBill) {
-              setEditedBill({ ...editedBill, imagePath: undefined });
-            }
-            return;
-          },
-        },
-        {
-          text: "Edit",
-          onPress: async () => {
-            const uri = await pickImage();
-            if (!uri) return;
-            const imagePath = await saveReceiptImage(uri, bill.id);
-            if (editedBill) {
-              setEditedBill({ ...editedBill, imagePath });
-            }
-            return;
-          },
-        },
-      ],
+      bill.imagePath ? "Manage Receipt Image" : "Add Receipt Image",
+      "Select a source below",
+      alertButtons,
     );
   };
 

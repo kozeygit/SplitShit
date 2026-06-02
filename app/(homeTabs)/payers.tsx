@@ -1,5 +1,3 @@
-import { ThemedText } from "@/components/ThemedText";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
@@ -7,6 +5,8 @@ import {
   FlatList,
   RefreshControl,
   Alert,
+  AlertOptions,
+  AlertButton,
 } from "react-native";
 
 import { Colors } from "@/constants/Colors";
@@ -20,6 +20,7 @@ import ActionFAB from "@/components/ui/ActionFAB";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { updatePayerImagePath } from "@/utils/updateData";
 import { deletePayerImage, savePayerImage } from "@/utils/fileSystem";
+import { setProfileImage } from "@/utils/imageUtils";
 
 const PayerPage = () => {
   const router = useRouter();
@@ -27,7 +28,7 @@ const PayerPage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [payers, setPayers] = useState<Payer[]>([]);
   const [selectedPayerIds, setSelectedPayerIds] = useState<number[]>([]);
-  const { pickImage } = useImagePicker({ aspect: [1, 1] });
+  const { launchCamera, launchGallery } = useImagePicker({ aspect: [1, 1] });
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -47,40 +48,64 @@ const PayerPage = () => {
     }, [onRefresh]),
   );
 
-  const handlePickAndSaveImage = async (payer: Payer) => {
-    const uri = await pickImage();
-    if (!uri) return;
+  const handleManageProfileImage = async (payer: Payer) => {
+    // A tiny configuration blueprint mapping Payer functions to the generic handler
+    const triggerUpdate = (launchFn: () => Promise<string | null>) =>
+      setProfileImage({
+        launchFn,
+        currentImagePath: payer.imagePath,
+        saveImageFn: (uri) => savePayerImage(uri, payer.id),
+        deleteImageFn: deletePayerImage,
+        updateDbFn: (path) => updatePayerImagePath(payer.id, path),
+        onRefresh,
+      });
 
-    const imagePath = await savePayerImage(uri, payer.id);
-    await updatePayerImagePath(payer.id, imagePath);
-    onRefresh();
-  };
-
-  const handleChangeImage = async (payer: Payer) => {
-    if (!payer.imagePath) {
-      await handlePickAndSaveImage(payer);
-      return;
-    }
-    Alert.alert("Change Image", "Are you sure you want to change the image?", [
-      { text: "Cancel", style: "cancel" },
+    const alertButtons: AlertButton[] = [
+      { text: "Take Photo", onPress: () => triggerUpdate(launchCamera) },
       {
-        text: "Delete",
+        text: "Choose from Gallery",
+        onPress: () => triggerUpdate(launchGallery),
+      },
+    ];
+
+    if (payer.imagePath) {
+      alertButtons.push({
+        text: "Delete Current Photo",
         style: "destructive",
         onPress: async () => {
-          if (payer.imagePath) {
-            deletePayerImage(payer.imagePath);
-          }
+          deletePayerImage(payer.imagePath!);
           await updatePayerImagePath(payer.id, undefined);
           onRefresh();
         },
-      },
-      {
-        text: "Change",
-        onPress: async () => {
-          await handlePickAndSaveImage(payer);
-        },
-      },
-    ]);
+      });
+    }
+
+    alertButtons.push({ text: "Cancel", style: "cancel" });
+
+    Alert.alert(
+      payer.imagePath ? "Manage Profile Photo" : "Add Profile Photo",
+      "Select an option below",
+      alertButtons,
+    );
+  };
+
+  const handleSelect = (id: number) => {
+    if (selectedPayerIds.length === 0) {
+      return;
+    }
+    if (selectedPayerIds.includes(id)) {
+      setSelectedPayerIds(selectedPayerIds.filter((value) => value !== id));
+      return;
+    }
+    setSelectedPayerIds([...selectedPayerIds, id]);
+  };
+
+  const handleLongSelect = (id: number) => {
+    if (selectedPayerIds.includes(id)) {
+      setSelectedPayerIds(selectedPayerIds.filter((value) => value !== id));
+      return;
+    }
+    setSelectedPayerIds([...selectedPayerIds, id]);
   };
 
   return (
@@ -94,8 +119,11 @@ const PayerPage = () => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <PayerCard
-            onLongPress={() => handleChangeImage(item)}
             payerData={item}
+            // onPress={handleSelect}
+            onPress={() => handleManageProfileImage(item)} // just for testing, replace with actual onPress when i have something to use it for
+            isSelected={selectedPayerIds.includes(item.id)}
+            onSelect={handleLongSelect}
           />
         )}
         refreshControl={

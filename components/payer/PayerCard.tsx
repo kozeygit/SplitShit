@@ -5,15 +5,28 @@ import Touchable from "@/components/ui/Touchable";
 import { Bill, Payer } from "@/models/bill";
 import PayerIcon from "./PayerIcon";
 
-const PayerCard = ({
-  payerData,
-  onLongPress,
-}: {
+interface PayerCardProps {
   payerData: Payer;
-  onLongPress: () => void;
+  isSelected: boolean;
+  onPress: (id: number) => void;
+  onSelect: (id: number) => void;
+}
+
+const PayerCard: React.FC<PayerCardProps> = ({
+  payerData,
+  isSelected,
+  onPress,
+  onSelect,
 }) => {
+  const handlePress = () => onPress(payerData.id);
+  const handleToggleSelect = () => onSelect(payerData.id);
+
   return (
-    <Touchable onLongPress={onLongPress} style={styles.payerCard}>
+    <Touchable
+      onPress={handlePress}
+      onLongPress={handleToggleSelect}
+      style={styles.payerCard}
+    >
       <PayerIcon payer={payerData} />
       <ThemedText type="defaultSemiBold" style={styles.payerName}>
         {payerData.name.length < 20

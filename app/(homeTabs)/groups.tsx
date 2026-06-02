@@ -1,5 +1,12 @@
 import React, { useCallback, useState } from "react";
-import { StyleSheet, FlatList, View, RefreshControl } from "react-native";
+import {
+  StyleSheet,
+  FlatList,
+  View,
+  RefreshControl,
+  Alert,
+  AlertButton,
+} from "react-native";
 import { Colors } from "@/constants/Colors";
 import Logo from "@/components/ui/Logo";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -8,12 +15,18 @@ import { Group } from "@/models/bill";
 import GroupCard from "@/components/group/GroupCard";
 import ActionFAB from "@/components/ui/ActionFAB";
 import { removeGroup } from "@/utils/removeData";
+import { deleteGroupImage, saveGroupImage } from "@/utils/fileSystem";
+import { updateGroupImagePath } from "@/utils/updateData";
+import { setProfileImage } from "@/utils/imageUtils";
+import { useImagePicker } from "@/hooks/useImagePicker";
 
 const GroupPage = () => {
   const router = useRouter();
+
   const [refreshing, setRefreshing] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]);
+  const { launchCamera, launchGallery } = useImagePicker({ aspect: [1, 1] });
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -32,6 +45,46 @@ const GroupPage = () => {
       onRefresh();
     }, [onRefresh]),
   );
+
+  const handleManageProfileImage = async (group: Group) => {
+    const triggerUpdate = (launchFn: () => Promise<string | null>) =>
+      setProfileImage({
+        launchFn,
+        currentImagePath: group.imagePath,
+        saveImageFn: (uri) => saveGroupImage(uri, group.id),
+        deleteImageFn: deleteGroupImage,
+        updateDbFn: (path) => updateGroupImagePath(group.id, path),
+        onRefresh,
+      });
+
+    const alertButtons: AlertButton[] = [
+      { text: "Take Photo", onPress: () => triggerUpdate(launchCamera) },
+      {
+        text: "Choose from Gallery",
+        onPress: () => triggerUpdate(launchGallery),
+      },
+    ];
+
+    if (group.imagePath) {
+      alertButtons.push({
+        text: "Delete Current Photo",
+        style: "destructive",
+        onPress: async () => {
+          deleteGroupImage(group.imagePath!);
+          await updateGroupImagePath(group.id, undefined);
+          onRefresh();
+        },
+      });
+    }
+
+    alertButtons.push({ text: "Cancel", style: "cancel" });
+
+    Alert.alert(
+      group.imagePath ? "Manage Profile Photo" : "Add Profile Photo",
+      "Select an option below",
+      alertButtons,
+    );
+  };
 
   const handleSelect = (id: number) => {
     if (selectedGroupIds.length === 0) {

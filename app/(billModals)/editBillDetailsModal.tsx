@@ -15,8 +15,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { Bill } from "@/models/bill";
 import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+  DateTimePickerChangeEvent,
+} from "@expo/ui/datetimepicker";
 import { useBillStore } from "@/hooks/useBillStore";
 import { Price } from "@/utils/priceUtils";
 import { toServiceChargeRate } from "@/utils/serviceChargeUtils";
@@ -42,7 +42,7 @@ const EditBillDetailsModal = () => {
   );
 
   const onChangeDate = (
-    event: DateTimePickerEvent,
+    event: DateTimePickerChangeEvent,
     selectedDate: Date | undefined,
   ) => {
     if (selectedDate) {
@@ -171,11 +171,10 @@ const EditBillDetailsModal = () => {
           {/* Date Picker */}
           {showDatePicker && (
             <DateTimePicker
-              id="dateTimePicker"
               value={date}
               mode={"date"}
               display="default"
-              onChange={onChangeDate}
+              onValueChange={onChangeDate}
             />
           )}
 

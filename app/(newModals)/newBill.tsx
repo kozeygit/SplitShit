@@ -16,8 +16,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Bill, NewBill } from "@/models/bill";
 import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+  DateTimePickerChangeEvent,
+} from "@expo/ui/datetimepicker";
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
@@ -112,7 +112,7 @@ export default function NewBillPage() {
   };
 
   const onChangeDate = (
-    event: DateTimePickerEvent,
+    event: DateTimePickerChangeEvent,
     selectedDate: Date | undefined,
   ) => {
     if (selectedDate) {
@@ -257,11 +257,10 @@ export default function NewBillPage() {
             {/* Date Picker Input */}
             {showDatePicker && (
               <DateTimePicker
-                id="dateTimePicker"
                 value={date}
                 mode={"date"}
                 display="default"
-                onChange={onChangeDate}
+                onValueChange={onChangeDate}
               />
             )}
 

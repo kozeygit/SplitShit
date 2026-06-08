@@ -172,7 +172,7 @@ const updateBillPayers = async (bill: Bill): Promise<void> => {
     // 2. INSERT: Payers in draft but NOT in DB
     const toInsert = bill.payers.filter((p) => !oldIds.includes(p.id));
     for (const payer of toInsert) {
-        await insertBillPayer(bill.id, payer);
+        await insertBillPayer(bill.id, payer, payer.addedWithGroup);
     }
 };
 

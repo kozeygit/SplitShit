@@ -4,13 +4,18 @@ import React, { useCallback, useRef, useState } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useFocusEffect, useRouter } from "expo-router";
-import { Payer } from "@/models/bill";
+import { Group, Payer } from "@/models/bill";
 import { useBillStore } from "@/hooks/useBillStore";
-import { fetchAllPayers } from "@/utils/fetchData";
+import { fetchAllGroupsWithPayers, fetchAllPayers } from "@/utils/fetchData";
 import AdjustPayer from "../../components/payer/SelectPayer";
 import ContainerView from "@/components/ui/ContainerView";
-import { Form } from "react-hook-form";
 import { FormButtonRow } from "@/components/ui/FormButtonRow";
+import {
+  addGroupToBillDraft,
+  removeGroupFromBillDraft,
+} from "@/utils/billUtils";
+import GroupCard from "@/components/group/GroupCard";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const EditBillPayersModal = () => {
   const router = useRouter();
@@ -19,8 +24,15 @@ const EditBillPayersModal = () => {
   const isMounted = useRef(false);
 
   const [payers, setPayers] = useState<Payer[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(
+  const [groups, setGroups] = useState<Group[]>([]);
+
+  // apparently sets are a better choice for managing selected IDs than arrays, O(1) lookup
+  const [selectedPayerIds, setSelectedPayerIds] = useState<Set<number>>(
     new Set(editedBill?.payers.map((p) => p.id) ?? []),
+  );
+
+  const [selectedGroupId, setSelectedGroupId] = useState<number | undefined>(
+    editedBill?.groupId,
   );
 
   if (!editedBill) {
@@ -30,32 +42,47 @@ const EditBillPayersModal = () => {
 
   useFocusEffect(
     useCallback(() => {
-      const refreshAndScroll = async () => {
+      const refresh = async () => {
         try {
-          const dbPayers = await fetchAllPayers();
-          setPayers(dbPayers);
+          const [dbPayers, dbGroups] = await Promise.all([
+            fetchAllPayers(),
+            fetchAllGroupsWithPayers(),
+          ]);
 
-          if (isMounted.current) {
-            requestAnimationFrame(() => {
-              flatListRef.current?.scrollToEnd({ animated: true });
-            });
-          } else {
-            isMounted.current = true;
+          const targetGroupId = editedBill.groupId;
+          const initialPayerIds = new Set(editedBill.payers.map((p) => p.id));
+
+          const currentGroup = dbGroups.find((g) => g.id === targetGroupId);
+
+          let updatedPayers = dbPayers;
+          if (currentGroup) {
+            const groupPayerIds = new Set(
+              currentGroup.payers.map((gp) => gp.id),
+            );
+
+            updatedPayers = dbPayers.map((p) =>
+              groupPayerIds.has(p.id) ? { ...p, addedWithGroup: true } : p,
+            );
           }
+
+          setPayers(updatedPayers);
+          setGroups(dbGroups);
+          setSelectedGroupId(targetGroupId);
+          setSelectedPayerIds(initialPayerIds);
         } catch (error) {
           console.error("Error loading payers:", error);
         }
       };
 
-      refreshAndScroll();
-    }, [editedBill.payers]),
+      refresh();
+    }, [editedBill]),
   );
 
   const handleBack = () => {
     const originalIds = new Set(editedBill.payers.map((p) => p.id));
     const hasChanges =
-      selectedIds.size !== originalIds.size ||
-      [...selectedIds].some((id) => !originalIds.has(id));
+      selectedPayerIds.size !== originalIds.size ||
+      [...selectedPayerIds].some((id) => !originalIds.has(id));
 
     if (hasChanges) {
       Alert.alert(
@@ -76,17 +103,43 @@ const EditBillPayersModal = () => {
   };
 
   const togglePayer = (id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    const newPayer = payers.find((p) => p.id == id);
+    if (!newPayer) return;
+    if (newPayer.addedWithGroup) return;
+
+    const newBillState = { ...editedBill };
+
+    if (selectedPayerIds.has(id)) {
+      newBillState.payers = newBillState.payers.filter((p) => p.id !== id);
+    } else {
+      newBillState.payers = [...newBillState.payers, newPayer];
+    }
+
+    setEditedBill(newBillState);
+  };
+
+  const handleSelectGroup = (id: number) => {
+    const selectedGroup = groups.find((group) => group.id == id);
+    if (!selectedGroup) return;
+
+    let newBillState;
+    if (selectedGroupId == id) {
+      setSelectedGroupId(0);
+      newBillState = removeGroupFromBillDraft(editedBill);
+    } else {
+      setSelectedGroupId(id);
+      newBillState = addGroupToBillDraft(editedBill, selectedGroup);
+    }
+
+    const newIds = new Set(newBillState.payers.map((p) => p.id));
+    setSelectedPayerIds(newIds);
+    setEditedBill(newBillState);
   };
 
   const handleSave = () => {
     const updatedBill = {
       ...editedBill,
-      payers: payers.filter((p) => selectedIds.has(p.id)),
+      payers: payers.filter((p) => selectedPayerIds.has(p.id)),
     };
     setEditedBill(updatedBill);
     router.back();
@@ -95,7 +148,7 @@ const EditBillPayersModal = () => {
   const handleNewPayer = () => {
     const updatedBill = {
       ...editedBill,
-      payers: payers.filter((p) => selectedIds.has(p.id)),
+      payers: payers.filter((p) => selectedPayerIds.has(p.id)),
     };
     setEditedBill(updatedBill);
     router.push({ pathname: "/newPayer" });
@@ -106,7 +159,31 @@ const EditBillPayersModal = () => {
       <ContainerView>
         <View style={styles.title}>
           <ThemedText type="subtitle">{editedBill.name}</ThemedText>
-          <ThemedText type="subtitle">{selectedIds.size} selected</ThemedText>
+          <ThemedText type="subtitle">
+            {selectedPayerIds.size} selected
+          </ThemedText>
+        </View>
+
+        {/* TODO: Add your Group dropdown selection anchor component here, wiring up its value updates directly to handleSelectGroup */}
+        <View style={styles.groupDropdown}>
+          <View style={styles.groupDropdownHeader}>
+            <ThemedText type="subtitle">Groups</ThemedText>
+            <MaterialIcons name="arrow-drop-down" size={24} color="grey" />
+          </View>
+          <FlatList
+            contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
+            numColumns={1}
+            data={groups}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <GroupCard
+                groupData={item}
+                isSelected={selectedGroupId === item.id}
+                onSelect={() => handleSelectGroup(item.id)}
+                onPress={handleSelectGroup}
+              />
+            )}
+          />
         </View>
 
         <FlatList
@@ -119,7 +196,7 @@ const EditBillPayersModal = () => {
             <AdjustPayer
               onToggle={() => togglePayer(item.id)}
               payer={item}
-              selected={selectedIds.has(item.id)}
+              selected={selectedPayerIds.has(item.id)}
             />
           )}
         />
@@ -143,6 +220,23 @@ const EditBillPayersModal = () => {
 export default EditBillPayersModal;
 
 const styles = StyleSheet.create({
+  groupDropdownHeader: {
+    padding: 20,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  groupDropdown: {
+    borderColor: "grey",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: "white",
+    marginBottom: 10,
+    elevation: 2,
+  },
   newPayerButtonInner: {
     padding: 7,
     justifyContent: "center",

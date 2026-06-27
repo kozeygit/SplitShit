@@ -16,7 +16,7 @@ import { useRouter } from "expo-router";
 import { Bill } from "@/models/bill";
 import DateTimePicker, {
   DateTimePickerChangeEvent,
-} from "@expo/ui/datetimepicker";
+} from "@expo/ui/community/datetime-picker";
 import { useBillStore } from "@/hooks/useBillStore";
 import { Price } from "@/utils/priceUtils";
 import { toServiceChargeRate } from "@/utils/serviceChargeUtils";

@@ -7,7 +7,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { Group, Payer } from "@/models/bill";
 import { useBillStore } from "@/hooks/useBillStore";
 import { fetchAllGroupsWithPayers, fetchAllPayers } from "@/utils/fetchData";
-import AdjustPayer from "../../components/payer/SelectPayer";
+import AdjustPayer from "@/components/payer/SelectPayer";
 import ContainerView from "@/components/ui/ContainerView";
 import { FormButtonRow } from "@/components/ui/FormButtonRow";
 import {

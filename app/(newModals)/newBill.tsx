@@ -17,7 +17,7 @@ import { z } from "zod";
 import { Bill, NewBill } from "@/models/bill";
 import DateTimePicker, {
   DateTimePickerChangeEvent,
-} from "@expo/ui/datetimepicker";
+} from "@expo/ui/community/datetime-picker";
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { useRouter } from "expo-router";
@@ -151,23 +151,28 @@ export default function NewBillPage() {
   };
 
   const handleUseImage = async () => {
-    let uri: string | null = null;
-    Alert.alert("Add Receipt", "Scan your bill", [
-      {
-        text: "Take Photo",
-        onPress: async () => {
-          uri = await handleAddByCamera();
-        },
-      },
-      {
-        text: "Gallery",
-        onPress: async () => {
-          uri = await launchGallery();
-        },
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
+    const AsyncAlert = async () =>
+      new Promise<string | null>(async (resolve) => {
+        Alert.alert("Add Receipt", "Scan your bill", [
+          {
+            text: "Take Photo",
+            onPress: async () => {
+              resolve(await handleAddByCamera());
+            },
+          },
+          {
+            text: "Gallery",
+            onPress: async () => {
+              resolve(await launchGallery());
+            },
+          },
+          { text: "Cancel", style: "cancel" },
+        ]);
+      });
 
+    let uri: string | null = null;
+    uri = await AsyncAlert();
+    console.log("Im Here", uri);
     if (!uri) return;
 
     setLoading(true);

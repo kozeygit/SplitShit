@@ -1,10 +1,10 @@
 import { Pressable, View, StyleSheet } from "react-native";
 import Touchable from "@/components/ui/Touchable";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { Bill, BillItem } from "@/models/bill";
+import { AssignItem, Bill, BillItem } from "@/models/bill";
 import { useBillStore } from "@/hooks/useBillStore";
 import { getPayerById } from "@/utils/billUtils";
 import PayerIcon from "@/components/payer/PayerIcon";
@@ -29,36 +29,50 @@ const EditItemModal = () => {
     assignedTo: [],
   });
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!editedBill || !itemId) return;
-
-      const currentItem = editedBill.items.find(
-        (i) => i.id === parseInt(itemId),
-      );
-      const currentIndex = editedBill.items.findIndex(
-        (i) => i.id === parseInt(itemId),
-      );
-
-      if (currentItem) {
-        setItem(currentItem);
-      }
-      if (currentIndex !== -1) {
-        setItemIndex(currentIndex);
-      }
-    }, [editedBill, itemId]),
-  );
+  useEffect(() => {
+    if (!editedBill || !itemId) return;
+    const id = parseInt(itemId);
+    const currentIndex = editedBill.items.findIndex((i) => i.id === id);
+    if (currentIndex !== -1) {
+      setItem(editedBill.items[currentIndex]);
+      setItemIndex(currentIndex);
+    }
+  }, [itemId]);
 
   const toggleAssignPayer = (payerId: number) => {
+    const ass = item.assignedTo.find((ass) => ass.payerId === payerId);
+    if (ass) {
+      const newAssignedTo = item.assignedTo.filter(
+        (ass) => ass.payerId !== payerId,
+      );
+      setItem({
+        ...item,
+        assignedTo: newAssignedTo,
+      });
+      return;
+    }
+
+    setItem({
+      ...item,
+      assignedTo: [...item.assignedTo, { payerId: payerId, quantity: 1 }],
+    });
+  };
+
+  const increasePayerQuantity = (payerId: number) => {
     if (!item) return;
 
-    const isAlreadyAssigned = item.assignedTo.some(
-      (ass) => ass.payerId === payerId,
-    );
+    const ass = item.assignedTo.find((ass) => ass.payerId === payerId);
+    if (!ass) {
+      setItem({
+        ...item,
+        assignedTo: [...item.assignedTo, { payerId: payerId, quantity: 1 }],
+      });
+      return;
+    }
 
-    const newAssignedTo = isAlreadyAssigned
-      ? item.assignedTo.filter((ass) => ass.payerId !== payerId)
-      : [...item.assignedTo, { payerId: payerId, quantity: 1 }];
+    const newAssignedTo = item.assignedTo.map((ass) =>
+      ass.payerId === payerId ? { ...ass, quantity: ass.quantity + 1 } : ass,
+    );
 
     setItem({
       ...item,
@@ -66,6 +80,26 @@ const EditItemModal = () => {
     });
   };
 
+  const decreasePayerQuantity = (payerId: number) => {
+    if (!item) return;
+
+    const ass = item.assignedTo.find((ass) => ass.payerId === payerId);
+    if (!ass) return;
+
+    let newAssignedTo: AssignItem[] = [];
+    if (ass.quantity === 1) {
+      newAssignedTo = item.assignedTo.filter((ass) => ass.payerId !== payerId);
+    } else {
+      newAssignedTo = item.assignedTo.map((ass) =>
+        ass.payerId === payerId ? { ...ass, quantity: ass.quantity - 1 } : ass,
+      );
+    }
+
+    setItem({
+      ...item,
+      assignedTo: newAssignedTo,
+    });
+  };
   const saveCurrentState = (targetBill: Bill) => {
     if (!item) return targetBill;
 
@@ -82,27 +116,23 @@ const EditItemModal = () => {
 
   const handleNext = () => {
     if (
-      !editedBill ||
       itemIndex === undefined ||
+      !editedBill ||
       itemIndex + 1 >= editedBill.items.length
     )
       return;
-
     const updatedBill = saveCurrentState(editedBill);
-    router.replace({
-      pathname: "/assignItemModal",
-      params: { itemId: updatedBill.items[itemIndex + 1].id },
-    });
+    const nextIndex = itemIndex + 1;
+    setItem(updatedBill.items[nextIndex]);
+    setItemIndex(nextIndex);
   };
 
   const handlePrevious = () => {
-    if (!editedBill || itemIndex === undefined || itemIndex <= 0) return;
-
+    if (itemIndex === undefined || !editedBill || itemIndex <= 0) return;
     const updatedBill = saveCurrentState(editedBill);
-    router.replace({
-      pathname: "/assignItemModal",
-      params: { itemId: updatedBill.items[itemIndex - 1].id },
-    });
+    const prevIndex = itemIndex - 1;
+    setItem(updatedBill.items[prevIndex]);
+    setItemIndex(prevIndex);
   };
 
   const handleBack = () => {
@@ -123,7 +153,7 @@ const EditItemModal = () => {
       }}
     >
       <View style={styles.container}>
-        <View>
+        <View style={{ flex: 1 }}>
           <View style={styles.title}>
             <ThemedText type="subtitle">
               {" "}
@@ -160,16 +190,29 @@ const EditItemModal = () => {
                       {payer.name}
                     </ThemedText>
                   </View>
-                  <Pressable
-                    hitSlop={10}
-                    onPress={() => toggleAssignPayer(ass.payerId)}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 15,
+                    }}
                   >
-                    <MaterialIcons
-                      name="delete-outline"
-                      size={20}
-                      color="red"
-                    />
-                  </Pressable>
+                    <Touchable
+                      hitSlop={10}
+                      onPress={() => decreasePayerQuantity(ass.payerId)}
+                    >
+                      <MaterialIcons name="remove" size={20} />
+                    </Touchable>
+                    <ThemedText style={{ fontSize: 18 }}>
+                      {ass.quantity}
+                    </ThemedText>
+                    <Touchable
+                      hitSlop={10}
+                      onPress={() => increasePayerQuantity(ass.payerId)}
+                    >
+                      <MaterialIcons name="add" size={20} />
+                    </Touchable>
+                  </View>
                 </View>
               );
             })}
@@ -192,6 +235,27 @@ const EditItemModal = () => {
             );
           })}
         </View>
+      </View>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-evenly",
+          alignItems: "center",
+          paddingInline: 20,
+          marginTop: 30,
+        }}
+      >
+        {editedBill.items.map((i, index) => {
+          return (
+            <View key={index}>
+              {index === itemIndex ? (
+                <MaterialIcons name="circle" size={12} color={"black"} />
+              ) : (
+                <MaterialIcons name="circle" size={7} color={"black"} />
+              )}
+            </View>
+          );
+        })}
       </View>
       <View style={styles.buttonContainer}>
         <View style={styles.cancelButtonOuter}>
@@ -260,10 +324,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   container: {
-    justifyContent: "space-between",
     marginTop: 80,
     padding: 30,
-    paddingBottom: 40,
     backgroundColor: "white",
     borderWidth: 2,
     borderRadius: 20,

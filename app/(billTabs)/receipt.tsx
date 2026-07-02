@@ -37,7 +37,6 @@ const ReceiptScreen = () => {
     dimension: number,
     currentScale: number,
   ) => {
-    "worklet";
     const maxTranslate = (dimension * (currentScale - 1)) / 2;
     return Math.min(maxTranslate, Math.max(-maxTranslate, value));
   };

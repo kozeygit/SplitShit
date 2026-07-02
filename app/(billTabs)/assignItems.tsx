@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View, FlatList } from "react-native";
 import Touchable from "@/components/ui/Touchable";
 import { Price } from "@/utils/priceUtils";
+import InfoRowItemLabel from "@/components/ui/InfoRowItemLabel";
 
 const AssignItemsDisplay = () => {
   const router = useRouter();
@@ -60,45 +61,19 @@ const AssignItemsDisplay = () => {
               <Touchable onPress={() => openAssignModal(item)}>
                 <View
                   style={{
-                    borderBottomWidth: 1,
+                    borderBottomWidth: 2,
                     borderBottomColor: "lightgrey",
                     paddingVertical: 5,
                   }}
                 >
                   <InfoRow
-                    label={
-                      item.assignedTo.length < 2 ? (
-                        <ThemedText>
-                          {item.quantity} {item.name}
-                        </ThemedText>
-                      ) : (
-                        <ThemedText>
-                          {item.quantity} {item.name}{" "}
-                          <ThemedText type="darkGrital">
-                            (
-                            {item.totalPrice
-                              .divide(item.assignedTo.length)
-                              .toDisplay()}
-                            )
-                          </ThemedText>
-                        </ThemedText>
-                      )
-                    }
+                    label={<InfoRowItemLabel item={item} />}
                     value={
                       <ThemedText>£{item.totalPrice.toDisplay()}</ThemedText>
                     }
-                    showSeparator={false}
                   />
-                  {item.assignedTo.length >= 1 ? (
-                    <View
-                      style={{
-                        paddingBottom: 5,
-                        gap: 5,
-                        paddingTop: 10,
-                        flexDirection: "row",
-                        overflow: "hidden",
-                      }}
-                    >
+                  {item.assignedTo.length >= 1 && (
+                    <View style={styles.assignedPayersContainer}>
                       {item.assignedTo.map((obj, index) => {
                         const payer = getPayerById(editedBill, obj.payerId);
                         if (payer === undefined) {
@@ -107,8 +82,6 @@ const AssignItemsDisplay = () => {
                         return <PayerIcon key={index} payer={payer} />;
                       })}
                     </View>
-                  ) : (
-                    ""
                   )}
                 </View>
               </Touchable>
@@ -133,6 +106,13 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     flex: 1,
     gap: 10,
+  },
+  assignedPayersContainer: {
+    paddingBottom: 5,
+    gap: 5,
+    paddingTop: 10,
+    flexDirection: "row",
+    overflow: "hidden",
   },
   container: {
     flex: 1,

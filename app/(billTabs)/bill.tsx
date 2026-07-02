@@ -25,6 +25,7 @@ import { useImagePicker } from "@/hooks/useImagePicker";
 import { deleteReceiptImage, saveReceiptImage } from "@/utils/fileSystem";
 import { Rate } from "@/utils/rateUtils";
 import { getBillTotals } from "@/utils/billUtils";
+import InfoRowItemLabel from "@/components/ui/InfoRowItemLabel";
 
 const BillDisplay = () => {
   const router = useRouter();
@@ -212,26 +213,7 @@ const BillDisplay = () => {
               <Touchable onPress={() => openItemModal(item)} key={item.id}>
                 <View key={item.id}>
                   <InfoRow
-                    label={
-                      item.quantity == 1 ? (
-                        <ThemedText>
-                          {item.quantity} •{" "}
-                          {item.name.length > 25
-                            ? item.name.slice(0, 20) + "..."
-                            : item.name}
-                        </ThemedText>
-                      ) : (
-                        <ThemedText>
-                          {item.quantity} •{" "}
-                          {item.name.length > 25
-                            ? item.name.slice(0, 20) + "..."
-                            : item.name}{" "}
-                          <ThemedText type="darkGrital">
-                            ({item.price.toDisplay()})
-                          </ThemedText>
-                        </ThemedText>
-                      )
-                    }
+                    label={<InfoRowItemLabel item={item} />}
                     value={
                       <ThemedText>{item.totalPrice.toDisplay()}</ThemedText>
                     }

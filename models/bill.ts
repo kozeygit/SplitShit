@@ -34,7 +34,7 @@ export type Payer = {
     name: string;
     number?: string;
     email?: string;
-    amountToPay?: Price;
+    amountToPay: Price;
     addedWithGroup?: boolean;
     isArchived: boolean;
     imagePath?: string;

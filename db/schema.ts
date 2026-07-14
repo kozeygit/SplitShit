@@ -1,5 +1,11 @@
 // schema.ts
-import { integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
+import {
+    integer,
+    real,
+    sqliteTable,
+    text,
+    unique,
+} from "drizzle-orm/sqlite-core";
 
 export const bills = sqliteTable("bills", {
     id: integer("id").primaryKey({ autoIncrement: true }),
@@ -51,7 +57,7 @@ export const billPayers = sqliteTable(
 
 export const assignedItems = sqliteTable("assigned_items", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    quantity: integer("quantity").notNull(),
+    quantity: real("quantity").notNull(),
     billItemId: integer("bill_item_id").references(() => billItems.id, {
         onDelete: "cascade",
     }),

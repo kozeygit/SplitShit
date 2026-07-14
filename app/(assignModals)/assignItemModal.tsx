@@ -27,6 +27,7 @@ const EditItemModal = () => {
     totalPrice: Price.fromCents(0),
     quantity: 0,
     assignedTo: [],
+    splitMode: "equal",
   });
 
   useEffect(() => {
@@ -37,10 +38,13 @@ const EditItemModal = () => {
       setItem(editedBill.items[currentIndex]);
       setItemIndex(currentIndex);
     }
+    console.log(item.splitMode);
   }, [itemId]);
 
   const toggleAssignPayer = (payerId: number) => {
     const ass = item.assignedTo.find((ass) => ass.payerId === payerId);
+
+    // Payer already assigned, so unassign
     if (ass) {
       const newAssignedTo = item.assignedTo.filter(
         (ass) => ass.payerId !== payerId,
@@ -52,9 +56,30 @@ const EditItemModal = () => {
       return;
     }
 
+    const newAssignedTo = [
+      ...item.assignedTo,
+      { payerId: payerId, quantity: 0 },
+    ];
+
+    let updatedAssignedTo;
+
+    if (item.splitMode === "equal") {
+      const evenShare = item.quantity / newAssignedTo.length;
+
+      updatedAssignedTo = newAssignedTo.map((ass) => ({
+        ...ass,
+        quantity: evenShare,
+      }));
+    } else {
+      updatedAssignedTo = newAssignedTo.map((ass) => ({
+        ...ass,
+        quantity: 0,
+      }));
+    }
+
     setItem({
       ...item,
-      assignedTo: [...item.assignedTo, { payerId: payerId, quantity: 1 }],
+      assignedTo: updatedAssignedTo,
     });
   };
 
@@ -142,6 +167,11 @@ const EditItemModal = () => {
     router.back();
   };
 
+  const swapSplitMode = () => {
+    const newSplitMode = item.splitMode === "equal" ? "custom" : "equal";
+    setItem({ ...item, splitMode: newSplitMode });
+  };
+
   if (!editedBill || !item) return null;
 
   return (
@@ -156,13 +186,23 @@ const EditItemModal = () => {
         <View style={{ flex: 1 }}>
           <View style={styles.title}>
             <ThemedText type="subtitle">
-              {" "}
-              {item.quantity}x {item.name}{" "}
+              {item.quantity}x {item.name}
             </ThemedText>
             <ThemedText type="subtitle">
-              {" "}
-              £{item.price.toDisplay()} {item.quantity > 1 ? "each" : ""}{" "}
+              £{item.totalPrice.toDisplay()}
             </ThemedText>
+          </View>
+          <View style={styles.subtitle}>
+            <Touchable onPress={swapSplitMode}>
+              <ThemedText type="darkgrey">
+                Split Mode: {item.splitMode === "equal" ? "Equal" : "Custom"}
+              </ThemedText>
+            </Touchable>
+            {item.quantity > 1 && (
+              <ThemedText type="darkgrey">
+                £{item.price.toDisplay()} each
+              </ThemedText>
+            )}
           </View>
           <View
             style={{
@@ -335,12 +375,16 @@ const styles = StyleSheet.create({
   title: {
     flexDirection: "row",
     paddingTop: 10,
+    marginBottom: 10,
+    justifyContent: "space-between",
+  },
+  subtitle: {
+    flexDirection: "row",
     paddingBottom: 20,
     borderBottomWidth: 1,
     marginBottom: 10,
     justifyContent: "space-between",
   },
-
   submitButtonOuter: {
     flex: 1,
     height: 70,

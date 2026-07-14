@@ -95,7 +95,22 @@ export const fetchBillItems = async (billId: number): Promise<BillItem[]> => {
             }
         }
 
-        return Array.from(itemsMap.values());
+        const finalItems = Array.from(itemsMap.values());
+
+        for (const item of finalItems) {
+            if (item.assignedTo.length <= 1) {
+                item.splitMode = "equal";
+                continue;
+            }
+            const firstQuantity = item.assignedTo[0].quantity;
+            const isAllEqual = item.assignedTo.every(
+                (ass) => ass.quantity === firstQuantity,
+            );
+
+            item.splitMode = isAllEqual ? "equal" : "custom";
+        }
+
+        return finalItems;
     } catch (error) {
         console.error("Error in fetchBillItems:", error);
         return [];

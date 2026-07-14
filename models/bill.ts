@@ -27,6 +27,7 @@ export type BillItem = {
     totalPrice: Price;
     assignedTo: AssignItem[];
     category?: string;
+    splitMode?: "equal" | "custom";
 };
 
 export type Payer = {

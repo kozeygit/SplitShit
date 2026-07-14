@@ -28,20 +28,6 @@ export default function RootLayout() {
     console.log(error);
   }
 
-  const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
   return (
     <SafeAreaProvider>
       <Suspense fallback={<ActivityIndicator size="large" />}>

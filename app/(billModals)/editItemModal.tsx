@@ -91,6 +91,7 @@ const EditItemModal = () => {
       price: finalUnitPrice,
       totalPrice: finalTotalPrice,
       assignedTo: item ? item.assignedTo : [],
+      splitMode: item ? item.splitMode : "equal",
     };
 
     let newItemsList: BillItem[];

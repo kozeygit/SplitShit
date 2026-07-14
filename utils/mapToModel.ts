@@ -73,6 +73,10 @@ export const mapBillItemToModel = (
         totalPrice: Price.fromCents(totalPriceCents),
         assignedTo: [],
         category: dbBillItem.category || undefined,
+        splitMode: "equal"
     };
+
+    
+
     return mappedBillItem;
 };

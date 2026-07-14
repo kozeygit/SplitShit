@@ -1,11 +1,10 @@
-import { Tabs, useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
-import { Pressable, View, StyleSheet, Dimensions } from "react-native";
+import { Tabs } from "expo-router";
+import { View } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { useSQLiteContext } from "expo-sqlite";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const db = useSQLiteContext();
@@ -13,19 +12,24 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={{ flex: 1, paddingBottom: insets.bottom, backgroundColor: "black"}}>
+    <View
+      style={{
+        flex: 1,
+        paddingBottom: insets.bottom,
+        backgroundColor: "black",
+      }}
+    >
       <Tabs
-        safeAreaInsets={{ bottom: 0 }} // 1. Tell the navigator NOT to add space at the bottom
+        safeAreaInsets={{ bottom: 0 }}
         screenOptions={{
           headerShown: false,
           tabBarActiveBackgroundColor: "black",
           tabBarInactiveTintColor: "black",
           tabBarStyle: {
-          height: 60,
-          borderTopWidth: 2,
-          borderColor: "black",
-        },
-
+            height: 60,
+            borderTopWidth: 2,
+            borderColor: "black",
+          },
         }}
       >
         <Tabs.Screen
@@ -59,7 +63,6 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-
     </View>
   );
 }
